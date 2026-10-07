@@ -1,0 +1,80 @@
+# One application: a Deployment (keep one copy running) and a Service (a
+# stable internal name and port in front of it). Written by config/apply.py.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: @@NAME@@
+  namespace: @@NS@@
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: @@NAME@@
+  template:
+    metadata:
+      labels:
+        app: @@NAME@@
+    spec:
+      # Without this, Kubernetes adds a variable such as AUTH_SERVICE_PORT for
+      # every Service in the namespace, which can collide with a real setting.
+      enableServiceLinks: false
+@@INIT@@      containers:
+        - name: @@NAME@@
+          # scripts/deploy.sh puts the ECR address and the build's tag in front.
+          image: @@IMAGE@@:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: @@LISTEN@@
+          # Every setting in the ConfigMap and every key in the Secret
+          # becomes an environment variable of the same name.
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          env:
+            - name: PORT
+              value: "@@LISTEN@@"
+            - name: SERVER_PORT
+              value: "@@LISTEN@@"
+          startupProbe:
+            httpGet:
+              path: @@HEALTH@@
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: @@HEALTH@@
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: @@HEALTH@@
+              port: http
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: @@CPU@@
+              memory: @@MEMORY@@
+            limits:
+              cpu: @@CPU_LIMIT@@
+              memory: @@MEMORY_LIMIT@@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: @@NAME@@
+  namespace: @@NS@@
+  annotations:
+    # The load balancer only sends traffic to pods that answer 200 here.
+    alb.ingress.kubernetes.io/healthcheck-path: @@HEALTH@@
+spec:
+  type: ClusterIP
+  selector:
+    app: @@NAME@@
+  ports:
+    - name: http
+      port: @@PORT@@
+      targetPort: http

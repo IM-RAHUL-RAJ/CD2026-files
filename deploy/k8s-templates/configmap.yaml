@@ -1,0 +1,10 @@
+# The project's settings (the `env` section of config/application.yaml), with
+# this phase's values. Every application pod receives all of them.
+# LOAD_BALANCER_ADDRESS is replaced by scripts/deploy.sh at deploy time.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: @@NS@@
+data:
+@@DATA@@

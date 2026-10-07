@@ -1,0 +1,24 @@
+# One public load balancer (an AWS Application Load Balancer) in front of the
+# whole application. The AWS Load Balancer Controller reads this object and
+# builds the load balancer; each path below becomes a routing rule on it.
+#
+@@ROUTES@@
+#
+# The most specific path wins. A service with no route is not reachable
+# from outside the cluster.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app
+  namespace: @@NS@@
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    # Send traffic straight to pod addresses, so the Services can stay internal.
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+@@PATHS@@

@@ -1,0 +1,134 @@
+# ==============================================================================
+# The one file to edit. Everything in deploy/ reads its values from here:
+# docker-compose, the Kubernetes files, the pipeline scripts.
+#
+# After any change:   python3 deploy/config/apply.py
+#
+# Moving to another phase of the deployment:
+#   1. set `phase` below
+#   2. change the values marked [phase] to that phase's values
+#   3. run apply.py again
+#
+#   phase    what it is                              apply.py writes
+#   local    services started by hand, with          deploy/.env
+#            Postgres and Kafka from docker-compose
+#   docker   everything in docker-compose on a box   deploy/.env
+#   eks      Kubernetes behind one load balancer     deploy/k8s/  (commit it)
+#
+# No passwords or keys in this file: it is committed. Their NAMES are listed
+# under `secrets`; their values are typed into deploy/.env, which is not.
+# ==============================================================================
+
+phase: docker             # local | docker | eks
+
+project:
+  name: trading           # short, lower case; prefixes image and container names
+  root: ..                # the project's top folder, relative to deploy/
+
+# What people type in the browser.                                     [phase]
+#   local   localhost
+#   docker  the box's public IP
+#   eks     not read: the load balancer's address is found at deploy time
+public:
+  scheme: http
+  host: localhost
+
+# The four applications. For each one:
+#   path    its folder, relative to the project's top folder
+#   type    which Dockerfile in deploy/docker builds it
+#           (java | node | angular | python)
+#   port    the port it listens on. This does not move the service unless its
+#           code reads PORT (Node) or SERVER_PORT (Spring), which most do.
+#   health  a path that answers 200 without a login, used by every health check
+#   routes  eks only: the paths the load balancer sends to this service.
+#           Anything not listed goes to the frontend.
+#   test    whether the pipeline runs its unit tests (mvn test / npm test)
+services:
+  frontend:
+    path: frontend
+    type: angular
+    port: 4200
+    health: /
+    test: false
+  auth:
+    path: auth-service
+    type: node
+    port: 3000
+    health: /
+    routes: [/auth]
+    test: true
+  order:                  # the trade API
+    path: order-service
+    type: java
+    port: 8081
+    health: /actuator/health
+    routes: [/api/v1]
+    test: true
+  executor:               # nothing calls it by address
+    path: executor-service
+    type: java
+    port: 8082
+    health: /actuator/health
+    test: true
+
+database:
+  host: postgres          # [phase] docker: postgres (the container) or the RDS
+                          #         endpoint. eks: the RDS endpoint.
+  port: 5432
+  name: trading_db
+  user: postgres
+  password_env: POSTGRES_PASSWORD   # which name under `secrets` is its password
+  sql:                    # files or folders, loaded in this order into an
+    - db/schema.sql       # empty database; a folder means all its *.sql
+    - db/seed-data.sql    # files in name order
+
+kafka:
+  host: kafka
+  port: 29092
+
+mail:
+  mailpit: true           # run a Mailpit test inbox next to the application
+  host: mailpit           # with mailpit: false, a real SMTP server
+  port: 1025
+
+aws:
+  region: ap-south-1
+  cluster: capstone
+  namespace: trading      # one namespace per project, so two can share a cluster
+  image_prefix: trading   # ECR repositories are <prefix>-frontend, -auth-service,
+                          # -order-service and -executor-service
+
+# The settings YOUR code reads, by the names YOUR code uses. Every container
+# receives all of them. The value may use these placeholders, which apply.py
+# fills in for the current phase:
+#
+#   {frontend_url}        page address               http://<host>:4200
+#   {auth_url}            auth service, from the browser
+#   {order_url}           trade API, from the browser
+#   {cors_origins}        page addresses the APIs should accept calls from
+#   {auth_internal}       auth service, from another container
+#   {order_internal}      trade API, from another container
+#   {db_host} {db_port} {db_name} {db_user}
+#   {db_sslmode}          disable for the postgres container, no-verify for RDS,
+#                         which accepts only encrypted connections. A Node
+#                         service needs it as PGSSLMODE; Spring encrypts by itself.
+#   {kafka}               host:port
+#   {mail_host} {mail_port}
+#   {cookie_secure}       true over https or on localhost, otherwise false
+env:
+  POSTGRES_HOST: "{db_host}"
+  POSTGRES_PORT: "{db_port}"
+  POSTGRES_DB: "{db_name}"
+  POSTGRES_USER: "{db_user}"
+  KAFKA_BOOTSTRAP_SERVERS: "{kafka}"
+  CORS_ALLOWED_ORIGINS: "{cors_origins}"
+
+# Names only. apply.py adds an empty line for each to deploy/.env; type the
+# values there. On EKS they become the Secret `app-secrets`.
+secrets:
+  - POSTGRES_PASSWORD
+  - JWT_SECRET
+
+# eks only: what the pipeline calls through the load balancer after a deploy.
+smoke:
+  - {path: /, expect: 200}

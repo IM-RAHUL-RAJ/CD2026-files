@@ -1,0 +1,110 @@
+# config/application.yaml as used for Neueda-Learning/chennai-capstone-SE6-team5.
+# A worked example: copy it over application.yaml to see a complete setup.
+# The docker phase was run with exactly these values on 7 October 2026.
+
+phase: docker             # local | docker | eks
+
+project:
+  name: team5
+  root: ..
+
+public:
+  scheme: http
+  host: localhost         # on the EC2 box: its public IP
+
+services:
+  frontend:
+    path: Frontend/trading-ui
+    type: angular
+    port: 4200
+    health: /
+    test: true
+  auth:
+    path: Services/auth-service
+    type: node
+    port: 3000
+    health: /
+    routes: [/auth]
+    test: true
+  order:
+    path: Services/order-service
+    type: java
+    port: 8081
+    health: /actuator/health
+    routes: [/api/v1]
+    # One test in this repository fails on main (PriceAlertEvaluatorTest), so
+    # the pipeline would stop here. Set to true once it is fixed.
+    test: false
+  executor:
+    path: Services/executor-service
+    type: java
+    port: 8082
+    health: /actuator/health
+    test: true
+
+database:
+  host: postgres
+  port: 5432
+  name: trading_db_1
+  user: postgres
+  password_env: POSTGRES_PASSWORD
+  sql:
+    - Databases/PostgreSQL/migrations
+    - Databases/PostgreSQL/seed
+
+kafka:
+  host: kafka
+  port: 29092
+
+mail:
+  mailpit: true           # the trade API emails the sign-up link
+  host: mailpit
+  port: 1025
+
+aws:
+  region: ap-south-1
+  cluster: capstone
+  namespace: team5
+  image_prefix: team5
+
+env:
+  # database: the auth service reads the parts, the Spring services the URL
+  POSTGRES_HOST: "{db_host}"
+  POSTGRES_PORT: "{db_port}"
+  POSTGRES_DB: "{db_name}"
+  POSTGRES_USER: "{db_user}"
+  POSTGRES_SCHEMA: trade
+  POSTGRES_SEARCH_PATH: auth
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://{db_host}:{db_port}/{db_name}?currentSchema=trade"
+  SPRING_DATASOURCE_USERNAME: "{db_user}"
+  # read by the auth service's Postgres driver; the Spring services encrypt on their own
+  PGSSLMODE: "{db_sslmode}"
+  KAFKA_BOOTSTRAP_SERVERS: "{kafka}"
+  JWT_ISSUER: auth-service
+  # browser-facing
+  APP_CORS_ALLOWED_ORIGINS: "{cors_origins}"
+  APP_FRONTEND_URL: "{frontend_url}"
+  # service to service
+  AUTH_SERVICE_URL: "{auth_internal}"
+  TRADE_API_BASE_URL: "{order_internal}"
+  # mail
+  SPRING_MAIL_HOST: "{mail_host}"
+  SPRING_MAIL_PORT: "{mail_port}"
+  SPRING_MAIL_AUTH: "false"
+  SPRING_MAIL_STARTTLS: "false"
+  APP_MAIL_FROM: noreply@holdmystocks.com
+  # outside services
+  FAUXNANCE_BASE_URL: https://y4t9nq2bqf.execute-api.eu-west-2.amazonaws.com/v1
+  CURRENCYAPI_BASE_URL: https://api.currencyapi.com
+  POLL_INTERVAL_SECONDS: "60"
+
+secrets:
+  - POSTGRES_PASSWORD
+  - JWT_SECRET
+  - FAUXNANCE_API_KEY
+  - CURRENCYAPI_API_KEY
+
+smoke:
+  - {path: /, expect: 200}
+  - {path: /auth/me, expect: 401}
+  - {path: /api/v1/accounts/1, expect: 401}

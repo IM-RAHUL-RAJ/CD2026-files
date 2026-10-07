@@ -1,0 +1,73 @@
+// Test, build and deploy the application to the EKS cluster.
+//
+// Runs on the Jenkins machine itself, which already has Docker, kubectl and
+// an AWS role that can push to ECR and manage the cluster. No keys are
+// stored in Jenkins.
+//
+// In the Jenkins job, set Script Path to deploy/Jenkinsfile.
+// What is built, where it goes and what is tested all come from
+// deploy/build.env, which config/apply.py writes from config/application.yaml.
+// One-time cluster preparation is deploy/scripts/bootstrap.sh, not this pipeline.
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    disableConcurrentBuilds()
+    timeout(time: 45, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '15'))
+  }
+
+  // "Build with Parameters" lets a build pick its branch. The job itself
+  // always tracks */main (a parameter there stops the webhook check from
+  // seeing new commits); the "Select branch" stage switches the workspace
+  // when another branch is asked for. Webhook builds use the default.
+  parameters {
+    string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build and deploy')
+  }
+
+  // GitHub calls http://<jenkins>:8080/github-webhook/ on every push, which
+  // starts a build within seconds. The slow poll is only a safety net for a
+  // missed call, for example while the machine was stopped.
+  triggers {
+    githubPush()
+    pollSCM('H */2 * * *')
+  }
+
+  stages {
+    stage('Select branch') {
+      when { expression { params.BRANCH && params.BRANCH != 'main' } }
+      steps {
+        sh '''
+          git fetch --no-tags origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}"
+          git checkout -f "origin/${BRANCH}"
+        '''
+      }
+    }
+
+    // Every service with `test: true`, each in a throwaway container.
+    stage('Test') {
+      steps { sh './deploy/scripts/test.sh' }
+    }
+
+    stage('Build and push images') {
+      // Images are tagged with the commit they were built from.
+      steps { sh './deploy/scripts/build-push.sh "$(git rev-parse --short=12 HEAD)"' }
+    }
+
+    stage('Deploy to EKS') {
+      steps { sh './deploy/scripts/deploy.sh "$(git rev-parse --short=12 HEAD)"' }
+    }
+
+    stage('Smoke test') {
+      steps { sh './deploy/scripts/smoke-test.sh' }
+    }
+  }
+
+  post {
+    success { echo 'Deployed and smoke-tested.' }
+    failure { echo 'Failed. The cluster keeps running the last version that rolled out.' }
+    // Test containers and build leftovers, whatever the outcome.
+    always  { sh 'docker image prune -f >/dev/null || true' }
+  }
+}
