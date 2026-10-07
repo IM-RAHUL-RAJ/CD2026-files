@@ -11,7 +11,8 @@ trade API and an executor) with Postgres and Kafka.
 ## Use it
 
 ```bash
-git clone git@github.com:IM-RAHUL-RAJ/CD2026-files.git
+sudo dnf install -y git                # a new machine has none
+git clone https://github.com/IM-RAHUL-RAJ/CD2026-files.git
 cp -r CD2026-files/deploy <your-project>/deploy
 cd <your-project>
 
