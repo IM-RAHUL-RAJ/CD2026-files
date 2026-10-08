@@ -1,13 +1,6 @@
-// Test, build and deploy the application to the EKS cluster.
-//
-// Runs on the Jenkins machine itself, which already has Docker, kubectl and
-// an AWS role that can push to ECR and manage the cluster. No keys are
-// stored in Jenkins.
-//
+// Test, build, push to ECR, deploy to EKS, check. Runs on every push to main.
 // In the Jenkins job, set Script Path to deploy/Jenkinsfile.
-// What is built, where it goes and what is tested all come from
-// deploy/build.env, which config/apply.py writes from the files in config/.
-// One-time cluster preparation is deploy/scripts/bootstrap.sh, not this pipeline.
+// Names, folders and the registry come from deploy/build.env.
 pipeline {
   agent any
 
@@ -18,56 +11,119 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '15'))
   }
 
-  // "Build with Parameters" lets a build pick its branch. The job itself
-  // always tracks */main (a parameter there stops the webhook check from
-  // seeing new commits); the "Select branch" stage switches the workspace
-  // when another branch is asked for. Webhook builds use the default.
-  parameters {
-    string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build and deploy')
-  }
-
-  // GitHub calls http://<jenkins>:8080/github-webhook/ on every push, which
-  // starts a build within seconds. The slow poll is only a safety net for a
-  // missed call, for example while the machine was stopped.
   triggers {
     githubPush()
-    pollSCM('H */2 * * *')
   }
 
   stages {
-    stage('Select branch') {
-      when { expression { params.BRANCH && params.BRANCH != 'main' } }
+    // Each service is tested in a throwaway Maven or Node container.
+    stage('Test') {
       steps {
-        sh '''
-          git fetch --no-tags origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}"
-          git checkout -f "origin/${BRANCH}"
+        sh '''#!/bin/bash
+          set -euo pipefail
+          set -a; . deploy/build.env; set +a
+          mkdir -p "$HOME/.m2"
+          for role in FRONTEND AUTH ORDER EXECUTOR; do
+            test="${role}_TEST"; path="${role}_PATH"; type="${role}_TYPE"; version="${role}_VERSION"
+            [ "${!test}" = true ] || continue
+            echo "==> tests: ${!path}"
+            case "${!type}" in
+              java)
+                docker run --rm -u "$(id -u):$(id -g)" \
+                  -v "$WORKSPACE/${!path}":/app -w /app \
+                  -v "$HOME/.m2":/var/maven/.m2 -e MAVEN_CONFIG=/var/maven/.m2 \
+                  "maven:3.9.9-eclipse-temurin-${!version}" mvn -B -q -Duser.home=/var/maven test
+                ;;
+              node|angular)
+                docker run --rm -e HOME=/tmp -e npm_config_cache=/tmp/.npm \
+                  -v "$WORKSPACE/${!path}":/src:ro "node:${!version}-alpine" sh -c \
+                  "cp -r /src /tmp/app && cd /tmp/app && rm -rf node_modules && (npm ci --no-audit --no-fund || npm install --no-audit --no-fund) && npm test"
+                ;;
+              *) echo "no test command for type ${!type}; skipped" ;;
+            esac
+          done
         '''
       }
     }
 
-    // Every service with `test: true`, each in a throwaway container.
-    stage('Test') {
-      steps { sh './deploy/scripts/test.sh' }
-    }
-
+    // Images are tagged with the commit they were built from.
     stage('Build and push images') {
-      // Images are tagged with the commit they were built from.
-      steps { sh './deploy/scripts/build-push.sh "$(git rev-parse --short=12 HEAD)"' }
+      steps {
+        sh '''#!/bin/bash
+          set -euo pipefail
+          set -a; . deploy/build.env; set +a
+          TAG="$(git rev-parse --short=12 HEAD)"
+          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REGISTRY"
+          for pair in FRONTEND:frontend AUTH:auth-service ORDER:order-service EXECUTOR:executor-service; do
+            role="${pair%%:*}"; name="${pair##*:}"
+            path="${role}_PATH"; type="${role}_TYPE"; version="${role}_VERSION"; listen="${role}_LISTEN"; health="${role}_HEALTH"
+            image="$REGISTRY/$IMAGE_PREFIX-$name:$TAG"
+            echo "==> $image"
+            docker build \
+              -f "deploy/docker/${!type}.Dockerfile" \
+              --build-arg RUNTIME_VERSION="${!version}" \
+              --build-arg APP_PORT="${!listen}" \
+              --build-arg HEALTH_PATH="${!health}" \
+              -t "$image" "$WORKSPACE/${!path}"
+            docker push "$image"
+            docker rmi "$image" >/dev/null
+          done
+        '''
+      }
     }
 
+    // Applies deploy/k8s with the four images set to this build's tag.
     stage('Deploy to EKS') {
-      steps { sh './deploy/scripts/deploy.sh "$(git rev-parse --short=12 HEAD)"' }
+      steps {
+        sh '''#!/bin/bash
+          set -euo pipefail
+          set -a; . deploy/build.env; set +a
+          TAG="$(git rev-parse --short=12 HEAD)"
+          NAMES="frontend auth-service order-service executor-service"
+          rm -rf deploy/build && mkdir deploy/build
+          {
+            echo "resources:"
+            echo "  - ../k8s"
+            echo "images:"
+            for name in $NAMES; do
+              echo "  - name: $REGISTRY/$IMAGE_PREFIX-$name"
+              echo "    newTag: \\"$TAG\\""
+            done
+          } > deploy/build/kustomization.yaml
+          kubectl apply -k deploy/build
+          for name in $NAMES; do
+            kubectl -n "$NS" rollout status "deployment/$name" --timeout=10m
+          done
+        '''
+      }
     }
 
+    // Calls the load balancer: each path must return the status listed
+    // under kubernetes.smoke in config/project.yaml.
     stage('Smoke test') {
-      steps { sh './deploy/scripts/smoke-test.sh' }
+      steps {
+        sh '''#!/bin/bash
+          set -euo pipefail
+          set -a; . deploy/build.env; set +a
+          HOST="$(kubectl -n "$NS" get ingress app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
+          for entry in ${SMOKE:-/=200}; do
+            path="${entry%%=*}"; want="${entry##*=}"; code=""
+            for _ in $(seq 1 30); do
+              code="$(curl -s -o /dev/null -m 10 -w '%{http_code}' "http://$HOST$path" || true)"
+              [ "$code" = "$want" ] && break
+              sleep 10
+            done
+            echo "$path -> $code (wanted $want)"
+            [ "$code" = "$want" ]
+          done
+        '''
+      }
     }
   }
 
   post {
-    success { echo 'Deployed and smoke-tested.' }
+    success { echo 'Deployed and checked.' }
     failure { echo 'Failed. The cluster keeps running the last version that rolled out.' }
-    // Test containers and build leftovers, whatever the outcome.
-    always  { sh 'docker image prune -f >/dev/null || true' }
+    always  { sh 'docker image prune -f >/dev/null || true; docker builder prune -f --keep-storage 4GB >/dev/null || true' }
   }
 }

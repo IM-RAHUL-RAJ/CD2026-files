@@ -10,7 +10,7 @@
   python3 deploy/config/apply.py --check    change nothing; exit 1 if a file is out of date
 
 What it writes:
-  deploy/build.env   always        folders, ports and names for the scripts (commit it)
+  deploy/build.env   always        folders, ports and names for the pipeline (commit it)
   deploy/.env        docker, local settings for docker-compose, plus the secrets
                                    you type in (never committed)
   deploy/k8s/        eks           the Kubernetes files (commit them)
@@ -33,9 +33,8 @@ LOCAL_HOSTS = ("localhost", "127.0.0.1")
 NAMES = {"frontend": "frontend", "auth": "auth-service",
          "order": "order-service", "executor": "executor-service"}
 VERSIONS = {"java": "21", "node": "22", "angular": "22", "python": "3.11"}
-# Value left in the ConfigMap wherever the load balancer's address belongs.
-# scripts/deploy.sh replaces it once AWS has built the load balancer.
-LB = "LOAD_BALANCER_ADDRESS"
+# The tag of the images pushed by hand. The pipeline replaces it with the commit.
+FIRST_TAG = "1.0"
 SECRETS_HEAD = "# ---- Secrets: type the values here. This file is never committed. ----"
 MANAGED_HEAD = "# ---- Written by config/apply.py from the two config files. Do not edit below. ----"
 # Requests and limits per kind of service, sized for two t3.medium nodes.
@@ -83,8 +82,8 @@ def load_config():
         "kafka": app["kafka"],
         "mail": {"mailpit": project.get("mailpit", False), "host": "mailpit", "port": 1025,
                  **(project.get("mail") or {})},
-        "aws": {"region": "ap-south-1", "cluster": "capstone", "namespace": name,
-                "image_prefix": name, **(k8s.get("aws") or {})},
+        "aws": {"region": "ap-south-1", "namespace": name, "image_prefix": name,
+                "registry": str(k8s.get("registry") or "").rstrip("/")},
         "env": project.get("settings") or {},
         "secrets": project.get("secrets") or [],
         "smoke": k8s.get("smoke") or [{"path": "/", "expect": 200}],
@@ -115,9 +114,9 @@ def placeholders(cfg, phase):
     page = urlsplit(svc["frontend"]["url"])
     scheme, host = page.scheme or "http", page.hostname or ""
     if phase == "eks":
-        # One load balancer serves the page and both APIs, so the browser
-        # needs no API address, and services find each other by name.
-        base = f"http://{LB}"
+        # One load balancer serves the page and both APIs on port 80, so the
+        # browser needs no API address, and services find each other by name.
+        base = svc["frontend"]["url"]
         out = {"frontend_url": base, "auth_url": "", "order_url": "", "cors_origins": base,
                "cookie_secure": "false"}
         internal = {role: f"http://{NAMES[role]}:{svc[role]['port']}" for role in ("auth", "order")}
@@ -179,7 +178,7 @@ def build_settings(cfg):
         "DEPLOY_DIR": str(DEPLOY),
         "IMAGE_PREFIX": aws["image_prefix"],
         "AWS_REGION": aws["region"],
-        "CLUSTER": aws["cluster"],
+        "REGISTRY": aws["registry"],
         "NS": aws["namespace"],
         "DB_NAME": db["name"],
         "DB_USER": db["user"],
@@ -211,7 +210,7 @@ def env_line(key, value):
 
 
 def build_env(cfg):
-    lines = ["# Folders, ports and names for the scripts in deploy/scripts.",
+    lines = ["# Folders, ports and names for the pipeline (deploy/Jenkinsfile).",
              "# Written by config/apply.py from the two config files. Do not edit.",
              "# No secrets: this file is committed, so the pipeline can read it."]
     lines += [env_line(k, v) for k, v in build_settings(cfg).items()
@@ -281,7 +280,8 @@ def k8s_files(cfg):
         service = svc[role]
         cpu, memory, cpu_limit, memory_limit = RESOURCES[service["type"]]
         files[f"{name}.yaml"] = render(app, {
-            **common, "NAME": name, "IMAGE": f"{aws['image_prefix']}-{name}",
+            **common, "NAME": name,
+            "IMAGE": f"{aws['registry']}/{aws['image_prefix']}-{name}:{FIRST_TAG}",
             "PORT": service["port"], "LISTEN": listen_port(service),
             "HEALTH": service.get("health", "/"),
             "CPU": cpu, "MEMORY": memory, "CPU_LIMIT": cpu_limit, "MEMORY_LIMIT": memory_limit,
@@ -303,7 +303,7 @@ def k8s_files(cfg):
         "ROUTES": "\n".join(f"#   {route:<14} -> {name}:{port}" for route, name, port in rules),
     })
     files["kustomization.yaml"] = (
-        "# The list `kubectl apply -k deploy/k8s` applies. Written by config/apply.py.\n"
+        "# Every file in this folder, for `kubectl apply -k`. Written by config/apply.py.\n"
         "apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nresources:\n"
         + "".join(f"  - {name}\n" for name in files))
     return files
@@ -318,6 +318,9 @@ def main():
         sys.exit(f"unknown phase '{phase}'; choose one of: {', '.join(PHASES)}")
     if phase == "docker":
         check_docker(cfg)
+    if phase == "eks" and not cfg["aws"]["registry"]:
+        sys.exit("project.yaml: kubernetes.registry is missing. It is the address of your image "
+                 "registry, such as 123456789012.dkr.ecr.ap-south-1.amazonaws.com")
 
     targets = {DEPLOY / "build.env": build_env(cfg)}
     if phase == "eks":
@@ -349,7 +352,7 @@ def main():
                   "set it to the RDS endpoint and run this again.")
         if not any(cfg["services"][role]["routes"] for role in ("auth", "order")):
             print("Warning: project.yaml has no kubernetes.routes, so the load balancer sends every path to the frontend.")
-        print("Commit and push deploy/k8s and deploy/build.env; the pipeline deploys them.")
+        print(f"Page address written into the settings: {cfg['services']['frontend']['url']}")
         return
     empty = [k for k, v in secret_values(DEPLOY / ".env", cfg.get("secrets") or []).items() if not v.strip()]
     if empty:

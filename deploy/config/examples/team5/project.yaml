@@ -62,6 +62,7 @@ database_password: POSTGRES_PASSWORD
 
 # Kubernetes and Jenkins only. Not read by docker-compose.
 kubernetes:
+  registry: 123456789012.dkr.ecr.ap-south-1.amazonaws.com
   routes:
     auth: [/auth]
     order: [/api/v1]

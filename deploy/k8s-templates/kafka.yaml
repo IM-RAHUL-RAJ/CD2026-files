@@ -1,6 +1,5 @@
-# Kafka for the cluster: an internal name (Service), one broker with its own
-# disk (StatefulSet), and a job that creates the six topics once.
-# Needs the EBS CSI add-on and the gp3 StorageClass for the disk.
+# Kafka: a Service (its name), a StatefulSet (one broker with its own disk)
+# and a Job that creates the six topics once.
 apiVersion: v1
 kind: Service
 metadata:
@@ -35,12 +34,10 @@ spec:
       labels:
         app: kafka
     spec:
-      # Without this, Kubernetes adds a KAFKA_PORT variable for the Service
-      # named kafka, which the image would read as a setting.
+      # Stops Kubernetes adding a KAFKA_PORT variable, which the image would read as a setting.
       enableServiceLinks: false
       terminationGracePeriodSeconds: 60
-      # The image runs as uid/gid 1000, and a fresh EBS volume is owned by
-      # root. fsGroup makes the mounted disk writable by that group.
+      # Kafka runs as user 1000; a new disk belongs to root. This makes it writable.
       securityContext:
         fsGroup: 1000
       containers:
@@ -77,8 +74,7 @@ spec:
               value: "1"
             - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
               value: "false"
-            # A subdirectory, not the mount root: a new ext4 disk contains a
-            # lost+found folder there, which Kafka refuses to start with.
+            # A subfolder: a new disk has a lost+found folder that Kafka refuses to start with.
             - name: KAFKA_LOG_DIRS
               value: /var/lib/kafka/data/kraft
             - name: KAFKA_HEAP_OPTS
@@ -88,9 +84,6 @@ spec:
               port: kafka
             periodSeconds: 5
             failureThreshold: 36
-          # A port check, not kafka-topics.sh: starting that Java tool takes
-          # longer than a probe timeout under this CPU limit, so the pod
-          # never became Ready even though the broker was serving.
           readinessProbe:
             tcpSocket:
               port: kafka

@@ -1,7 +1,7 @@
 # CD2026-files
 
 Ready-made deployment files for the capstone trading platform: Dockerfiles,
-docker-compose, Kubernetes files, pipeline scripts and a Jenkinsfile. Nothing
+docker-compose, Kubernetes files and a Jenkinsfile. Nothing
 in them names a project. Copy the `deploy/` folder into your repository, fill
 in one file, and follow `GUIDE.html`.
 
@@ -12,7 +12,9 @@ trade API and an executor) with Postgres and Kafka.
 
 Open `GUIDE.html` in a browser and follow it from step 1. It goes from
 writing the config file, to an EC2 machine, to copying each file, to
-`docker-compose`, to the database on RDS. Every file is printed in it.
+`docker-compose`, to the database on RDS, then ECR, an EKS cluster made
+with `eksctl`, VPC peering, the Kubernetes files one by one, Jenkins and
+the GitHub webhook. Every file is printed in it.
 
 `deploy/config/examples/team5/` holds a complete, working pair of config files.
 
@@ -30,10 +32,11 @@ writing the config file, to an EC2 machine, to copying each file, to
 | `docker/postgres-init.sh` | Loads your SQL into an empty database |
 | `docker-compose.yml` | Postgres, Kafka, Mailpit and the four applications on one machine. Postgres is left out once `database.host` is an RDS endpoint |
 | `k8s-templates/` | The Kubernetes files before your values are filled in |
-| `scripts/bootstrap.sh` | One-time cluster preparation: ECR repositories, disk add-on, load balancer controller, namespace, Secret |
-| `scripts/create-secret.sh` | Makes the Kubernetes Secret from `.env` |
-| `scripts/test.sh`, `build-push.sh`, `deploy.sh`, `smoke-test.sh` | The four pipeline steps; each also runs by hand |
-| `Jenkinsfile` | The pipeline. In the Jenkins job, set Script Path to `deploy/Jenkinsfile` |
+| `Jenkinsfile` | The whole pipeline in one file: test, build, push to ECR, deploy to EKS, check. In the Jenkins job, set Script Path to `deploy/Jenkinsfile` |
+
+There are no helper scripts. Everything done once (ECR, the cluster, the
+disk add-on, the load balancer controller, VPC peering, the Secret, Jenkins)
+is a numbered step with plain commands in `GUIDE.html`.
 
 `apply.py` also creates `deploy/build.env` and, for the `eks` phase,
 `deploy/k8s/`. Commit both. `deploy/.env` holds your secrets and is ignored
@@ -59,7 +62,9 @@ The `docker` phase was run end to end on 8 October 2026 against
 `Neueda-Learning/chennai-capstone-SE6-team5`, first with the Postgres
 container and then switched to a separate Postgres that accepts only
 encrypted connections, standing in for RDS. It has not yet been run against
-a real RDS instance. The Kubernetes files and the
-pipeline scripts are adapted from the ones that deployed `ETP-testing` to
-EKS; in this generic form they render and pass a dry run, but they have not
-yet been applied to a cluster.
+a real RDS instance. The commands for ECR, the cluster, the add-ons, VPC
+peering and Jenkins are the ones that deployed `ETP-testing` to EKS. The
+Kubernetes templates and the Jenkinsfile are generic versions of that
+project's files; they render correctly and the pipeline's shell stages run
+against stand-in commands, but in this form they have not yet been run on a
+cluster or in Jenkins.

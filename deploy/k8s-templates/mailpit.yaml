@@ -1,5 +1,4 @@
-# A test inbox: catches every email the application sends. Internal only.
-# To read it:  kubectl -n @@NS@@ port-forward service/mailpit 8025:8025
+# A test inbox: catches every email the application sends. Inside the cluster only.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

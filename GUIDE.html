@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Step by step: write the config file, create an EC2 box, copy the deployment files one by one, run the project with docker-compose, then move the database to RDS.">
+  <meta name="description" content="Step by step: write the config file, create an EC2 box, copy the deployment files one by one, run the project with docker-compose, move the database to RDS, then deploy to EKS with a Jenkins pipeline.">
   <title>Deploy Guide</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,7 +59,7 @@ svg .edge { stroke:var(--muted); stroke-width:1.25; fill:none; } svg .m-edge { f
 <main>
 
 <h1>Deploy your project, step by step</h1>
-<p class="sub">From nothing to your trading project running on an AWS machine in Docker, and then with its database on RDS. Do the steps in order. Every command is here, and so is every file, ready to copy.</p>
+<p class="sub">From nothing to your trading project running on an AWS machine in Docker, then with its database on RDS, then on a Kubernetes cluster (EKS) with a Jenkins pipeline that deploys on every push. Do the steps in order. Every command is here, and so is every file, ready to copy.</p>
 
 <nav><ol>
   <li><a href="#s1">Write the two config files</a></li>
@@ -73,7 +73,17 @@ svg .edge { stroke:var(--muted); stroke-width:1.25; fill:none; } svg .m-edge { f
   <li><a href="#s9">Create the RDS database</a></li>
   <li><a href="#s10">Replace the Postgres container with RDS</a></li>
   <li><a href="#s11">The VPCs: who can reach the database</a></li>
-  <li><a href="#s12">What comes next, and the rest of the files</a></li>
+  <li><a href="#s12">Save your work in git</a></li>
+  <li><a href="#s13">Put the four images in ECR</a></li>
+  <li><a href="#s14">Create the EKS cluster</a></li>
+  <li><a href="#s15">Connect your machine to the cluster</a></li>
+  <li><a href="#s16">Prepare the cluster: disks and the load balancer</a></li>
+  <li><a href="#s17">Join the cluster's VPC to the database's VPC</a></li>
+  <li><a href="#s18">Copy the Kubernetes files, one by one</a></li>
+  <li><a href="#s19">Deploy to the cluster, file by file</a></li>
+  <li><a href="#s20">Install Jenkins</a></li>
+  <li><a href="#s21">The pipeline and the webhook</a></li>
+  <li><a href="#s22">Everyday commands, and errors you may meet</a></li>
 </ol></nav>
 
 <figure>
@@ -97,7 +107,7 @@ svg .edge { stroke:var(--muted); stroke-width:1.25; fill:none; } svg .m-edge { f
   <text x="745" y="235" text-anchor="middle" class="quiet" font-size="12">Postgres run by</text>
   <text x="745" y="251" text-anchor="middle" class="quiet" font-size="12">AWS, from step 10</text>
 </svg>
-<figcaption>What you build. Steps 1 to 8 put everything in the box. Steps 9 to 11 move the database out to RDS.</figcaption>
+<figcaption>What you build first. Steps 1 to 8 put everything in the box. Steps 9 to 11 move the database out to RDS. Steps 13 to 21 move the applications to a cluster; that picture is at the start of Part 2.</figcaption>
 </figure>
 
 <div class="callout"><strong>Three rules.</strong>
@@ -502,6 +512,7 @@ database_password: POSTGRES_PASSWORD
 
 # Kubernetes and Jenkins only. Not read by docker-compose.
 kubernetes:
+  registry: 123456789012.dkr.ecr.ap-south-1.amazonaws.com
   routes:
     auth: [/auth]
     order: [/api/v1]
@@ -510,7 +521,7 @@ kubernetes:
     - {path: /, expect: 200}
     - {path: /auth/me, expect: 401}
     - {path: /api/v1/accounts/1, expect: 401}</code></pre></details>
-<p>The <code>kubernetes</code> block at the bottom is not read by Docker. Leave it out until you reach Kubernetes.</p>
+<p>The <code>kubernetes</code> block at the bottom is not read by Docker. Leave it out until you reach Kubernetes; step 18.2 adds it.</p>
 <div class="done"><strong>Done when:</strong> you have your own two files saved on your laptop. Keep them open; you paste them in step 5.</div>
 
 <!-- ====================================================================== -->
@@ -1062,7 +1073,7 @@ volumes:
   python3 deploy/config/apply.py --check    change nothing; exit 1 if a file is out of date
 
 What it writes:
-  deploy/build.env   always        folders, ports and names for the scripts (commit it)
+  deploy/build.env   always        folders, ports and names for the pipeline (commit it)
   deploy/.env        docker, local settings for docker-compose, plus the secrets
                                    you type in (never committed)
   deploy/k8s/        eks           the Kubernetes files (commit them)
@@ -1085,9 +1096,8 @@ LOCAL_HOSTS = ("localhost", "127.0.0.1")
 NAMES = {"frontend": "frontend", "auth": "auth-service",
          "order": "order-service", "executor": "executor-service"}
 VERSIONS = {"java": "21", "node": "22", "angular": "22", "python": "3.11"}
-# Value left in the ConfigMap wherever the load balancer's address belongs.
-# scripts/deploy.sh replaces it once AWS has built the load balancer.
-LB = "LOAD_BALANCER_ADDRESS"
+# The tag of the images pushed by hand. The pipeline replaces it with the commit.
+FIRST_TAG = "1.0"
 SECRETS_HEAD = "# ---- Secrets: type the values here. This file is never committed. ----"
 MANAGED_HEAD = "# ---- Written by config/apply.py from the two config files. Do not edit below. ----"
 # Requests and limits per kind of service, sized for two t3.medium nodes.
@@ -1135,8 +1145,8 @@ def load_config():
         "kafka": app["kafka"],
         "mail": {"mailpit": project.get("mailpit", False), "host": "mailpit", "port": 1025,
                  **(project.get("mail") or {})},
-        "aws": {"region": "ap-south-1", "cluster": "capstone", "namespace": name,
-                "image_prefix": name, **(k8s.get("aws") or {})},
+        "aws": {"region": "ap-south-1", "namespace": name, "image_prefix": name,
+                "registry": str(k8s.get("registry") or "").rstrip("/")},
         "env": project.get("settings") or {},
         "secrets": project.get("secrets") or [],
         "smoke": k8s.get("smoke") or [{"path": "/", "expect": 200}],
@@ -1167,9 +1177,9 @@ def placeholders(cfg, phase):
     page = urlsplit(svc["frontend"]["url"])
     scheme, host = page.scheme or "http", page.hostname or ""
     if phase == "eks":
-        # One load balancer serves the page and both APIs, so the browser
-        # needs no API address, and services find each other by name.
-        base = f"http://{LB}"
+        # One load balancer serves the page and both APIs on port 80, so the
+        # browser needs no API address, and services find each other by name.
+        base = svc["frontend"]["url"]
         out = {"frontend_url": base, "auth_url": "", "order_url": "", "cors_origins": base,
                "cookie_secure": "false"}
         internal = {role: f"http://{NAMES[role]}:{svc[role]['port']}" for role in ("auth", "order")}
@@ -1231,7 +1241,7 @@ def build_settings(cfg):
         "DEPLOY_DIR": str(DEPLOY),
         "IMAGE_PREFIX": aws["image_prefix"],
         "AWS_REGION": aws["region"],
-        "CLUSTER": aws["cluster"],
+        "REGISTRY": aws["registry"],
         "NS": aws["namespace"],
         "DB_NAME": db["name"],
         "DB_USER": db["user"],
@@ -1263,7 +1273,7 @@ def env_line(key, value):
 
 
 def build_env(cfg):
-    lines = ["# Folders, ports and names for the scripts in deploy/scripts.",
+    lines = ["# Folders, ports and names for the pipeline (deploy/Jenkinsfile).",
              "# Written by config/apply.py from the two config files. Do not edit.",
              "# No secrets: this file is committed, so the pipeline can read it."]
     lines += [env_line(k, v) for k, v in build_settings(cfg).items()
@@ -1333,7 +1343,8 @@ def k8s_files(cfg):
         service = svc[role]
         cpu, memory, cpu_limit, memory_limit = RESOURCES[service["type"]]
         files[f"{name}.yaml"] = render(app, {
-            **common, "NAME": name, "IMAGE": f"{aws['image_prefix']}-{name}",
+            **common, "NAME": name,
+            "IMAGE": f"{aws['registry']}/{aws['image_prefix']}-{name}:{FIRST_TAG}",
             "PORT": service["port"], "LISTEN": listen_port(service),
             "HEALTH": service.get("health", "/"),
             "CPU": cpu, "MEMORY": memory, "CPU_LIMIT": cpu_limit, "MEMORY_LIMIT": memory_limit,
@@ -1355,7 +1366,7 @@ def k8s_files(cfg):
         "ROUTES": "\n".join(f"#   {route:&lt;14} -&gt; {name}:{port}" for route, name, port in rules),
     })
     files["kustomization.yaml"] = (
-        "# The list `kubectl apply -k deploy/k8s` applies. Written by config/apply.py.\n"
+        "# Every file in this folder, for `kubectl apply -k`. Written by config/apply.py.\n"
         "apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nresources:\n"
         + "".join(f"  - {name}\n" for name in files))
     return files
@@ -1370,6 +1381,9 @@ def main():
         sys.exit(f"unknown phase '{phase}'; choose one of: {', '.join(PHASES)}")
     if phase == "docker":
         check_docker(cfg)
+    if phase == "eks" and not cfg["aws"]["registry"]:
+        sys.exit("project.yaml: kubernetes.registry is missing. It is the address of your image "
+                 "registry, such as 123456789012.dkr.ecr.ap-south-1.amazonaws.com")
 
     targets = {DEPLOY / "build.env": build_env(cfg)}
     if phase == "eks":
@@ -1401,7 +1415,7 @@ def main():
                   "set it to the RDS endpoint and run this again.")
         if not any(cfg["services"][role]["routes"] for role in ("auth", "order")):
             print("Warning: project.yaml has no kubernetes.routes, so the load balancer sends every path to the frontend.")
-        print("Commit and push deploy/k8s and deploy/build.env; the pipeline deploys them.")
+        print(f"Page address written into the settings: {cfg['services']['frontend']['url']}")
         return
     empty = [k for k, v in secret_values(DEPLOY / ".env", cfg.get("secrets") or []).items() if not v.strip()]
     if empty:
@@ -1661,7 +1675,7 @@ docker-compose up -d</code></pre>
   <tr><td>Template</td><td>Free tier, or Dev/Test</td><td></td></tr>
   <tr><td>DB instance identifier</td><td>Your team name, for example <code>team5-db</code></td><td>Its name in the console.</td></tr>
   <tr><td>Master username</td><td><code>postgres</code></td><td>Must equal <code>database.user</code> in <code>application.yaml</code>.</td></tr>
-  <tr><td>Credentials management</td><td>Self managed. Type the <strong>same password</strong> you put in <code>.env</code> in step 6.3.</td><td>The services log in with the password from <code>.env</code>.</td></tr>
+  <tr><td>Credentials management</td><td>Self managed. Type the <strong>same password</strong> you put in <code>.env</code> in step 6.8.</td><td>The services log in with the password from <code>.env</code>.</td></tr>
   <tr><td>Instance class</td><td>Burstable, <strong>db.t4g.micro</strong></td><td>The smallest class the account allows.</td></tr>
   <tr><td>Storage</td><td>gp3, 20 GiB</td><td></td></tr>
   <tr><td>Compute resource</td><td>Don't connect to an EC2 compute resource</td><td>You add the rule yourself below, so you see what it is.</td></tr>
@@ -1843,29 +1857,312 @@ aws ec2 authorize-security-group-ingress --group-id $DB_SG --protocol tcp --port
 <div class="done"><strong>Done when:</strong> everything that needs the database prints "accepting connections".</div>
 
 <!-- ====================================================================== -->
-<h2 id="s12"><span class="n">Step 12</span>What comes next, and the rest of the files</h2>
-<p>You now have the project running in Docker on one machine, with its database on RDS. Commit the <code>deploy</code> folder to your project so the work is kept. <code>.env</code> stays out because of <code>.gitignore</code>.</p>
-<pre><code>cd ..
+<h2 id="s12"><span class="n">Step 12</span>Save your work in git</h2>
+<span class="where">Where: the terminal on the machine, inside your project</span>
+<p>The project now runs in Docker on one machine, with its database on RDS. Commit the <code>deploy</code> folder so the work is kept. <code>.env</code> stays out because of <code>.gitignore</code>, so no password reaches GitHub.</p>
+<pre><code>cd ~/&lt;your-project&gt;
 git add deploy
-git commit -m "Add deployment files"
+git status</code></pre>
+<p>Read the list. It must not show <code>deploy/.env</code>. If you changed your Angular frontend in step 5, add those files too with <code>git add &lt;file&gt;</code>.</p>
+<pre><code>git commit -m "Add deployment files"
 git push</code></pre>
-<h3>Everyday commands</h3>
+<p>git asks for your username and the token from step 4.</p>
+<div class="done"><strong>Done when:</strong> the <code>deploy</code> folder is visible in your repository on GitHub, without <code>.env</code>.</div>
+
+<!-- ====================================================================== -->
+<h2 id="part2" style="border-top:3px solid var(--orange)"><span class="n">Part 2</span>From one machine to a cluster, with a pipeline</h2>
+<p>Steps 13 to 21 take the same four images and run them on Kubernetes (EKS), behind one load balancer, deployed by Jenkins on every push.</p>
+<figure>
+<svg viewBox="0 0 820 330" role="img" aria-label="A push to GitHub calls Jenkins on the EC2 machine. Jenkins pushes images to ECR and applies the Kubernetes files to the EKS cluster. The browser reaches one load balancer, which sends each path to the frontend, the auth service or the trade API. The cluster reaches RDS through VPC peering.">
+  <rect x="10" y="20" width="120" height="50" rx="8" class="box tint"/><text x="70" y="50" text-anchor="middle" class="ink" font-size="13" font-weight="700">GitHub push</text>
+  <path d="M70 70 V106" class="edge" marker-end="url(#arr)"/><text x="78" y="93" class="quiet" font-size="11">webhook</text>
+  <rect x="10" y="110" width="120" height="70" rx="8" class="box accent"/><text x="70" y="138" text-anchor="middle" class="ink" font-size="13" font-weight="700">Jenkins</text><text x="70" y="156" text-anchor="middle" class="quiet" font-size="11.5">on your EC2 machine</text>
+  <path d="M70 180 V226" class="edge" marker-end="url(#arr)"/><text x="78" y="208" class="quiet" font-size="11">images</text>
+  <rect x="10" y="230" width="120" height="50" rx="8" class="box tint"/><text x="70" y="260" text-anchor="middle" class="ink" font-size="13" font-weight="700">ECR</text>
+  <path d="M130 145 H216" class="edge" marker-end="url(#arr)"/><text x="138" y="137" class="quiet" font-size="11">kubectl apply</text>
+  <path d="M130 255 H170 V190 H216" class="edge" stroke-dasharray="5 4" marker-end="url(#arr)"/><text x="138" y="298" class="quiet" font-size="11">nodes pull images</text>
+  <rect x="220" y="20" width="400" height="290" rx="10" class="box"/>
+  <text x="236" y="44" class="ink" font-size="14" font-weight="700">EKS cluster (2 nodes, its own VPC)</text>
+  <rect x="240" y="60" width="360" height="44" rx="6" class="box accent"/><text x="420" y="80" text-anchor="middle" class="ink" font-size="13" font-weight="700">One load balancer + Ingress</text><text x="420" y="96" text-anchor="middle" class="quiet" font-size="11.5">/auth, /api, everything else</text>
+  <path d="M300 104 V130" class="edge" marker-end="url(#arr)"/><path d="M420 104 V130" class="edge" marker-end="url(#arr)"/><path d="M540 104 V130" class="edge" marker-end="url(#arr)"/>
+  <rect x="240" y="134" width="112" height="44" rx="6" class="box good"/><text x="296" y="161" text-anchor="middle" class="ink" font-size="12.5">frontend</text>
+  <rect x="364" y="134" width="112" height="44" rx="6" class="box good"/><text x="420" y="161" text-anchor="middle" class="ink" font-size="12.5">auth service</text>
+  <rect x="488" y="134" width="112" height="44" rx="6" class="box good"/><text x="544" y="161" text-anchor="middle" class="ink" font-size="12.5">trade API</text>
+  <rect x="488" y="196" width="112" height="44" rx="6" class="box good"/><text x="544" y="223" text-anchor="middle" class="ink" font-size="12.5">executor</text>
+  <rect x="240" y="196" width="236" height="44" rx="6" class="box tint"/><text x="358" y="223" text-anchor="middle" class="ink" font-size="12.5">Kafka, with its own disk</text>
+  <text x="420" y="282" text-anchor="middle" class="quiet" font-size="12">Settings: ConfigMap. Passwords: Secret.</text>
+  <rect x="690" y="60" width="120" height="44" rx="8" class="box tint"/><text x="750" y="87" text-anchor="middle" class="ink" font-size="13" font-weight="700">Your browser</text>
+  <path d="M690 82 H604" class="edge" marker-end="url(#arr)"/>
+  <rect x="690" y="180" width="120" height="70" rx="8" class="box accent"/><text x="750" y="208" text-anchor="middle" class="ink" font-size="13" font-weight="700">RDS</text><text x="750" y="226" text-anchor="middle" class="quiet" font-size="11.5">in the other VPC</text>
+  <path d="M620 215 H686" class="edge" marker-end="url(#arr)"/><text x="655" y="207" text-anchor="middle" class="quiet" font-size="11">peering</text>
+</svg>
+<figcaption>What you build in steps 13 to 21.</figcaption>
+</figure>
 <div class="tablewrap"><table>
-  <tr><th>To</th><th>Run, inside <code>deploy</code></th></tr>
-  <tr><td>See what is running</td><td><code>docker-compose ps -a</code></td></tr>
-  <tr><td>Read a service's log</td><td><code>docker-compose logs --tail=50 order-service</code></td></tr>
-  <tr><td>Deploy new code</td><td><code>git pull</code> then <code>docker-compose up -d --build</code></td></tr>
-  <tr><td>Apply a config change</td><td><code>python3 config/apply.py</code> then <code>docker-compose up -d</code></td></tr>
-  <tr><td>Stop everything</td><td><code>docker-compose down</code></td></tr>
+  <tr><th>Step</th><th>What you add</th><th>Why it is needed</th></tr>
+  <tr><td>13</td><td>ECR, with your four images in it</td><td>The cluster cannot use images that exist only on your machine.</td></tr>
+  <tr><td>14</td><td>The EKS cluster</td><td>The machines that will run your containers.</td></tr>
+  <tr><td>15</td><td><code>kubectl</code> on your machine, allowed into the cluster</td><td>The program you give the cluster orders with.</td></tr>
+  <tr><td>16</td><td>Two helpers in the cluster: disks and load balancers</td><td>Kafka needs a disk, and the browser needs one way in.</td></tr>
+  <tr><td>17</td><td>VPC peering from the cluster to RDS</td><td>The cluster is in a different network from the database.</td></tr>
+  <tr><td>18</td><td>The Kubernetes files</td><td>They describe what must run.</td></tr>
+  <tr><td>19</td><td>The application, running on the cluster</td><td></td></tr>
+  <tr><td>20, 21</td><td>Jenkins and the webhook</td><td>So a push deploys by itself.</td></tr>
 </table></div>
-<h3>After Docker: Kubernetes and Jenkins</h3>
-<p>The next stages run the same images on an EKS cluster behind one load balancer, deployed by a Jenkins pipeline on every push. The same two config files drive them: <code>python3 config/apply.py eks</code> writes the Kubernetes files, and the <code>kubernetes</code> block of <code>project.yaml</code> adds the load balancer's routes. Those stages are written up, with every command and error met, in <a href="ETP-history.html">ETP-history.html</a>, the record of the first project deployed this way. The files they use are below.</p>
-<div class="callout">The Kubernetes files and pipeline scripts below are adapted from the ones that deployed the first project. In this generic form they pass a dry run but have not yet been applied to a cluster.</div>
-<details><summary><code>k8s-templates/namespace.yaml</code></summary><pre data-file="deploy/k8s-templates/namespace.yaml"><code>apiVersion: v1
+<div class="callout"><strong>How far this has been tested.</strong> The commands in steps 13 to 17 and 20 are the ones that deployed the first project (ETP) to EKS. The Kubernetes files and the Jenkinsfile in steps 18, 19 and 21 are the generic versions of that project's files. They produce correct output on a test machine, but in this generic form they have not yet been run on a real cluster. If a step fails, the table in step 22 lists the errors met the first time.</div>
+<div class="callout"><strong>The variables block.</strong> Many commands below use <code>$REGION</code>, <code>$NAME</code> and others. Variables are forgotten when the session closes. Every time you reconnect, run this block first. Replace <code>team5</code> with the <code>name</code> in your <code>project.yaml</code>, and <code>team5-db</code> with your database's identifier from step 9.
+<pre><code>REGION=ap-south-1
+NAME=team5
+CLUSTER=team5
+DB=team5-db
+ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+REGISTRY=$ACCOUNT.dkr.ecr.$REGION.amazonaws.com
+echo $REGISTRY</code></pre>
+<div class="out"><span>Expected</span><pre>&lt;your 12-digit account number&gt;.dkr.ecr.ap-south-1.amazonaws.com</pre></div>
+If a command later says <code>expected one argument</code>, a variable is empty: run this block again.</div>
+
+<!-- ====================================================================== -->
+<h2 id="s13"><span class="n">Step 13</span>Put the four images in ECR</h2>
+<span class="where">Where: the terminal on the machine</span>
+<p><strong>ECR</strong> is the AWS image registry: a shelf in AWS where images are kept. The cluster pulls your images from there. Kafka and Mailpit use public images and do not go in ECR.</p>
+<p>In ECR, one repository holds one image with all its versions. Four images need four repositories.</p>
+<h3>13.1 Create the four repositories</h3>
+<p>Run the variables block above first. Then one command per repository:</p>
+<pre><code>aws ecr create-repository --region $REGION --repository-name $NAME-frontend
+aws ecr create-repository --region $REGION --repository-name $NAME-auth-service
+aws ecr create-repository --region $REGION --repository-name $NAME-order-service
+aws ecr create-repository --region $REGION --repository-name $NAME-executor-service</code></pre>
+<div class="out"><span>Expected, four times</span><pre>{
+    "repository": {
+        "repositoryName": "team5-frontend",
+        "repositoryUri": "&lt;account&gt;.dkr.ecr.ap-south-1.amazonaws.com/team5-frontend",
+        ...</pre></div>
+<h3>13.2 Log Docker in to ECR</h3>
+<pre><code>aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $REGISTRY</code></pre>
+<div class="out"><span>Expected</span><pre>Login Succeeded</pre></div>
+<p>You type nothing. The username is always the word <code>AWS</code>, and the password is a temporary token made from the machine's role. It lasts 12 hours; after that, run this line again.</p>
+<h3>13.3 Tag and push each image</h3>
+<p>docker-compose built the images in step 7. Look at them:</p>
+<pre><code>docker images | grep $NAME</code></pre>
+<div class="out"><span>Expected</span><pre>team5-frontend           latest   ...
+team5-auth-service       latest   ...
+team5-order-service      latest   ...
+team5-executor-service   latest   ...</pre></div>
+<p>If the list is empty, build them again: <code>cd deploy &amp;&amp; docker-compose build &amp;&amp; cd ..</code></p>
+<p><strong>Tag</strong> gives an image its address in ECR and a version, here <code>1.0</code>. <strong>Push</strong> uploads it. Two lines per image:</p>
+<pre><code>docker tag $NAME-frontend:latest $REGISTRY/$NAME-frontend:1.0
+docker push $REGISTRY/$NAME-frontend:1.0
+
+docker tag $NAME-auth-service:latest $REGISTRY/$NAME-auth-service:1.0
+docker push $REGISTRY/$NAME-auth-service:1.0
+
+docker tag $NAME-order-service:latest $REGISTRY/$NAME-order-service:1.0
+docker push $REGISTRY/$NAME-order-service:1.0
+
+docker tag $NAME-executor-service:latest $REGISTRY/$NAME-executor-service:1.0
+docker push $REGISTRY/$NAME-executor-service:1.0</code></pre>
+<div class="out"><span>Expected, for each image</span><pre>The push refers to repository [&lt;account&gt;.dkr.ecr.ap-south-1.amazonaws.com/team5-frontend]
+...: Pushed
+1.0: digest: sha256:... size: ...</pre></div>
+<h3>13.4 Check</h3>
+<pre><code>aws ecr list-images --region $REGION --repository-name $NAME-frontend --query 'imageIds[].imageTag' --output text
+aws ecr list-images --region $REGION --repository-name $NAME-auth-service --query 'imageIds[].imageTag' --output text
+aws ecr list-images --region $REGION --repository-name $NAME-order-service --query 'imageIds[].imageTag' --output text
+aws ecr list-images --region $REGION --repository-name $NAME-executor-service --query 'imageIds[].imageTag' --output text</code></pre>
+<div class="done"><strong>Done when:</strong> each of the four lines prints <code>1.0</code>. Write down the registry address that <code>echo $REGISTRY</code> printed; you type it into a file in step 18.</div>
+
+<!-- ====================================================================== -->
+<h2 id="s14"><span class="n">Step 14</span>Create the EKS cluster</h2>
+<span class="where">Where: AWS console, CloudShell</span>
+<p>A <strong>cluster</strong> is a group of machines (nodes) run by Kubernetes. You tell Kubernetes what must run, and it keeps it running on those nodes. <strong>EKS</strong> is Kubernetes run by AWS. <code>eksctl</code> is the program that creates an EKS cluster with one command.</p>
+<p>This step is done in <strong>CloudShell</strong>, not on your EC2 machine. CloudShell is a terminal in the AWS console that runs as you, with your own permissions.</p>
+<ol>
+  <li>In the AWS console, check the region is Mumbai. Click the <strong>CloudShell</strong> icon in the top bar (it looks like <code>&gt;_</code>). Wait for the prompt.</li>
+  <li>Install <code>eksctl</code>:</li>
+</ol>
+<pre><code>curl -sSL "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+eksctl version</code></pre>
+<div class="out"><span>Expected</span><pre>0.2xx.0</pre></div>
+<ol start="3">
+  <li>Create the cluster. Replace <code>team5</code> with your name.</li>
+</ol>
+<pre><code>eksctl create cluster \
+  --name team5 \
+  --region ap-south-1 \
+  --nodegroup-name workers \
+  --node-type t3.medium \
+  --nodes 2 \
+  --nodes-min 1 \
+  --nodes-max 3 \
+  --managed</code></pre>
+<div class="tablewrap"><table>
+  <tr><th>Part of the command</th><th>Meaning</th></tr>
+  <tr><td><code>--name team5</code></td><td>The cluster's name. You use it in later steps.</td></tr>
+  <tr><td><code>--nodegroup-name workers</code></td><td>The name of the group of machines that run your containers.</td></tr>
+  <tr><td><code>--node-type t3.medium</code></td><td>The size of each machine. The account allows only t3.micro, t3.small, t3.medium, t3.large, m5.large, m5.xlarge, m6i.large and m6i.xlarge. t3.micro and t3.small are too small for a cluster.</td></tr>
+  <tr><td><code>--nodes 2</code></td><td>Two machines. Enough for this project.</td></tr>
+  <tr><td><code>--managed</code></td><td>AWS looks after the machines (updates, replacing a broken one).</td></tr>
+</table></div>
+<p>It takes <strong>15 to 20 minutes</strong>. Lines scroll past while AWS builds the network, the cluster and the two machines.</p>
+<div class="out"><span>Expected, the last line</span><pre>EKS cluster "team5" in "ap-south-1" region is ready</pre></div>
+<div class="callout">CloudShell disconnects after about 20 minutes without typing. If that happens, nothing is lost: AWS keeps building. Wait, then look in the console under <strong>EKS, Clusters</strong>: the cluster is finished when Status is <strong>Active</strong> and the <strong>Compute</strong> tab shows two nodes.</div>
+<p><code>eksctl</code> also created a new VPC for the cluster. That is why step 17 exists.</p>
+<div class="done"><strong>Done when:</strong> the EKS console shows your cluster as Active with two nodes.</div>
+
+<!-- ====================================================================== -->
+<h2 id="s15"><span class="n">Step 15</span>Connect your machine to the cluster</h2>
+<p>You give the cluster orders with a program called <code>kubectl</code>. You install it on your EC2 machine, then tell the cluster that this machine is allowed in.</p>
+<h3>15.1 Install kubectl</h3>
+<span class="where">Where: the terminal on the machine</span>
+<pre><code>cd ~
+curl -L --http1.1 --retry 5 --retry-all-errors -o kubectl "https://dl.k8s.io/release/v1.34.0/bin/linux/amd64/kubectl"
+ls -lh kubectl</code></pre>
+<div class="out"><span>Expected: about 58M. A smaller file is a broken download; run the curl again.</span><pre>-rw-r--r--. 1 root root 58M ... kubectl</pre></div>
+<pre><code>install -m 0755 kubectl /usr/local/bin/kubectl
+rm -f kubectl
+kubectl version --client</code></pre>
+<div class="out"><span>Expected</span><pre>Client Version: v1.34.0</pre></div>
+<h3>15.2 Allow the machine into the cluster</h3>
+<p>The cluster checks every request: who are you, and are you on my list? A new cluster's list holds only the person who created it (you, in CloudShell). Your EC2 machine is somebody else: it acts as its IAM role. You add that role to the list. This is called an <strong>access entry</strong>.</p>
+<span class="where">Where: the terminal on the machine</span>
+<pre><code>aws sts get-caller-identity --query Arn --output text</code></pre>
+<div class="out"><span>Example</span><pre>arn:aws:sts::123456789012:assumed-role/capstone-instance/i-0fc99e68e7d4fa5ff</pre></div>
+<p>The console wants a slightly different form of this. Change it by hand:</p>
+<div class="tablewrap"><table>
+  <tr><th></th><th></th></tr>
+  <tr><td>The command printed</td><td><code>arn:aws:sts::123456789012:assumed-role/capstone-instance/i-0fc99e68e7d4fa5ff</code></td></tr>
+  <tr><td>You enter</td><td><code>arn:aws:iam::123456789012:role/capstone-instance</code></td></tr>
+</table></div>
+<p><code>sts</code> becomes <code>iam</code>, <code>assumed-role/</code> becomes <code>role/</code>, and the ending <code>/i-...</code> is removed.</p>
+<span class="where">Where: AWS console</span>
+<ol>
+  <li><strong>EKS</strong>, your cluster, the <strong>Access</strong> tab, <strong>Create access entry</strong>.</li>
+  <li>IAM principal ARN: the form you made above. Type: <strong>Standard</strong>. Next.</li>
+  <li>Access policy: <strong>AmazonEKSClusterAdminPolicy</strong>. Access scope: <strong>Cluster</strong>. Click <strong>Add policy</strong>, Next, <strong>Create</strong>.</li>
+</ol>
+<h3>15.3 Point kubectl at the cluster</h3>
+<span class="where">Where: the terminal on the machine</span>
+<pre><code>aws eks update-kubeconfig --name $CLUSTER --region $REGION
+kubectl get nodes</code></pre>
+<div class="out"><span>Expected</span><pre>Added new context arn:aws:eks:ap-south-1:&lt;account&gt;:cluster/team5 to /root/.kube/config
+NAME                                            STATUS   ROLES    AGE   VERSION
+ip-192-168-28-8.ap-south-1.compute.internal     Ready    &lt;none&gt;   20m   v1.34.x-eks-...
+ip-192-168-40-218.ap-south-1.compute.internal   Ready    &lt;none&gt;   20m   v1.34.x-eks-...</pre></div>
+<div class="done"><strong>Done when:</strong> <code>kubectl get nodes</code> lists two nodes, both <code>Ready</code>.</div>
+
+<!-- ====================================================================== -->
+<h2 id="s16"><span class="n">Step 16</span>Prepare the cluster: disks and the load balancer</h2>
+<span class="where">Where: the terminal on the machine</span>
+<p>A new cluster cannot yet create a disk or a load balancer. Two helpers do that. You install each one once.</p>
+<div class="tablewrap"><table>
+  <tr><th>You ask for</th><th>The helper that makes it real</th><th>Who needs it</th></tr>
+  <tr><td>A disk</td><td>The EBS CSI add-on</td><td>Kafka. Without a disk Kafka never starts, and the trade API and the executor wait for Kafka for ever.</td></tr>
+  <tr><td>A load balancer</td><td>The AWS Load Balancer Controller</td><td>The browser. Without it the Ingress file is accepted and then nothing happens.</td></tr>
+</table></div>
+<p>Both helpers run on the nodes and call AWS using the nodes' IAM role, so that role needs permission for each. That is the <code>attach-role-policy</code> line in each part.</p>
+<h3>16.1 Find the nodes' role</h3>
+<pre><code>NODE_ROLE=$(aws eks describe-nodegroup --cluster-name $CLUSTER --nodegroup-name workers --region $REGION --query 'nodegroup.nodeRole' --output text | awk -F/ '{print $NF}')
+echo $NODE_ROLE</code></pre>
+<div class="out"><span>Example</span><pre>eksctl-team5-nodegroup-workers-NodeInstanceRole-jBRcDhUrgkg8</pre></div>
+<h3>16.2 The disk add-on</h3>
+<pre><code>aws iam attach-role-policy --role-name $NODE_ROLE --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
+aws eks create-addon --cluster-name $CLUSTER --addon-name aws-ebs-csi-driver --region $REGION</code></pre>
+<p>The first line prints nothing when it works. Wait two minutes, then check:</p>
+<pre><code>aws eks describe-addon --cluster-name $CLUSTER --addon-name aws-ebs-csi-driver --region $REGION --query 'addon.status' --output text
+kubectl get pods -n kube-system | grep ebs</code></pre>
+<div class="out"><span>Expected</span><pre>ACTIVE
+ebs-csi-controller-56f5846679-4hsj6   6/6     Running   0          39s
+ebs-csi-controller-56f5846679-cqjgz   6/6     Running   0          39s
+ebs-csi-node-7mm4m                    3/3     Running   0          39s
+ebs-csi-node-l49qw                    3/3     Running   0          39s</pre></div>
+<p>The add-on is free. The only disk it will create is Kafka's 2 GB disk.</p>
+<h3>16.3 Helm</h3>
+<p><strong>Helm</strong> is an installer for Kubernetes, as <code>dnf</code> is for the machine. The load balancer controller is about a dozen objects that must fit together, and Helm installs them with one command. Helm is used for this one thing only.</p>
+<pre><code>curl -fsSL --http1.1 --retry 5 https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+helm version --short</code></pre>
+<div class="out"><span>Expected</span><pre>v3.x.x+g...</pre></div>
+<h3>16.4 Permission for the load balancer controller</h3>
+<pre><code>curl -fsSL --http1.1 --retry 5 -o alb-iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
+aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://alb-iam-policy.json</code></pre>
+<p>If it answers <code>EntityAlreadyExists</code>, another team already created the policy in this account. That is fine; carry on.</p>
+<pre><code>aws iam attach-role-policy --role-name $NODE_ROLE --policy-arn arn:aws:iam::$ACCOUNT:policy/AWSLoadBalancerControllerIAMPolicy</code></pre>
+<h3>16.5 Install the load balancer controller</h3>
+<pre><code>VPC_ID=$(aws eks describe-cluster --name $CLUSTER --region $REGION --query 'cluster.resourcesVpcConfig.vpcId' --output text)
+echo $VPC_ID
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update eks
+helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  --namespace kube-system \
+  --set clusterName=$CLUSTER --set region=$REGION --set vpcId=$VPC_ID \
+  --wait --timeout 5m</code></pre>
+<div class="out"><span>Expected, near the end</span><pre>AWS Load Balancer controller installed!</pre></div>
+<pre><code>kubectl -n kube-system get deployment aws-load-balancer-controller</code></pre>
+<div class="out"><span>Expected</span><pre>NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+aws-load-balancer-controller   2/2     2            2           1m</pre></div>
+<div class="done"><strong>Done when:</strong> the add-on is <code>ACTIVE</code> and the controller shows <code>2/2</code>.</div>
+
+<!-- ====================================================================== -->
+<h2 id="s17"><span class="n">Step 17</span>Join the cluster's VPC to the database's VPC</h2>
+<span class="where">Where: the terminal on the machine</span>
+<p>The cluster lives in the VPC that <code>eksctl</code> made. The database lives in the VPC of your EC2 machine. They are two separate private networks, so a pod cannot reach the database yet. This is the second case of step 11, and the cure is the same: VPC peering. It needs three things: the link, a route on each side, and a firewall rule on the database.</p>
+<h3>17.1 Find the two networks</h3>
+<pre><code>OTHER_VPC=$(aws eks describe-cluster --name $CLUSTER --region $REGION --query 'cluster.resourcesVpcConfig.vpcId' --output text)
+DB_VPC=$(aws rds describe-db-instances --db-instance-identifier $DB --region $REGION --query 'DBInstances[0].DBSubnetGroup.VpcId' --output text)
+DB_SG=$(aws rds describe-db-instances --db-instance-identifier $DB --region $REGION --query 'DBInstances[0].VpcSecurityGroups[0].VpcSecurityGroupId' --output text)
+DB_CIDR=$(aws ec2 describe-vpcs --vpc-ids $DB_VPC --region $REGION --query 'Vpcs[0].CidrBlock' --output text)
+OTHER_CIDR=$(aws ec2 describe-vpcs --vpc-ids $OTHER_VPC --region $REGION --query 'Vpcs[0].CidrBlock' --output text)
+echo "cluster $OTHER_VPC $OTHER_CIDR   database $DB_VPC $DB_CIDR   firewall $DB_SG"</code></pre>
+<div class="out"><span>Example</span><pre>cluster vpc-0d0ed4c712f06dcec 192.168.0.0/16   database vpc-084b301c91f11db96 172.31.0.0/16   firewall sg-0fc2ee1301e173d37</pre></div>
+<p>All five values must be filled, and the two ranges must be different.</p>
+<h3>17.2 The link</h3>
+<pre><code>PCX=$(aws ec2 create-vpc-peering-connection --vpc-id $OTHER_VPC --peer-vpc-id $DB_VPC --region $REGION --query 'VpcPeeringConnection.VpcPeeringConnectionId' --output text)
+aws ec2 accept-vpc-peering-connection --vpc-peering-connection-id $PCX --region $REGION --query 'VpcPeeringConnection.Status.Code' --output text</code></pre>
+<div class="out"><span>Expected</span><pre>provisioning</pre></div>
+<h3>17.3 A route on each side</h3>
+<p>A route says "the other network is reached through the link". The first loop tells the cluster's network how to reach the database's; the second does the reverse.</p>
+<pre><code>for rt in $(aws ec2 describe-route-tables --region $REGION --filters Name=vpc-id,Values=$OTHER_VPC --query 'RouteTables[].RouteTableId' --output text); do
+  aws ec2 create-route --region $REGION --route-table-id $rt --destination-cidr-block $DB_CIDR --vpc-peering-connection-id $PCX
+done
+for rt in $(aws ec2 describe-route-tables --region $REGION --filters Name=vpc-id,Values=$DB_VPC --query 'RouteTables[].RouteTableId' --output text); do
+  aws ec2 create-route --region $REGION --route-table-id $rt --destination-cidr-block $OTHER_CIDR --vpc-peering-connection-id $PCX
+done</code></pre>
+<div class="out"><span>Expected, once per route table</span><pre>{ "Return": true }</pre></div>
+<h3>17.4 The database's firewall lets the cluster in</h3>
+<pre><code>aws ec2 authorize-security-group-ingress --group-id $DB_SG --protocol tcp --port 5432 --cidr $OTHER_CIDR --region $REGION</code></pre>
+<p>The rule names the cluster's whole network, not single machines. If a node is replaced, the new one is already allowed.</p>
+<h3>17.5 Test from inside the cluster</h3>
+<p>This starts a small throwaway pod that only asks the database "are you there?". Replace the endpoint with yours from step 9.</p>
+<pre><code>kubectl run pgtest --restart=Never --image=postgres:16-alpine -- pg_isready -h &lt;endpoint&gt; -p 5432 -t 10
+sleep 20
+kubectl logs pgtest
+kubectl delete pod pgtest</code></pre>
+<div class="out"><span>Expected</span><pre>pod/pgtest created
+team5-db.c94cwk4g097q.ap-south-1.rds.amazonaws.com:5432 - accepting connections
+pod "pgtest" deleted</pre></div>
+<p><code>no response</code> means a route or the firewall rule is missing. Run 17.1 again and check that no value is empty.</p>
+<div class="done"><strong>Done when:</strong> the pod prints "accepting connections". The database stays private: Public access is still No.</div>
+
+<!-- ====================================================================== -->
+<h2 id="s18"><span class="n">Step 18</span>Copy the Kubernetes files, one by one</h2>
+<span class="where">Where: the terminal on the machine, inside <code>deploy</code></span>
+<p>Kubernetes is told what to run with YAML files. As with the Dockerfiles, you copy ours. They are <strong>templates</strong>: wherever a file says <code>@@NAME@@</code> or <code>@@NS@@</code>, your own values are filled in from the two config files in 18.3. You do not edit the templates.</p>
+<pre><code>cd ~/&lt;your-project&gt;/deploy
+mkdir -p k8s-templates</code></pre>
+
+<h3>18.1 The seven files</h3>
+<h4>File 1. <code>k8s-templates/namespace.yaml</code></h4>
+<p>A <strong>namespace</strong> is a folder inside the cluster. Everything of yours goes in it, so it is easy to list and easy to delete. It gets the <code>name</code> from <code>project.yaml</code>.</p>
+<pre><code>curl -fsSL -o k8s-templates/namespace.yaml https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/k8s-templates/namespace.yaml</code></pre>
+<details><summary>Show the file: <code>k8s-templates/namespace.yaml</code></summary><pre data-file="deploy/k8s-templates/namespace.yaml"><code>apiVersion: v1
 kind: Namespace
 metadata:
   name: @@NS@@</code></pre></details>
-<details><summary><code>k8s-templates/storageclass.yaml</code></summary><pre data-file="deploy/k8s-templates/storageclass.yaml"><code>apiVersion: storage.k8s.io/v1
+
+<h4>File 2. <code>k8s-templates/storageclass.yaml</code></h4>
+<p>A <strong>StorageClass</strong> says what kind of disk to create when something asks for one: here <code>gp3</code>, the cheap general disk. Kafka asks for it. It works because of the add-on from step 16.2.</p>
+<pre><code>curl -fsSL -o k8s-templates/storageclass.yaml https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/k8s-templates/storageclass.yaml</code></pre>
+<details><summary>Show the file: <code>k8s-templates/storageclass.yaml</code></summary><pre data-file="deploy/k8s-templates/storageclass.yaml"><code>apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: gp3
@@ -1875,9 +2172,11 @@ parameters:
   encrypted: "true"
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true</code></pre></details>
-<details><summary><code>k8s-templates/configmap.yaml</code></summary><pre data-file="deploy/k8s-templates/configmap.yaml"><code># The project's settings (`settings` in config/project.yaml), with
-# this phase's values. Every application pod receives all of them.
-# LOAD_BALANCER_ADDRESS is replaced by scripts/deploy.sh at deploy time.
+
+<h4>File 3. <code>k8s-templates/configmap.yaml</code></h4>
+<p>A <strong>ConfigMap</strong> holds settings. It is the cluster's version of the <code>.env</code> file: every line under <code>settings</code> in your <code>project.yaml</code> lands here, and every application pod receives all of them. No passwords go in it.</p>
+<pre><code>curl -fsSL -o k8s-templates/configmap.yaml https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/k8s-templates/configmap.yaml</code></pre>
+<details><summary>Show the file: <code>k8s-templates/configmap.yaml</code></summary><pre data-file="deploy/k8s-templates/configmap.yaml"><code># The `settings` of config/project.yaml. Every application pod receives all of them.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -1885,8 +2184,16 @@ metadata:
   namespace: @@NS@@
 data:
 @@DATA@@</code></pre></details>
-<details><summary><code>k8s-templates/app.yaml</code></summary><pre data-file="deploy/k8s-templates/app.yaml"><code># One application: a Deployment (keep one copy running) and a Service (a
-# stable internal name and port in front of it). Written by config/apply.py.
+
+<h4>File 4. <code>k8s-templates/app.yaml</code></h4>
+<p>The pattern for one application. It is used four times: frontend, auth service, trade API, executor. It holds two objects:</p>
+<ul>
+  <li>a <strong>Deployment</strong>: "keep one copy of this image running, and restart it if it dies". It names the image in ECR, takes its settings from the ConfigMap and its passwords from the Secret, and has health checks.</li>
+  <li>a <strong>Service</strong>: a fixed name and port inside the cluster, such as <code>auth-service:3000</code>. Pods come and go and change address; the Service name stays. It is the same idea as the container name in docker-compose.</li>
+</ul>
+<pre><code>curl -fsSL -o k8s-templates/app.yaml https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/k8s-templates/app.yaml</code></pre>
+<details><summary>Show the file: <code>k8s-templates/app.yaml</code></summary><pre data-file="deploy/k8s-templates/app.yaml"><code># A Deployment keeps one copy of the application running.
+# A Service gives it a fixed name and port inside the cluster.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1902,19 +2209,14 @@ spec:
       labels:
         app: @@NAME@@
     spec:
-      # Without this, Kubernetes adds a variable such as AUTH_SERVICE_PORT for
-      # every Service in the namespace, which can collide with a real setting.
       enableServiceLinks: false
 @@INIT@@      containers:
         - name: @@NAME@@
-          # scripts/deploy.sh puts the ECR address and the build's tag in front.
-          image: @@IMAGE@@:latest
+          image: @@IMAGE@@
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: @@LISTEN@@
-          # Every setting in the ConfigMap and every key in the Secret
-          # becomes an environment variable of the same name.
           envFrom:
             - configMapRef:
                 name: app-config
@@ -1955,7 +2257,6 @@ metadata:
   name: @@NAME@@
   namespace: @@NS@@
   annotations:
-    # The load balancer only sends traffic to pods that answer 200 here.
     alb.ingress.kubernetes.io/healthcheck-path: @@HEALTH@@
 spec:
   type: ClusterIP
@@ -1965,9 +2266,12 @@ spec:
     - name: http
       port: @@PORT@@
       targetPort: http</code></pre></details>
-<details><summary><code>k8s-templates/kafka.yaml</code></summary><pre data-file="deploy/k8s-templates/kafka.yaml"><code># Kafka for the cluster: an internal name (Service), one broker with its own
-# disk (StatefulSet), and a job that creates the six topics once.
-# Needs the EBS CSI add-on and the gp3 StorageClass for the disk.
+
+<h4>File 5. <code>k8s-templates/kafka.yaml</code></h4>
+<p>Kafka for the cluster, in three objects: a Service (the name <code>kafka</code>), a <strong>StatefulSet</strong> (one Kafka with its own 2 GB disk, so messages survive a restart), and a <strong>Job</strong> that runs once and creates the six topics.</p>
+<pre><code>curl -fsSL -o k8s-templates/kafka.yaml https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/k8s-templates/kafka.yaml</code></pre>
+<details><summary>Show the file: <code>k8s-templates/kafka.yaml</code></summary><pre data-file="deploy/k8s-templates/kafka.yaml"><code># Kafka: a Service (its name), a StatefulSet (one broker with its own disk)
+# and a Job that creates the six topics once.
 apiVersion: v1
 kind: Service
 metadata:
@@ -2002,12 +2306,10 @@ spec:
       labels:
         app: kafka
     spec:
-      # Without this, Kubernetes adds a KAFKA_PORT variable for the Service
-      # named kafka, which the image would read as a setting.
+      # Stops Kubernetes adding a KAFKA_PORT variable, which the image would read as a setting.
       enableServiceLinks: false
       terminationGracePeriodSeconds: 60
-      # The image runs as uid/gid 1000, and a fresh EBS volume is owned by
-      # root. fsGroup makes the mounted disk writable by that group.
+      # Kafka runs as user 1000; a new disk belongs to root. This makes it writable.
       securityContext:
         fsGroup: 1000
       containers:
@@ -2044,8 +2346,7 @@ spec:
               value: "1"
             - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
               value: "false"
-            # A subdirectory, not the mount root: a new ext4 disk contains a
-            # lost+found folder there, which Kafka refuses to start with.
+            # A subfolder: a new disk has a lost+found folder that Kafka refuses to start with.
             - name: KAFKA_LOG_DIRS
               value: /var/lib/kafka/data/kraft
             - name: KAFKA_HEAP_OPTS
@@ -2055,9 +2356,6 @@ spec:
               port: kafka
             periodSeconds: 5
             failureThreshold: 36
-          # A port check, not kafka-topics.sh: starting that Java tool takes
-          # longer than a probe timeout under this CPU limit, so the pod
-          # never became Ready even though the broker was serving.
           readinessProbe:
             tcpSocket:
               port: kafka
@@ -2125,8 +2423,11 @@ spec:
               create orders.DLT 3 604800000
               create trade-events.DLT 3 2592000000
               create market-data.DLT 6 86400000</code></pre></details>
-<details><summary><code>k8s-templates/mailpit.yaml</code></summary><pre data-file="deploy/k8s-templates/mailpit.yaml"><code># A test inbox: catches every email the application sends. Internal only.
-# To read it:  kubectl -n @@NS@@ port-forward service/mailpit 8025:8025
+
+<h4>File 6. <code>k8s-templates/mailpit.yaml</code> (only if <code>mailpit: true</code> in <code>project.yaml</code>)</h4>
+<p>The test inbox that catches the emails your application sends.</p>
+<pre><code>curl -fsSL -o k8s-templates/mailpit.yaml https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/k8s-templates/mailpit.yaml</code></pre>
+<details><summary>Show the file: <code>k8s-templates/mailpit.yaml</code></summary><pre data-file="deploy/k8s-templates/mailpit.yaml"><code># A test inbox: catches every email the application sends. Inside the cluster only.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -2178,14 +2479,12 @@ spec:
     - name: http
       port: 8025
       targetPort: http</code></pre></details>
-<details><summary><code>k8s-templates/ingress.yaml</code></summary><pre data-file="deploy/k8s-templates/ingress.yaml"><code># One public load balancer (an AWS Application Load Balancer) in front of the
-# whole application. The AWS Load Balancer Controller reads this object and
-# builds the load balancer; each path below becomes a routing rule on it.
-#
+
+<h4>File 7. <code>k8s-templates/ingress.yaml</code></h4>
+<p>An <strong>Ingress</strong> is the one way in from the internet. The controller from step 16.5 reads it and builds one AWS load balancer. Each path in it is a rule: <code>/auth</code> goes to the auth service, <code>/api/v1</code> to the trade API, everything else to the frontend. The page and both APIs then share one address, so the browser needs no CORS and the login cookie just works.</p>
+<pre><code>curl -fsSL -o k8s-templates/ingress.yaml https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/k8s-templates/ingress.yaml</code></pre>
+<details><summary>Show the file: <code>k8s-templates/ingress.yaml</code></summary><pre data-file="deploy/k8s-templates/ingress.yaml"><code># One public load balancer for the whole application. Each path is a routing rule:
 @@ROUTES@@
-#
-# The most specific path wins. A service with no route is not reachable
-# from outside the cluster.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -2193,7 +2492,6 @@ metadata:
   namespace: @@NS@@
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
-    # Send traffic straight to pod addresses, so the Services can stay internal.
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
 spec:
@@ -2202,297 +2500,223 @@ spec:
     - http:
         paths:
 @@PATHS@@</code></pre></details>
-<details><summary><code>scripts/pipeline-env.sh</code></summary><pre data-file="deploy/scripts/pipeline-env.sh"><code># Shared settings for the scripts in this folder. Sourced, not run.
-# The values come from deploy/build.env, which config/apply.py writes from
-# the files in config/.
-DEPLOY="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." &amp;&amp; pwd)"
-[ -f "$DEPLOY/build.env" ] || { echo "deploy/build.env is missing. Run: python3 deploy/config/apply.py" &gt;&amp;2; exit 1; }
-set -a
-. "$DEPLOY/build.env"
-set +a
-PROJECT_DIR="$(cd "$DEPLOY/$PROJECT_ROOT" &amp;&amp; pwd)"
-export AWS_REGION
+<p>There is no file for Postgres: the database is RDS. There is no file for passwords either: you create the Secret by hand in step 19.2, so passwords never sit in a file.</p>
 
-# role -&gt; the name of its image, container and Kubernetes objects
-ROLES=(FRONTEND AUTH ORDER EXECUTOR)
-name_of() {
-  case "$1" in
-    FRONTEND) echo frontend ;;
-    AUTH)     echo auth-service ;;
-    ORDER)    echo order-service ;;
-    EXECUTOR) echo executor-service ;;
-  esac
+<h3>18.2 Add the <code>kubernetes</code> block to <code>project.yaml</code></h3>
+<p>Three more things our files need to know. Open the file and add this block at the very bottom, starting at the left edge.</p>
+<pre><code>nano config/project.yaml</code></pre>
+<pre><code>kubernetes:
+  registry: 123456789012.dkr.ecr.ap-south-1.amazonaws.com
+  routes:
+    auth: [/auth]
+    order: [/api/v1]
+  smoke:
+    - {path: /, expect: 200}
+    - {path: /auth/me, expect: 401}</code></pre>
+<div class="tablewrap"><table>
+  <tr><th>Line</th><th>What to type</th><th>How to find it</th></tr>
+  <tr><td><code>registry</code></td><td>Your registry address</td><td>What <code>echo $REGISTRY</code> printed in step 13.</td></tr>
+  <tr><td><code>routes.auth</code></td><td>The start of every path your frontend calls on the auth service</td><td>Open the Network tab while logging in on the Docker version (step 8.2). The calls look like <code>http://&lt;ip&gt;:3000/auth/login</code>: the route is <code>/auth</code>.</td></tr>
+  <tr><td><code>routes.order</code></td><td>The same for the trade API</td><td>Calls like <code>http://&lt;ip&gt;:8081/api/v1/orders</code>: the route is <code>/api/v1</code>.</td></tr>
+  <tr><td><code>smoke</code></td><td>Paths the pipeline calls after a deploy, and the answer each must give</td><td><code>/</code> must give 200 (the page). A path that needs a login must give 401 without one; that proves the route reaches the service.</td></tr>
+</table></div>
+<p>If a service's unit tests do not pass yet and you want the pipeline to skip them, add one more line inside the block, for example <code>  skip_tests: [order]</code>.</p>
+<div class="callout">The two routes must not overlap with a page of your frontend. If both services use paths that start the same way, give the full different parts, for example <code>auth: [/api/auth]</code> and <code>order: [/api/orders, /api/accounts]</code>.</div>
+
+<h3>18.3 Fill in the templates</h3>
+<pre><code>python3 config/apply.py eks
+ls k8s</code></pre>
+<div class="out"><span>Expected</span><pre>phase eks: updated build.env, k8s/namespace.yaml, k8s/storageclass.yaml, ...
+auth-service.yaml  configmap.yaml  executor-service.yaml  frontend.yaml  ingress.yaml  kafka.yaml
+kustomization.yaml  mailpit.yaml  namespace.yaml  order-service.yaml  storageclass.yaml</pre></div>
+<p>A new folder <code>k8s</code> now holds the finished files, with your names, ports, settings and image addresses in them. <code>app.yaml</code> became four files. <code>kustomization.yaml</code> is only a list of the others; the pipeline uses it in step 21.</p>
+<p>Look at two of them. Nothing in them should still say <code>@@</code>.</p>
+<pre><code>cat k8s/configmap.yaml
+grep image: k8s/auth-service.yaml</code></pre>
+<div class="out"><span>Expected for the second command</span><pre>          image: 123456789012.dkr.ecr.ap-south-1.amazonaws.com/team5-auth-service:1.0</pre></div>
+<p>In <code>configmap.yaml</code> the database host must be your RDS endpoint. If it says <code>postgres</code>, step 10.5 was skipped: fix <code>database.host</code> in <code>application.yaml</code> and run the command again.</p>
+<div class="done"><strong>Done when:</strong> <code>ls k8s</code> matches, the image line shows your registry, and the ConfigMap shows your RDS endpoint.</div>
+
+<!-- ====================================================================== -->
+<h2 id="s19"><span class="n">Step 19</span>Deploy to the cluster, file by file</h2>
+<span class="where">Where: the terminal on the machine, inside <code>deploy</code></span>
+<p><code>kubectl apply -f &lt;file&gt;</code> hands one file to the cluster. You apply them in an order where each one finds what it needs already there. In every command, replace <code>team5</code> with your name (or use <code>$NAME</code> after running the variables block).</p>
+
+<h3>19.1 The namespace</h3>
+<pre><code>kubectl apply -f k8s/namespace.yaml</code></pre>
+<div class="out"><span>Expected</span><pre>namespace/team5 created</pre></div>
+
+<h3>19.2 The Secret: your passwords and keys</h3>
+<p>A <strong>Secret</strong> is like a ConfigMap, but for passwords. You create it with one command instead of a file. Look at the names and values you typed into <code>.env</code> in step 6.8:</p>
+<pre><code>head -8 .env</code></pre>
+<p>Write one <code>--from-literal</code> line for each of those names, with the same value, inside single quotes. End every line except the last with a backslash. For team5 it is:</p>
+<pre><code>kubectl -n $NAME create secret generic app-secrets \
+  --from-literal=POSTGRES_PASSWORD='the same password as in .env' \
+  --from-literal=JWT_SECRET='the same value as in .env' \
+  --from-literal=FAUXNANCE_API_KEY='the same value as in .env' \
+  --from-literal=CURRENCYAPI_API_KEY='the same value as in .env'</code></pre>
+<div class="out"><span>Expected</span><pre>secret/app-secrets created</pre></div>
+<p>The names must be exactly the names under <code>secrets</code> in <code>project.yaml</code>. To change a value later: <code>kubectl -n $NAME delete secret app-secrets</code>, run the command again, then restart the pods (19.8, last command).</p>
+
+<h3>19.3 The StorageClass and the ConfigMap</h3>
+<pre><code>kubectl apply -f k8s/storageclass.yaml
+kubectl apply -f k8s/configmap.yaml</code></pre>
+<div class="out"><span>Expected</span><pre>storageclass.storage.k8s.io/gp3 created
+configmap/app-config created</pre></div>
+
+<h3>19.4 Kafka</h3>
+<pre><code>kubectl apply -f k8s/kafka.yaml
+kubectl -n $NAME rollout status statefulset/kafka --timeout=5m
+kubectl -n $NAME wait --for=condition=complete job/kafka-topics --timeout=10m</code></pre>
+<div class="out"><span>Expected</span><pre>service/kafka created
+statefulset.apps/kafka created
+job.batch/kafka-topics created
+partitioned roll out complete: 1 new pods have been updated...
+job.batch/kafka-topics condition met</pre></div>
+<p>This takes two to four minutes: AWS creates the disk, attaches it, Kafka starts, then the job creates the topics. If it times out, look at <code>kubectl -n $NAME get pods</code> and <code>kubectl -n $NAME describe pod kafka-0</code>; a pod stuck in <code>Pending</code> means the disk add-on of step 16.2 is missing.</p>
+
+<h3>19.5 Mailpit (only if you copied file 6)</h3>
+<pre><code>kubectl apply -f k8s/mailpit.yaml</code></pre>
+
+<h3>19.6 The four applications</h3>
+<pre><code>kubectl apply -f k8s/auth-service.yaml
+kubectl apply -f k8s/order-service.yaml
+kubectl apply -f k8s/executor-service.yaml
+kubectl apply -f k8s/frontend.yaml</code></pre>
+<div class="out"><span>Expected, for each</span><pre>deployment.apps/auth-service created
+service/auth-service created</pre></div>
+<p>Wait two minutes, then look:</p>
+<pre><code>kubectl -n $NAME get pods</code></pre>
+<div class="out"><span>Expected</span><pre>NAME                                READY   STATUS      RESTARTS   AGE
+auth-service-7c9d8f6b5-x2k4m        1/1     Running     0          2m
+executor-service-5d6f7c8b9-q8w2n    1/1     Running     0          2m
+frontend-6b7c8d9f5-p4r7t            1/1     Running     0          2m
+kafka-0                             1/1     Running     0          6m
+kafka-topics-h5j2k                  0/1     Completed   0          6m
+mailpit-8f9d7c6b5-z3x5v             1/1     Running     0          3m
+order-service-9f8d7c6b5-m6n8b       1/1     Running     0          2m</pre></div>
+<p>The Java services take the longest. If a pod is not <code>1/1 Running</code> after five minutes:</p>
+<div class="tablewrap"><table>
+  <tr><th>STATUS</th><th>Usual cause</th><th>Look with</th></tr>
+  <tr><td><code>ImagePullBackOff</code></td><td>The image is not in ECR under that name and tag, or <code>registry</code> in <code>project.yaml</code> is wrong</td><td><code>kubectl -n $NAME describe pod &lt;pod name&gt;</code>, the last lines</td></tr>
+  <tr><td><code>CrashLoopBackOff</code></td><td>The application started and stopped: a wrong setting, a missing secret name, or the database is not reachable (step 17)</td><td><code>kubectl -n $NAME logs &lt;pod name&gt;</code></td></tr>
+  <tr><td><code>Init:0/1</code></td><td>The trade API and the executor wait for Kafka's topics. Kafka is not ready (19.4)</td><td><code>kubectl -n $NAME get pods</code></td></tr>
+  <tr><td><code>CreateContainerConfigError</code></td><td>The Secret <code>app-secrets</code> does not exist (19.2)</td><td><code>kubectl -n $NAME get secret</code></td></tr>
+</table></div>
+
+<h3>19.7 The Ingress: the way in</h3>
+<pre><code>kubectl apply -f k8s/ingress.yaml</code></pre>
+<p>AWS now builds the load balancer. Ask for its address until one appears, about a minute:</p>
+<pre><code>kubectl -n $NAME get ingress app</code></pre>
+<div class="out"><span>Expected</span><pre>NAME   CLASS   HOSTS   ADDRESS                                                     PORTS   AGE
+app    alb     *       k8s-team5-app-1a2b3c4d5e-123456789.ap-south-1.elb.amazonaws.com   80      1m</pre></div>
+<p>Copy the ADDRESS. It answers two to three minutes after it appears. If ADDRESS stays empty, read the reason at the end of <code>kubectl -n $NAME describe ingress app</code>; usually the controller of step 16.5 is not running or lacks its permission (16.4).</p>
+
+<h3>19.8 Tell the application its new address</h3>
+<p>Your services still believe the page is at the EC2 machine's IP, because that is what <code>application.yaml</code> says. On the cluster the page is at the load balancer. Change it by hand, as in step 6.1.</p>
+<pre><code>nano config/application.yaml</code></pre>
+<div class="tablewrap"><table>
+  <tr><th>Line</th><th>Change to</th><th>Why</th></tr>
+  <tr><td><code>frontend.url</code></td><td><code>http://&lt;the ADDRESS you copied&gt;</code></td><td>This is the address people now open. The services use it to accept calls from the page (CORS) and to build links in emails.</td></tr>
+  <tr><td><code>services.auth.url</code> and <code>services.order.url</code></td><td>the same <code>http://&lt;ADDRESS&gt;</code></td><td>The browser reaches both through the same load balancer, by path. On the cluster these two lines are not read, but the file should say what is true.</td></tr>
+  <tr><td>Every <code>port</code></td><td><strong>Do not change</strong></td><td>Inside the cluster each service still listens on its own port. The load balancer listens on 80 and passes requests on.</td></tr>
+  <tr><td><code>database</code> and <code>kafka</code></td><td><strong>Do not change</strong></td><td>The RDS endpoint is the same from the cluster, and Kafka is again called <code>kafka</code>.</td></tr>
+</table></div>
+<p>Save. Then fill in the files again, hand the new ConfigMap to the cluster, and restart the four applications:</p>
+<pre><code>python3 config/apply.py eks
+kubectl apply -f k8s/configmap.yaml
+kubectl -n $NAME rollout restart deployment auth-service order-service executor-service frontend
+kubectl -n $NAME rollout status deployment/order-service</code></pre>
+<div class="out"><span>Expected</span><pre>phase eks: updated k8s/configmap.yaml
+Page address written into the settings: http://k8s-team5-app-....elb.amazonaws.com
+configmap/app-config configured
+deployment.apps/auth-service restarted
+...
+deployment "order-service" successfully rolled out</pre></div>
+<p>The restart is needed because a pod reads its settings only when it starts. Changing the ConfigMap alone changes nothing in a running pod.</p>
+<div class="callout">From now on <code>application.yaml</code> describes the cluster. The Docker version on the machine is not used any more; step 19.10 stops it.</div>
+
+<h3>19.9 Test it</h3>
+<span class="where">Where: your laptop's browser</span>
+<p>Open <code>http://&lt;ADDRESS&gt;</code>. There is no port. Register, log in, place an order. In the Network tab every call goes to the same address.</p>
+<p>To read sign-up emails, make Mailpit visible through the machine for a moment, open <code>http://&lt;machine IP&gt;:8025</code>, and press Ctrl+C when finished:</p>
+<pre><code>kubectl -n $NAME port-forward --address 0.0.0.0 service/mailpit 8025:8025</code></pre>
+<p>To see that your order really went through Kafka:</p>
+<pre><code>kubectl -n $NAME exec kafka-0 -- env KAFKA_HEAP_OPTS=-Xmx64m /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:29092 --topic orders --from-beginning --timeout-ms 10000</code></pre>
+<div class="out"><span>Expected: one line per order, then a TimeoutException, which is not an error. The tool reached the end and stopped.</span><pre>{"eventType":"ORDER_PLACED", ... "symbol":"AMZN","side":"BUY","quantity":2 ...}</pre></div>
+
+<h3>19.10 Stop the Docker version</h3>
+<p>The application runs on the cluster now. Free the machine's memory for Jenkins:</p>
+<pre><code>docker-compose down</code></pre>
+<div class="done"><strong>Done when:</strong> you can register, log in and place an order at the load balancer's address, and the order appears in Kafka.</div>
+
+<!-- ====================================================================== -->
+<h2 id="s20"><span class="n">Step 20</span>Install Jenkins</h2>
+<span class="where">Where: the terminal on the machine</span>
+<p><strong>Jenkins</strong> is a program that does the build and deploy for you each time code is pushed. It is installed on your EC2 machine as a normal service. It uses the Docker, kubectl and AWS role that are already there, so no key or password is stored in it.</p>
+
+<h3>20.1 Give the machine a fixed address</h3>
+<p>GitHub has to call Jenkins. The machine's public IP changes whenever it is stopped, so give it one that does not change, an <strong>Elastic IP</strong>.</p>
+<pre><code>TOKEN=$(curl -s -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+INSTANCE=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+ALLOC=$(aws ec2 allocate-address --domain vpc --region $REGION --query AllocationId --output text)
+aws ec2 associate-address --instance-id $INSTANCE --allocation-id $ALLOC --region $REGION
+curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4; echo</code></pre>
+<div class="out"><span>Expected</span><pre>{
+    "AssociationId": "eipassoc-..."
 }
-# value_of AUTH PORT -&gt; the value of AUTH_PORT
-value_of() { local key="$1_$2"; echo "${!key}"; }
+15.252.29.161</pre></div>
+<p>The last line is the machine's new fixed IP. Write it down. The old IP no longer works.</p>
 
-registry() {
-  echo "$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
-}</code></pre></details>
-<details><summary><code>scripts/bootstrap.sh</code></summary><pre data-file="deploy/scripts/bootstrap.sh"><code>#!/usr/bin/env bash
-# One-time preparation of the cluster for this project. Safe to run again:
-# every step checks before it creates.
-#
-#   deploy/scripts/bootstrap.sh
-#
-# Not done here, because they involve the network or are done once per
-# database (see GUIDE.html, steps 10 and 11): the VPC peering to RDS, and
-# loading the schema and seed data.
-set -euo pipefail
-. "$(dirname "$0")/pipeline-env.sh"
-HERE="$(dirname "$0")"
+<h3>20.2 Open port 8080 to GitHub and to you</h3>
+<p>Jenkins listens on port 8080. Only two callers need it: GitHub (for the webhook) and your own laptop (to use the Jenkins page).</p>
+<pre><code>SG=$(aws ec2 describe-instances --instance-ids $INSTANCE --region $REGION --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' --output text)
+aws ec2 authorize-security-group-ingress --group-id $SG --protocol tcp --port 8080 --cidr 192.30.252.0/22 --region $REGION
+aws ec2 authorize-security-group-ingress --group-id $SG --protocol tcp --port 8080 --cidr 185.199.108.0/22 --region $REGION
+aws ec2 authorize-security-group-ingress --group-id $SG --protocol tcp --port 8080 --cidr 140.82.112.0/20 --region $REGION
+aws ec2 authorize-security-group-ingress --group-id $SG --protocol tcp --port 8080 --cidr 143.55.64.0/20 --region $REGION</code></pre>
+<p>Those four ranges are GitHub's webhook addresses (listed under <code>hooks</code> at <a href="https://api.github.com/meta">api.github.com/meta</a>). Now your laptop: open <a href="https://checkip.amazonaws.com">checkip.amazonaws.com</a> <strong>in your laptop's browser</strong> and put that IP in this line.</p>
+<pre><code>aws ec2 authorize-security-group-ingress --group-id $SG --protocol tcp --port 8080 --cidr &lt;your laptop's IP&gt;/32 --region $REGION</code></pre>
+<div class="out"><span>Expected, five times</span><pre>{ "Return": true, "SecurityGroupRules": [ { ... "FromPort": 8080, "ToPort": 8080 ... } ] }</pre></div>
 
-echo "==&gt; ECR repositories"
-for role in "${ROLES[@]}"; do
-  repo="${IMAGE_PREFIX}-$(name_of "$role")"
-  aws ecr describe-repositories --region "$AWS_REGION" --repository-names "$repo" &gt;/dev/null 2&gt;&amp;1 ||
-    aws ecr create-repository --region "$AWS_REGION" --repository-name "$repo" &gt;/dev/null
-done
+<h3>20.3 Install Jenkins</h3>
+<pre><code>dnf install -y java-21-amazon-corretto fontconfig
+wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2026.key
+dnf install -y jenkins</code></pre>
+<div class="out"><span>Expected, the last line</span><pre>Complete!</pre></div>
 
-echo "==&gt; Disk add-on (EBS CSI)"
-if ! aws eks describe-addon --cluster-name "$CLUSTER" --addon-name aws-ebs-csi-driver --region "$AWS_REGION" &gt;/dev/null 2&gt;&amp;1; then
-  NODEGROUP="$(aws eks list-nodegroups --cluster-name "$CLUSTER" --region "$AWS_REGION" --query 'nodegroups[0]' --output text)"
-  NODE_ROLE="$(aws eks describe-nodegroup --cluster-name "$CLUSTER" --nodegroup-name "$NODEGROUP" --region "$AWS_REGION" \
-    --query 'nodegroup.nodeRole' --output text | awk -F/ '{print $NF}')"
-  aws iam attach-role-policy --role-name "$NODE_ROLE" --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
-  aws eks create-addon --cluster-name "$CLUSTER" --addon-name aws-ebs-csi-driver --region "$AWS_REGION" &gt;/dev/null
-  aws eks wait addon-active --cluster-name "$CLUSTER" --addon-name aws-ebs-csi-driver --region "$AWS_REGION"
-fi
+<h3>20.4 Let Jenkins use Docker and the cluster</h3>
+<p>Jenkins runs as its own Linux user, called <code>jenkins</code>. That user must be allowed to run Docker, and needs its own copy of the cluster's connection details.</p>
+<pre><code>usermod -aG docker jenkins
+systemctl enable --now jenkins
+sudo -u jenkins aws eks update-kubeconfig --name $CLUSTER --region $REGION
+sudo -u jenkins kubectl get nodes</code></pre>
+<div class="out"><span>Expected</span><pre>Added new context arn:aws:eks:ap-south-1:&lt;account&gt;:cluster/team5 to /var/lib/jenkins/.kube/config
+NAME                                            STATUS   ROLES    AGE   VERSION
+ip-192-168-28-8.ap-south-1.compute.internal     Ready    &lt;none&gt;   ...   v1.34.x-eks-...
+ip-192-168-40-218.ap-south-1.compute.internal   Ready    &lt;none&gt;   ...   v1.34.x-eks-...</pre></div>
 
-"$HERE/install-lb-controller.sh"
+<h3>20.5 First login</h3>
+<pre><code>cat /var/lib/jenkins/secrets/initialAdminPassword</code></pre>
+<ol>
+  <li>On your laptop open <code>http://&lt;fixed IP&gt;:8080</code>.</li>
+  <li>Paste the password the command printed.</li>
+  <li>Choose <strong>Install suggested plugins</strong> and wait.</li>
+  <li>Create an admin user with a strong password. Keep the Jenkins URL as shown.</li>
+</ol>
+<div class="done"><strong>Done when:</strong> you see the Jenkins dashboard, and <code>sudo -u jenkins kubectl get nodes</code> lists the two nodes.</div>
 
-echo "==&gt; Namespace and Secret"
-kubectl apply -f "$DEPLOY/k8s/namespace.yaml"
-"$HERE/create-secret.sh"
-echo "Cluster is ready. Next: deploy/scripts/build-push.sh &lt;tag&gt; &amp;&amp; deploy/scripts/deploy.sh &lt;tag&gt;"</code></pre></details>
-<details><summary><code>scripts/install-lb-controller.sh</code></summary><pre data-file="deploy/scripts/install-lb-controller.sh"><code>#!/usr/bin/env bash
-# Install the AWS Load Balancer Controller, the component that turns an
-# Ingress into a real AWS load balancer. Safe to run again.
-set -euo pipefail
-. "$(dirname "$0")/pipeline-env.sh"
-REGION="$AWS_REGION"
-POLICY_NAME=AWSLoadBalancerControllerIAMPolicy
+<!-- ====================================================================== -->
+<h2 id="s21"><span class="n">Step 21</span>The pipeline and the webhook</h2>
+<p>A <strong>pipeline</strong> is the list of things Jenkins does on every push. It is written in one file, the <code>Jenkinsfile</code>, kept in your repository. A <strong>webhook</strong> is GitHub calling Jenkins the moment someone pushes.</p>
 
-echo "==&gt; Helm"
-if ! command -v helm &gt;/dev/null; then
-  curl -fsSL --http1.1 --retry 5 https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-fi
-
-echo "==&gt; IAM: let the worker nodes manage load balancers"
-ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
-POLICY_ARN="arn:aws:iam::${ACCOUNT}:policy/${POLICY_NAME}"
-if ! aws iam get-policy --policy-arn "$POLICY_ARN" &gt;/dev/null 2&gt;&amp;1; then
-  curl -fsSL --http1.1 --retry 5 -o /tmp/alb-iam-policy.json \
-    https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
-  aws iam create-policy --policy-name "$POLICY_NAME" --policy-document file:///tmp/alb-iam-policy.json &gt;/dev/null
-fi
-NODEGROUP="$(aws eks list-nodegroups --cluster-name "$CLUSTER" --region "$REGION" --query 'nodegroups[0]' --output text)"
-NODE_ROLE="$(aws eks describe-nodegroup --cluster-name "$CLUSTER" --nodegroup-name "$NODEGROUP" --region "$REGION" \
-  --query 'nodegroup.nodeRole' --output text | awk -F/ '{print $NF}')"
-aws iam attach-role-policy --role-name "$NODE_ROLE" --policy-arn "$POLICY_ARN"
-
-echo "==&gt; AWS Load Balancer Controller"
-VPC_ID="$(aws eks describe-cluster --name "$CLUSTER" --region "$REGION" --query 'cluster.resourcesVpcConfig.vpcId' --output text)"
-helm repo add eks https://aws.github.io/eks-charts &gt;/dev/null
-helm repo update eks &gt;/dev/null
-helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
-  --namespace kube-system \
-  --set clusterName="$CLUSTER" --set region="$REGION" --set vpcId="$VPC_ID" \
-  --wait --timeout 5m
-kubectl -n kube-system rollout status deployment/aws-load-balancer-controller --timeout=5m</code></pre></details>
-<details><summary><code>scripts/create-secret.sh</code></summary><pre data-file="deploy/scripts/create-secret.sh"><code>#!/usr/bin/env bash
-# Create or update the Secret `app-secrets` from deploy/.env. It gets one key
-# for each name under `secrets` in config/project.yaml, so passwords and
-# keys never reach git. Run it again after changing a value, then restart
-# the pods.
-#
-#   deploy/scripts/create-secret.sh
-set -euo pipefail
-. "$(dirname "$0")/pipeline-env.sh"
-[ -f "$DEPLOY/.env" ] || { echo "deploy/.env is missing; it holds the secret values" &gt;&amp;2; exit 1; }
-
-args=()
-for name in $SECRET_NAMES; do
-  # The line as typed, without running it through the shell.
-  value="$(grep -m1 "^${name}=" "$DEPLOY/.env" | cut -d= -f2- || true)"
-  [ -n "$value" ] || { echo "$name is empty in deploy/.env" &gt;&amp;2; exit 1; }
-  args+=(--from-literal="$name=$value")
-done
-
-kubectl -n "$NS" create secret generic app-secrets "${args[@]}" --dry-run=client -o yaml |
-  kubectl apply -f -</code></pre></details>
-<details><summary><code>scripts/test.sh</code></summary><pre data-file="deploy/scripts/test.sh"><code>#!/usr/bin/env bash
-# Run the unit tests of every service, except those listed under
-# kubernetes.skip_tests in config/project.yaml. Each runs in a throwaway Maven or Node container,
-# so the machine needs neither Java nor Node installed.
-#
-#   deploy/scripts/test.sh
-set -euo pipefail
-. "$(dirname "$0")/pipeline-env.sh"
-mkdir -p "$HOME/.m2"
-
-for role in "${ROLES[@]}"; do
-  [ "$(value_of "$role" TEST)" = true ] || continue
-  dir="$PROJECT_DIR/$(value_of "$role" PATH)"
-  version="$(value_of "$role" VERSION)"
-  echo "==&gt; tests: $(name_of "$role")"
-  case "$(value_of "$role" TYPE)" in
-    java)
-      docker run --rm -u "$(id -u):$(id -g)" \
-        -v "$dir":/app -w /app \
-        -v "$HOME/.m2":/var/maven/.m2 -e MAVEN_CONFIG=/var/maven/.m2 \
-        "maven:3.9.9-eclipse-temurin-${version}" mvn -B -q -Duser.home=/var/maven test
-      ;;
-    node|angular)
-      # Tested on a copy inside the container, so no node_modules folder is
-      # left behind in the workspace.
-      docker run --rm -e HOME=/tmp -e npm_config_cache=/tmp/.npm \
-        -v "$dir":/src:ro "node:${version}-alpine" sh -c \
-        "cp -r /src /tmp/app &amp;&amp; cd /tmp/app &amp;&amp; rm -rf node_modules &amp;&amp; (npm ci --no-audit --no-fund || npm install --no-audit --no-fund) &amp;&amp; npm test"
-      ;;
-    *)
-      echo "no test command for type $(value_of "$role" TYPE); skipped"
-      ;;
-  esac
-done</code></pre></details>
-<details><summary><code>scripts/build-push.sh</code></summary><pre data-file="deploy/scripts/build-push.sh"><code>#!/usr/bin/env bash
-# Build the four images, push them to ECR under one tag, then remove the
-# local copies so the build machine's disk does not fill up.
-#
-#   deploy/scripts/build-push.sh &lt;tag&gt;
-set -euo pipefail
-. "$(dirname "$0")/pipeline-env.sh"
-TAG="${1:?usage: build-push.sh &lt;tag&gt;}"
-REGISTRY="$(registry)"
-
-aws ecr get-login-password --region "$AWS_REGION" |
-  docker login --username AWS --password-stdin "$REGISTRY"
-
-for role in "${ROLES[@]}"; do
-  name="$(name_of "$role")"
-  ref="${REGISTRY}/${IMAGE_PREFIX}-${name}:${TAG}"
-  echo "==&gt; ${IMAGE_PREFIX}-${name}"
-  docker build \
-    -f "$DEPLOY/docker/$(value_of "$role" TYPE).Dockerfile" \
-    --build-arg RUNTIME_VERSION="$(value_of "$role" VERSION)" \
-    --build-arg APP_PORT="$(value_of "$role" LISTEN)" \
-    --build-arg HEALTH_PATH="$(value_of "$role" HEALTH)" \
-    -t "$ref" "$PROJECT_DIR/$(value_of "$role" PATH)"
-  docker push "$ref"
-  # The image is safe in ECR; the cluster pulls it from there.
-  docker rmi "$ref" &gt;/dev/null
-done
-
-# Leftover layers from this and earlier builds. The build cache is kept (up
-# to 4 GB) so the next build does not download every dependency again.
-docker image prune -f &gt;/dev/null
-docker builder prune -f --keep-storage 4GB &gt;/dev/null
-docker system df</code></pre></details>
-<details><summary><code>scripts/deploy.sh</code></summary><pre data-file="deploy/scripts/deploy.sh"><code>#!/usr/bin/env bash
-# Roll the cluster to one image tag: deploy/k8s with the four images taken
-# from ECR at &lt;tag&gt;, and the load balancer's address written into the
-# settings that need it.
-#
-#   deploy/scripts/deploy.sh &lt;tag&gt;
-#   RENDER_ONLY=1 deploy/scripts/deploy.sh &lt;tag&gt;     print what would be applied
-set -euo pipefail
-. "$(dirname "$0")/pipeline-env.sh"
-TAG="${1:?usage: deploy.sh &lt;tag&gt;}"
-REGISTRY="${REGISTRY:-$(registry)}"
-[ -f "$DEPLOY/k8s/kustomization.yaml" ] || { echo "deploy/k8s is missing. Run: python3 deploy/config/apply.py eks" &gt;&amp;2; exit 1; }
-
-lb_host() {
-  kubectl -n "$NS" get ingress app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2&gt;/dev/null || true
-}
-
-# Builds build/ from deploy/k8s: the address filled in, the images pinned.
-render() {  # load balancer host, or "" when it does not exist yet
-  rm -rf "$DEPLOY/build"; mkdir -p "$DEPLOY/build"
-  cp -r "$DEPLOY/k8s" "$DEPLOY/build/base"
-  [ -n "$1" ] &amp;&amp; sed -i "s|LOAD_BALANCER_ADDRESS|$1|g" "$DEPLOY/build/base/configmap.yaml"
-  {
-    echo "apiVersion: kustomize.config.k8s.io/v1beta1"
-    echo "kind: Kustomization"
-    echo "resources:"
-    echo "  - base"
-    echo "images:"
-    for role in "${ROLES[@]}"; do
-      echo "  - name: ${IMAGE_PREFIX}-$(name_of "$role")"
-      echo "    newName: ${REGISTRY}/${IMAGE_PREFIX}-$(name_of "$role")"
-      echo "    newTag: \"${TAG}\""
-    done
-  } &gt; "$DEPLOY/build/kustomization.yaml"
-}
-
-wait_for_rollout() {
-  for role in "${ROLES[@]}"; do
-    kubectl -n "$NS" rollout status "deployment/$(name_of "$role")" --timeout=10m
-  done
-}
-
-HOST="${INGRESS_HOST-$(lb_host)}"
-render "$HOST"
-[ "${RENDER_ONLY:-}" = 1 ] &amp;&amp; { kubectl kustomize "$DEPLOY/build"; exit 0; }
-
-kubectl apply -k "$DEPLOY/build"
-wait_for_rollout
-
-# First deploy: the load balancer did not exist when the settings were
-# written. Wait for its address, write it in, and restart the pods so they
-# read it (a pod reads its settings only at start).
-if [ -z "$HOST" ] &amp;&amp; grep -q LOAD_BALANCER_ADDRESS "$DEPLOY/k8s/configmap.yaml"; then
-  echo "==&gt; Waiting for the load balancer address"
-  for _ in $(seq 1 60); do
-    HOST="$(lb_host)"; [ -n "$HOST" ] &amp;&amp; break; sleep 5
-  done
-  [ -n "$HOST" ] || { echo "No address after 5 minutes. See: kubectl -n $NS describe ingress app" &gt;&amp;2; exit 1; }
-  render "$HOST"
-  kubectl apply -k "$DEPLOY/build"
-  for role in "${ROLES[@]}"; do
-    kubectl -n "$NS" rollout restart "deployment/$(name_of "$role")"
-  done
-  wait_for_rollout
-fi
-
-kubectl -n "$NS" get pods -o wide
-echo
-echo "Open:  http://$(lb_host)"</code></pre></details>
-<details><summary><code>scripts/smoke-test.sh</code></summary><pre data-file="deploy/scripts/smoke-test.sh"><code>#!/usr/bin/env bash
-# Prove the deployed application answers through the load balancer. The
-# checks are the `smoke` list in config/project.yaml: a path and the
-# status it must return. A path that needs a login should expect 401, which
-# proves both the route and the login check.
-set -euo pipefail
-. "$(dirname "$0")/pipeline-env.sh"
-HOST="$(kubectl -n "$NS" get ingress app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
-[ -n "$HOST" ] || { echo "Ingress has no address" &gt;&amp;2; exit 1; }
-BASE="http://$HOST"
-
-check() {  # path, expected status
-  local code=""
-  for _ in $(seq 1 30); do
-    code="$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$BASE$1" || true)"
-    [ "$code" = "$2" ] &amp;&amp; { echo "ok    $1 -&gt; $code"; return; }
-    sleep 10
-  done
-  echo "FAIL  $1 -&gt; $code (wanted $2)" &gt;&amp;2
-  return 1
-}
-
-for entry in ${SMOKE:-/=200}; do
-  check "${entry%%=*}" "${entry##*=}"
-done
-echo "Smoke test passed: $BASE"</code></pre></details>
-<details><summary><code>Jenkinsfile</code></summary><pre data-file="deploy/Jenkinsfile"><code>// Test, build and deploy the application to the EKS cluster.
-//
-// Runs on the Jenkins machine itself, which already has Docker, kubectl and
-// an AWS role that can push to ECR and manage the cluster. No keys are
-// stored in Jenkins.
-//
+<h3>21.1 Copy the Jenkinsfile</h3>
+<span class="where">Where: the terminal on the machine, inside <code>deploy</code></span>
+<pre><code>curl -fsSL -o Jenkinsfile https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/Jenkinsfile</code></pre>
+<details><summary>Show the file: <code>Jenkinsfile</code></summary><pre data-file="deploy/Jenkinsfile"><code>// Test, build, push to ECR, deploy to EKS, check. Runs on every push to main.
 // In the Jenkins job, set Script Path to deploy/Jenkinsfile.
-// What is built, where it goes and what is tested all come from
-// deploy/build.env, which config/apply.py writes from the files in config/.
-// One-time cluster preparation is deploy/scripts/bootstrap.sh, not this pipeline.
+// Names, folders and the registry come from deploy/build.env.
 pipeline {
   agent any
 
@@ -2503,59 +2727,251 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '15'))
   }
 
-  // "Build with Parameters" lets a build pick its branch. The job itself
-  // always tracks */main (a parameter there stops the webhook check from
-  // seeing new commits); the "Select branch" stage switches the workspace
-  // when another branch is asked for. Webhook builds use the default.
-  parameters {
-    string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build and deploy')
-  }
-
-  // GitHub calls http://&lt;jenkins&gt;:8080/github-webhook/ on every push, which
-  // starts a build within seconds. The slow poll is only a safety net for a
-  // missed call, for example while the machine was stopped.
   triggers {
     githubPush()
-    pollSCM('H */2 * * *')
   }
 
   stages {
-    stage('Select branch') {
-      when { expression { params.BRANCH &amp;&amp; params.BRANCH != 'main' } }
+    // Each service is tested in a throwaway Maven or Node container.
+    stage('Test') {
       steps {
-        sh '''
-          git fetch --no-tags origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}"
-          git checkout -f "origin/${BRANCH}"
+        sh '''#!/bin/bash
+          set -euo pipefail
+          set -a; . deploy/build.env; set +a
+          mkdir -p "$HOME/.m2"
+          for role in FRONTEND AUTH ORDER EXECUTOR; do
+            test="${role}_TEST"; path="${role}_PATH"; type="${role}_TYPE"; version="${role}_VERSION"
+            [ "${!test}" = true ] || continue
+            echo "==&gt; tests: ${!path}"
+            case "${!type}" in
+              java)
+                docker run --rm -u "$(id -u):$(id -g)" \
+                  -v "$WORKSPACE/${!path}":/app -w /app \
+                  -v "$HOME/.m2":/var/maven/.m2 -e MAVEN_CONFIG=/var/maven/.m2 \
+                  "maven:3.9.9-eclipse-temurin-${!version}" mvn -B -q -Duser.home=/var/maven test
+                ;;
+              node|angular)
+                docker run --rm -e HOME=/tmp -e npm_config_cache=/tmp/.npm \
+                  -v "$WORKSPACE/${!path}":/src:ro "node:${!version}-alpine" sh -c \
+                  "cp -r /src /tmp/app &amp;&amp; cd /tmp/app &amp;&amp; rm -rf node_modules &amp;&amp; (npm ci --no-audit --no-fund || npm install --no-audit --no-fund) &amp;&amp; npm test"
+                ;;
+              *) echo "no test command for type ${!type}; skipped" ;;
+            esac
+          done
         '''
       }
     }
 
-    // Every service with `test: true`, each in a throwaway container.
-    stage('Test') {
-      steps { sh './deploy/scripts/test.sh' }
-    }
-
+    // Images are tagged with the commit they were built from.
     stage('Build and push images') {
-      // Images are tagged with the commit they were built from.
-      steps { sh './deploy/scripts/build-push.sh "$(git rev-parse --short=12 HEAD)"' }
+      steps {
+        sh '''#!/bin/bash
+          set -euo pipefail
+          set -a; . deploy/build.env; set +a
+          TAG="$(git rev-parse --short=12 HEAD)"
+          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REGISTRY"
+          for pair in FRONTEND:frontend AUTH:auth-service ORDER:order-service EXECUTOR:executor-service; do
+            role="${pair%%:*}"; name="${pair##*:}"
+            path="${role}_PATH"; type="${role}_TYPE"; version="${role}_VERSION"; listen="${role}_LISTEN"; health="${role}_HEALTH"
+            image="$REGISTRY/$IMAGE_PREFIX-$name:$TAG"
+            echo "==&gt; $image"
+            docker build \
+              -f "deploy/docker/${!type}.Dockerfile" \
+              --build-arg RUNTIME_VERSION="${!version}" \
+              --build-arg APP_PORT="${!listen}" \
+              --build-arg HEALTH_PATH="${!health}" \
+              -t "$image" "$WORKSPACE/${!path}"
+            docker push "$image"
+            docker rmi "$image" &gt;/dev/null
+          done
+        '''
+      }
     }
 
+    // Applies deploy/k8s with the four images set to this build's tag.
     stage('Deploy to EKS') {
-      steps { sh './deploy/scripts/deploy.sh "$(git rev-parse --short=12 HEAD)"' }
+      steps {
+        sh '''#!/bin/bash
+          set -euo pipefail
+          set -a; . deploy/build.env; set +a
+          TAG="$(git rev-parse --short=12 HEAD)"
+          NAMES="frontend auth-service order-service executor-service"
+          rm -rf deploy/build &amp;&amp; mkdir deploy/build
+          {
+            echo "resources:"
+            echo "  - ../k8s"
+            echo "images:"
+            for name in $NAMES; do
+              echo "  - name: $REGISTRY/$IMAGE_PREFIX-$name"
+              echo "    newTag: \\"$TAG\\""
+            done
+          } &gt; deploy/build/kustomization.yaml
+          kubectl apply -k deploy/build
+          for name in $NAMES; do
+            kubectl -n "$NS" rollout status "deployment/$name" --timeout=10m
+          done
+        '''
+      }
     }
 
+    // Calls the load balancer: each path must return the status listed
+    // under kubernetes.smoke in config/project.yaml.
     stage('Smoke test') {
-      steps { sh './deploy/scripts/smoke-test.sh' }
+      steps {
+        sh '''#!/bin/bash
+          set -euo pipefail
+          set -a; . deploy/build.env; set +a
+          HOST="$(kubectl -n "$NS" get ingress app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
+          for entry in ${SMOKE:-/=200}; do
+            path="${entry%%=*}"; want="${entry##*=}"; code=""
+            for _ in $(seq 1 30); do
+              code="$(curl -s -o /dev/null -m 10 -w '%{http_code}' "http://$HOST$path" || true)"
+              [ "$code" = "$want" ] &amp;&amp; break
+              sleep 10
+            done
+            echo "$path -&gt; $code (wanted $want)"
+            [ "$code" = "$want" ]
+          done
+        '''
+      }
     }
   }
 
   post {
-    success { echo 'Deployed and smoke-tested.' }
+    success { echo 'Deployed and checked.' }
     failure { echo 'Failed. The cluster keeps running the last version that rolled out.' }
-    // Test containers and build leftovers, whatever the outcome.
-    always  { sh 'docker image prune -f &gt;/dev/null || true' }
+    always  { sh 'docker image prune -f &gt;/dev/null || true; docker builder prune -f --keep-storage 4GB &gt;/dev/null || true' }
   }
 }</code></pre></details>
+<p>You do not edit it. It reads your names, folders and registry from <code>build.env</code>, which <code>apply.py</code> wrote. Its four stages are the things you did by hand:</p>
+<div class="tablewrap"><table>
+  <tr><th>Stage</th><th>What it does</th><th>You did this by hand in</th></tr>
+  <tr><td>Test</td><td>Runs each service's unit tests in a throwaway container. A failing test stops the pipeline, so broken code is not deployed.</td><td></td></tr>
+  <tr><td>Build and push images</td><td>Builds the four images, tags them with the commit's ID, and pushes them to ECR.</td><td>Steps 7 and 13</td></tr>
+  <tr><td>Deploy to EKS</td><td>Applies everything in <code>deploy/k8s</code> with the four images set to that tag, and waits until the new pods are running.</td><td>Step 19</td></tr>
+  <tr><td>Smoke test</td><td>Calls the load balancer on the paths under <code>smoke</code> in <code>project.yaml</code>.</td><td>Step 19.9</td></tr>
+</table></div>
+<p>Each build tags its images with the first 12 characters of the commit, for example <code>team5-frontend:6e4dbe070fa7</code>. The tag tells you exactly which code a pod is running.</p>
+
+<h3>21.2 Push everything to GitHub</h3>
+<span class="where">Where: the terminal on the machine, inside your project</span>
+<p>Jenkins works from what is in GitHub, not from the files on the machine. Commit the new files.</p>
+<pre><code>cd ~/&lt;your-project&gt;
+git add deploy
+git status
+git commit -m "Add Kubernetes files and Jenkinsfile"
+git push</code></pre>
+<p><code>git status</code> must list <code>deploy/Jenkinsfile</code>, <code>deploy/build.env</code>, the files in <code>deploy/k8s</code> and <code>deploy/k8s-templates</code>, and must not list <code>deploy/.env</code>.</p>
+
+<h3>21.3 Give Jenkins a login for a private repository</h3>
+<span class="where">Where: the Jenkins page</span>
+<p>Skip this if your repository is public.</p>
+<ol>
+  <li><strong>Manage Jenkins</strong>, <strong>Credentials</strong>, <strong>System</strong>, <strong>Global credentials</strong>, <strong>Add Credentials</strong>.</li>
+  <li>Kind: <strong>Username with password</strong>. Username: your GitHub username. Password: a GitHub token made as in step 4. ID: <code>github</code>. <strong>Create</strong>.</li>
+</ol>
+
+<h3>21.4 Create the job</h3>
+<ol>
+  <li><strong>New Item</strong>. Name: your team name with <code>-deploy</code>, such as <code>team5-deploy</code>. Type: <strong>Pipeline</strong>. OK.</li>
+  <li>Scroll to <strong>Pipeline</strong> and fill it in:</li>
+</ol>
+<div class="tablewrap"><table>
+  <tr><th>Field</th><th>Value</th></tr>
+  <tr><td>Definition</td><td>Pipeline script from SCM</td></tr>
+  <tr><td>SCM</td><td>Git</td></tr>
+  <tr><td>Repository URL</td><td><code>https://github.com/&lt;organisation&gt;/&lt;your-project&gt;.git</code></td></tr>
+  <tr><td>Credentials</td><td>The <code>github</code> one from 21.3, or none for a public repository</td></tr>
+  <tr><td>Branch Specifier</td><td><code>*/main</code></td></tr>
+  <tr><td>Script Path</td><td><code>deploy/Jenkinsfile</code></td></tr>
+</table></div>
+<ol start="3">
+  <li>Leave the Triggers checkboxes empty. The Jenkinsfile sets the trigger itself. <strong>Save</strong>.</li>
+</ol>
+<p>If the SCM list does not offer Git, restart Jenkins with <code>systemctl restart jenkins</code> on the machine, log in again, and reopen the job.</p>
+
+<h3>21.5 Run the first build by hand</h3>
+<p>Click <strong>Build Now</strong>. Click the build number, then <strong>Console Output</strong>, and watch. The first build takes 10 to 20 minutes because nothing is cached yet.</p>
+<div class="out"><span>Expected, at the end</span><pre>/ -&gt; 200 (wanted 200)
+/auth/me -&gt; 401 (wanted 401)
+Deployed and checked.
+Finished: SUCCESS</pre></div>
+<p>The first build must be started by hand: Jenkins only learns the trigger from the Jenkinsfile once it has run it.</p>
+
+<h3>21.6 Add the webhook in GitHub</h3>
+<span class="where">Where: GitHub, your repository</span>
+<p>You need admin rights on the repository. If you do not see Settings, ask the owner to do this part.</p>
+<ol>
+  <li><strong>Settings</strong>, <strong>Webhooks</strong>, <strong>Add webhook</strong>.</li>
+  <li>Fill it in:</li>
+</ol>
+<div class="tablewrap"><table>
+  <tr><th>Field</th><th>Value</th></tr>
+  <tr><td>Payload URL</td><td><code>http://&lt;fixed IP&gt;:8080/github-webhook/</code> The slash at the end is required.</td></tr>
+  <tr><td>Content type</td><td><code>application/json</code></td></tr>
+  <tr><td>Which events</td><td>Just the push event</td></tr>
+</table></div>
+<ol start="3">
+  <li><strong>Add webhook</strong>. GitHub sends a test call at once. Open the webhook, <strong>Recent Deliveries</strong>: a green tick means Jenkins received it. The test call does not start a build; only a push does.</li>
+</ol>
+
+<h3>21.7 Test it with a real push</h3>
+<p>Change something small and visible, such as a word on your login page, on your laptop. Commit and push it to <code>main</code>. Within a few seconds a new build appears in Jenkins, and its first line says <code>Started by GitHub push</code>.</p>
+<p>When it finishes, check which images the cluster runs:</p>
+<span class="where">Where: the terminal on the machine</span>
+<pre><code>kubectl -n $NAME get deployments -o custom-columns=NAME:.metadata.name,IMAGE:.spec.template.spec.containers[0].image
+kubectl -n $NAME get pods</code></pre>
+<div class="out"><span>Expected</span><pre>NAME               IMAGE
+auth-service       &lt;account&gt;.dkr.ecr.ap-south-1.amazonaws.com/team5-auth-service:6e4dbe070fa7
+executor-service   &lt;account&gt;.dkr.ecr.ap-south-1.amazonaws.com/team5-executor-service:6e4dbe070fa7
+frontend           &lt;account&gt;.dkr.ecr.ap-south-1.amazonaws.com/team5-frontend:6e4dbe070fa7
+order-service      &lt;account&gt;.dkr.ecr.ap-south-1.amazonaws.com/team5-order-service:6e4dbe070fa7</pre></div>
+<p>A tag of <code>1.0</code> is the image you pushed by hand. A 12-character tag can only have come from Jenkins. The pods are minutes old, and your change is visible in the browser.</p>
+<div class="callout"><strong>After this step, deploy through git.</strong> To change a setting or an address: edit the config file, run <code>python3 config/apply.py eks</code>, commit, push. Jenkins applies it. If you apply an application file by hand with <code>kubectl apply -f</code>, that service goes back to the <code>1.0</code> image until the next build.</div>
+<div class="done"><strong>Done when:</strong> a push to <code>main</code> starts a build by itself, the build ends in SUCCESS, and your change is live at the load balancer's address.</div>
+
+<!-- ====================================================================== -->
+<h2 id="s22"><span class="n">Step 22</span>Everyday commands, and errors you may meet</h2>
+<h3>On the cluster</h3>
+<div class="tablewrap"><table>
+  <tr><th>To</th><th>Run on the machine</th></tr>
+  <tr><td>See what is running</td><td><code>kubectl -n $NAME get pods</code></td></tr>
+  <tr><td>Read a service's log</td><td><code>kubectl -n $NAME logs deployment/order-service --tail=50</code></td></tr>
+  <tr><td>See why a pod does not start</td><td><code>kubectl -n $NAME describe pod &lt;pod name&gt;</code></td></tr>
+  <tr><td>Find the application's address</td><td><code>kubectl -n $NAME get ingress app</code></td></tr>
+  <tr><td>Restart one service</td><td><code>kubectl -n $NAME rollout restart deployment/auth-service</code></td></tr>
+  <tr><td>Deploy new code</td><td><code>git push</code> to <code>main</code>. Jenkins does the rest.</td></tr>
+  <tr><td>Change a setting or address</td><td>Edit the config file, <code>python3 config/apply.py eks</code>, commit, push.</td></tr>
+  <tr><td>Delete the whole cluster when the course ends (in CloudShell)</td><td>First <code>kubectl delete namespace $NAME</code> so the load balancer is removed, then <code>eksctl delete cluster --name team5 --region ap-south-1</code></td></tr>
+</table></div>
+<h3>With Docker on the machine (steps 7 to 11)</h3>
+<div class="tablewrap"><table>
+  <tr><th>To</th><th>Run, inside <code>deploy</code></th></tr>
+  <tr><td>See what is running</td><td><code>docker-compose ps -a</code></td></tr>
+  <tr><td>Read a service's log</td><td><code>docker-compose logs --tail=50 order-service</code></td></tr>
+  <tr><td>Deploy new code</td><td><code>git pull</code> then <code>docker-compose up -d --build</code></td></tr>
+  <tr><td>Apply a config change</td><td><code>python3 config/apply.py</code> then <code>docker-compose up -d</code></td></tr>
+  <tr><td>Stop everything</td><td><code>docker-compose down</code></td></tr>
+</table></div>
+<h3>Errors met when the first project was deployed</h3>
+<div class="tablewrap"><table>
+  <tr><th>What appeared</th><th>Cause</th><th>Fix</th></tr>
+  <tr><td><code>argument --region: expected one argument</code></td><td>A variable is empty: the session was reconnected</td><td>Run the variables block again (start of Part 2)</td></tr>
+  <tr><td><code>no basic auth credentials</code> on <code>docker push</code></td><td>Docker is not logged in to ECR, or the 12-hour token ran out</td><td>Step 13.2 again</td></tr>
+  <tr><td><code>AccessDenied</code> on an <code>aws ecr</code> command</td><td>The machine's role has no ECR permission</td><td>In IAM, attach <code>AmazonEC2ContainerRegistryPowerUser</code> to the machine's role</td></tr>
+  <tr><td><code>curl: (92) HTTP/2 stream ... reset</code>, then <code>Segmentation fault</code> from kubectl</td><td>The download stopped early and the broken file was installed</td><td>Step 15.1 again; check the file is about 58M before installing</td></tr>
+  <tr><td><code>The principalArn parameter format is not valid</code></td><td>The <code>sts ... assumed-role</code> form was entered</td><td>Enter the <code>iam ... role/</code> form (step 15.2)</td></tr>
+  <tr><td><code>kubectl get pods</code>: <code>No resources found in default namespace</code></td><td>Not an error; your things are in your own namespace</td><td>Add <code>-n $NAME</code></td></tr>
+  <tr><td><code>kafka-0</code> stays <code>Pending</code></td><td>No disk could be made</td><td>Step 16.2</td></tr>
+  <tr><td>A corrected file was applied but a crashed Kafka pod or failed job did not change</td><td>Kubernetes does not replace them by itself</td><td><code>kubectl -n $NAME delete pod kafka-0</code> and <code>kubectl -n $NAME delete job kafka-topics</code>, then apply <code>k8s/kafka.yaml</code> again</td></tr>
+  <tr><td>Pods cannot reach the database</td><td>The cluster and the database are in different VPCs</td><td>Step 17</td></tr>
+  <tr><td>The Kafka console tool ends with <code>TimeoutException</code></td><td>Not an error: it reached the end of the topic</td><td>Nothing</td></tr>
+  <tr><td>The Jenkins job form has no Git choice under SCM</td><td>The plugin is installed but not loaded yet</td><td><code>systemctl restart jenkins</code></td></tr>
+  <tr><td>The Jenkins page does not open</td><td>Port 8080 was opened for the wrong IP</td><td>Step 20.2, last command, with the IP your laptop's browser shows at checkip.amazonaws.com</td></tr>
+  <tr><td>GitHub shows the webhook delivered, but no build starts</td><td>The job was never built by hand, or its Branch Specifier is not <code>*/main</code></td><td>Steps 21.4 and 21.5</td></tr>
+  <tr><td><code>permission denied ... docker.sock</code> in a build</td><td>Jenkins was started before it joined the docker group</td><td><code>systemctl restart jenkins</code></td></tr>
+</table></div>
+<p>The full record of that first deployment, with every error and more diagrams, is in <a href="ETP-history.html">ETP-history.html</a>.</p>
 
 </main>
 <script>
