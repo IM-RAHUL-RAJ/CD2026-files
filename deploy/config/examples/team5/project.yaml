@@ -1,70 +1,33 @@
 # The finished file for Neueda-Learning/chennai-capstone-SE6-team5.
 # GUIDE.html, step 1, shows how each value was found.
 
-phase: docker             # local | docker | eks
+name: team5
 
-project:
-  name: team5
-  root: ..
-
-public:
-  scheme: http
-  host: localhost         # on an EC2 box: its public IP
-
-services:
+folders:
   frontend:
     path: Frontend/trading-ui
     type: angular
-    port: 4200
     health: /
-    test: true
   auth:
     path: Services/auth-service
     type: node
-    port: 3000
     health: /
-    routes: [/auth]
-    test: true
   order:
     path: Services/order-service
     type: java
-    port: 8081
     health: /actuator/health
-    routes: [/api/v1]
-    test: false           # one unit test fails on main (PriceAlertEvaluatorTest)
   executor:
     path: Services/executor-service
     type: java
-    port: 8082
     health: /actuator/health
-    test: true
 
-database:
-  host: postgres          # postgres = the container; otherwise the RDS endpoint
-  port: 5432
-  name: trading_db_1
-  user: postgres
-  password_env: POSTGRES_PASSWORD
-  sql:
-    - Databases/PostgreSQL/migrations
-    - Databases/PostgreSQL/seed
+sql:
+  - Databases/PostgreSQL/migrations
+  - Databases/PostgreSQL/seed
 
-kafka:
-  host: kafka
-  port: 29092
+mailpit: true
 
-mail:
-  mailpit: true
-  host: mailpit
-  port: 1025
-
-aws:
-  region: ap-south-1
-  cluster: capstone
-  namespace: team5
-  image_prefix: team5
-
-env:
+settings:
   POSTGRES_HOST: "{db_host}"
   POSTGRES_PORT: "{db_port}"
   POSTGRES_DB: "{db_name}"
@@ -95,7 +58,15 @@ secrets:
   - FAUXNANCE_API_KEY
   - CURRENCYAPI_API_KEY
 
-smoke:
-  - {path: /, expect: 200}
-  - {path: /auth/me, expect: 401}
-  - {path: /api/v1/accounts/1, expect: 401}
+database_password: POSTGRES_PASSWORD
+
+# Kubernetes and Jenkins only. Not read by docker-compose.
+kubernetes:
+  routes:
+    auth: [/auth]
+    order: [/api/v1]
+  skip_tests: [order]     # one unit test fails on main (PriceAlertEvaluatorTest)
+  smoke:
+    - {path: /, expect: 200}
+    - {path: /auth/me, expect: 401}
+    - {path: /api/v1/accounts/1, expect: 401}

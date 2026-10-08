@@ -62,12 +62,12 @@ svg .edge { stroke:var(--muted); stroke-width:1.25; fill:none; } svg .m-edge { f
 <p class="sub">From nothing to your trading project running on an AWS machine in Docker, and then with its database on RDS. Do the steps in order. Every command is here, and so is every file, ready to copy.</p>
 
 <nav><ol>
-  <li><a href="#s1">Write the config file</a></li>
+  <li><a href="#s1">Write the two config files</a></li>
   <li><a href="#s2">Create the EC2 machine</a></li>
   <li><a href="#s3">Connect to it and install the tools</a></li>
   <li><a href="#s4">Put your project on the machine</a></li>
   <li><a href="#s5">Copy the deployment files, one by one</a></li>
-  <li><a href="#s6">Apply the config and type the passwords</a></li>
+  <li><a href="#s6">Change the addresses and ports for this machine, and type the passwords</a></li>
   <li><a href="#s7">Run it with docker-compose</a></li>
   <li><a href="#s8">Check it works, and check the addresses</a></li>
   <li><a href="#s9">Create the RDS database</a></li>
@@ -103,110 +103,120 @@ svg .edge { stroke:var(--muted); stroke-width:1.25; fill:none; } svg .m-edge { f
 <div class="callout"><strong>Three rules.</strong>
 <ol>
   <li>You do not write Dockerfiles or a docker-compose file. You copy ours, unchanged.</li>
-  <li>You edit exactly one file: <code>deploy/config/application.yaml</code>. Every folder, port and address of your project lives there.</li>
-  <li>Passwords and keys never go in that file. They go in <code>deploy/.env</code>, which is never committed.</li>
+  <li>You edit two small files in <code>deploy/config</code>: <code>application.yaml</code> for addresses and ports, <code>project.yaml</code> for what our files need to know about your code.</li>
+  <li>Passwords and keys never go in those files. They go in <code>deploy/.env</code>, which is never committed.</li>
 </ol></div>
 
 <!-- ====================================================================== -->
-<h2 id="s1"><span class="n">Step 1</span>Write the config file</h2>
+<h2 id="s1"><span class="n">Step 1</span>Write the two config files</h2>
 <span class="where">Where: your laptop, with your project open. Nothing is installed.</span>
 
-<p>Our Dockerfiles and compose file know nothing about your project. They do not know your folders, your ports, your database name, or what your code calls its settings. The config file tells them. It is a list of answers to questions about your project.</p>
-<p>This step shows how I wrote that file for one real project, <strong>team5</strong> (<code>Neueda-Learning/chennai-capstone-SE6-team5</code>), question by question: what I ran, what came back, and what I typed. Do the same for yours. At the end you have a finished file, which you paste on the machine in step 5.</p>
+<p>Our Dockerfiles and compose file know nothing about your project. Two small files tell them.</p>
+<div class="tablewrap"><table>
+  <tr><th>File</th><th>What it holds</th><th>When it changes</th></tr>
+  <tr><td><code>application.yaml</code></td><td>Addresses and ports. The file you were given in class.</td><td>On every new machine. Step 6 changes it line by line.</td></tr>
+  <tr><td><code>project.yaml</code></td><td>What our files need to know about your code: its folders, and what your code calls its settings.</td><td>Written once.</td></tr>
+</table></div>
+<p>This step shows how I filled both for one real project, <strong>team5</strong> (<code>Neueda-Learning/chennai-capstone-SE6-team5</code>): what I looked at, and what I typed. Do the same for yours. You paste both files on the machine in step 5.</p>
 
-<h3>Start from the blank file</h3>
-<p>Copy this into a text editor. You will change the values, not the shape.</p>
-<details><summary>The blank file: <code>deploy/config/application.yaml</code></summary>
-<pre data-file="deploy/config/application.yaml"><code># Every block is explained in GUIDE.html, step 1.
-# After any change run:  python3 deploy/config/apply.py
-
-phase: docker             # local | docker | eks
-
-project:
-  name: trading
-  root: ..
-
-public:
-  scheme: http
-  host: localhost         # on an EC2 box: its public IP
+<h3>File A. <code>application.yaml</code>: addresses and ports</h3>
+<p>This is the sample exactly as shared. Copy it into a text editor.</p>
+<pre data-file="deploy/config/application.yaml"><code>frontend:
+  url: http://localhost
+  port: 4200
 
 services:
-  frontend:
-    path: frontend
-    type: angular         # java | node | angular | python
-    port: 4200
-    health: /
-    test: false
   auth:
-    path: auth-service
-    type: node
+    url: http://localhost
     port: 3000
-    health: /
-    routes: [/auth]
-    test: true
+
   order:
-    path: order-service
-    type: java
+    url: http://localhost
     port: 8081
-    health: /actuator/health
-    routes: [/api/v1]
-    test: true
+
   executor:
-    path: executor-service
-    type: java
+    url: http://localhost
     port: 8082
-    health: /actuator/health
-    test: true
 
 database:
-  host: postgres          # postgres = the container; otherwise the RDS endpoint
+  host: localhost
   port: 5432
-  name: trading_db
+  name: trading_system_db
   user: postgres
-  password_env: POSTGRES_PASSWORD
-  sql:
-    - db/schema.sql
-    - db/seed-data.sql
 
 kafka:
   host: kafka
-  port: 29092
+  port: 29092</code></pre>
+<p>In this step you only make it true for your project <strong>on your laptop</strong>. Leave every <code>url</code> as <code>http://localhost</code>; step 6 changes them on the machine and explains each one.</p>
 
-mail:
-  mailpit: true
-  host: mailpit
-  port: 1025
+<h4>The four ports</h4>
+<p>Each port must be the one your code listens on. A Java (Spring) service says so in <code>application.properties</code>; a Node service where it reads <code>PORT</code>.</p>
+<pre><code>grep -rn 'server.port' --include='application*.properties' --include='application*.yml' . | grep -v /target/
+grep -rn 'process.env.PORT' Services/auth-service/src</code></pre>
+<div class="out"><span>What team5 printed</span><pre>Services/executor-service/src/main/resources/application.properties:2:server.port=${SERVER_PORT:8082}
+Services/order-service/src/main/resources/application.properties:2:server.port=${SERVER_PORT:8081}
+Services/auth-service/src/config/runtime-config.ts:74:  const rawPort = process.env.PORT?.trim() || '3000';</pre></div>
+<p>The number after the colon or the <code>||</code> is the port: order 8081, executor 8082, auth 3000. The frontend's port is the one people type in the browser; keep <code>4200</code>.</p>
 
-aws:
-  region: ap-south-1
-  cluster: capstone
-  namespace: trading
-  image_prefix: trading
+<h4>The database name and user</h4>
+<pre><code>grep -rn 'datasource' --include='application*.properties' . | grep -v /target/</code></pre>
+<div class="out"><span>What team5 printed (shortened)</span><pre>spring.datasource.url=jdbc:postgresql://${POSTGRES_HOST:postgres}:5432/${POSTGRES_DB:trading_db_1}?currentSchema=${POSTGRES_SCHEMA:trade}
+spring.datasource.username=${POSTGRES_USER:postgres}</pre></div>
+<p>So <code>name: trading_db_1</code> and <code>user: postgres</code>. The <code>kafka</code> block stays as it is.</p>
 
-env:
-  POSTGRES_HOST: "{db_host}"
-  POSTGRES_PORT: "{db_port}"
-  POSTGRES_DB: "{db_name}"
-  POSTGRES_USER: "{db_user}"
+<h3>File B. <code>project.yaml</code>: about your code</h3>
+<p>Copy the blank file into a text editor, then answer six questions.</p>
+<details><summary>The blank file: <code>deploy/config/project.yaml</code></summary>
+<pre data-file="deploy/config/project.yaml"><code># What our files need to know about your code. Written once.
+# Explained line by line in GUIDE.html, step 1.
+
+name: trading
+
+folders:
+  frontend:
+    path: frontend
+    type: angular         # java | node | angular | python
+    health: /
+  auth:
+    path: auth-service
+    type: node
+    health: /
+  order:
+    path: order-service
+    type: java
+    health: /actuator/health
+  executor:
+    path: executor-service
+    type: java
+    health: /actuator/health
+
+sql:
+  - db/schema.sql
+  - db/seed-data.sql
+
+mailpit: true
+
+settings:
+  DB_HOST: "{db_host}"
+  DB_PORT: "{db_port}"
+  DB_NAME: "{db_name}"
+  DB_USER: "{db_user}"
   PGSSLMODE: "{db_sslmode}"
   KAFKA_BOOTSTRAP_SERVERS: "{kafka}"
   CORS_ALLOWED_ORIGINS: "{cors_origins}"
 
 secrets:
-  - POSTGRES_PASSWORD
+  - DB_PASSWORD
   - JWT_SECRET
 
-smoke:
-  - {path: /, expect: 200}</code></pre></details>
+database_password: DB_PASSWORD</code></pre></details>
 
-<h3>Question 1. What is the project called?</h3>
+<h4>Question 1. What is the project called?</h4>
 <p>Any short name in lower case, no spaces. Docker puts it in front of every container name.</p>
-<pre><code>project:
-  name: team5
-  root: ..          # leave this as it is</code></pre>
+<pre><code>name: team5</code></pre>
 
-<h3>Question 2. Where are the four applications, and what are they written in?</h3>
-<p>Every capstone project has four: a frontend, an auth service, a trade API (called <code>order</code> in the file) and an executor. I looked for the file that marks the top folder of each one.</p>
+<h4>Question 2. Where are the four applications, and what are they written in?</h4>
+<p>I looked for the file that marks the top folder of each one.</p>
 <pre><code>find . \( -name pom.xml -o -name package.json -o -name requirements.txt \) -not -path '*/node_modules/*'</code></pre>
 <div class="out"><span>What team5 printed</span><pre>./package.json
 ./Frontend/trading-ui/package.json
@@ -222,80 +232,41 @@ smoke:
   <tr><td>any other <code>package.json</code></td><td><code>node</code></td></tr>
   <tr><td><code>requirements.txt</code></td><td><code>python</code></td></tr>
 </table></div>
-<p>To tell Angular from Node: <code>grep -l '@angular/core' Frontend/trading-ui/package.json</code> prints the file name if it is Angular. I ignored <code>./package.json</code> and <code>./shared/auth-stub</code>, which are not one of the four applications.</p>
-<div class="tablewrap"><table>
-  <tr><th>Application</th><th>path</th><th>type</th></tr>
-  <tr><td>frontend</td><td><code>Frontend/trading-ui</code></td><td>angular</td></tr>
-  <tr><td>auth</td><td><code>Services/auth-service</code></td><td>node</td></tr>
-  <tr><td>order</td><td><code>Services/order-service</code></td><td>java</td></tr>
-  <tr><td>executor</td><td><code>Services/executor-service</code></td><td>java</td></tr>
-</table></div>
+<p>I ignored <code>./package.json</code> and <code>./shared/auth-stub</code>, which are not one of the four applications.</p>
 
-<h3>Question 3. Which port does each one listen on?</h3>
-<p>A Java (Spring) service says so in <code>application.properties</code>. A Node service says so where it reads <code>PORT</code>.</p>
-<pre><code>grep -rn 'server.port' --include='application*.properties' --include='application*.yml' . | grep -v /target/
-grep -rn 'process.env.PORT' Services/auth-service/src</code></pre>
-<div class="out"><span>What team5 printed</span><pre>Services/executor-service/src/main/resources/application.properties:2:server.port=${SERVER_PORT:8082}
-Services/order-service/src/main/resources/application.properties:2:server.port=${SERVER_PORT:8081}
-Services/auth-service/src/config/runtime-config.ts:74:  const rawPort = process.env.PORT?.trim() || '3000';</pre></div>
-<p>So: order 8081, executor 8082, auth 3000. The number after the colon or the <code>||</code> is the port. For the frontend, use <code>4200</code>; it is the port people will type in the browser.</p>
-
-<h3>Question 4. Which address shows that each one is alive?</h3>
+<h4>Question 3. Which address shows that each one is alive?</h4>
 <p>Docker calls this address every few seconds to know whether the container is healthy. It must answer without a login.</p>
 <ul>
   <li><strong>Java:</strong> <code>/actuator/health</code>, if the project has the actuator. Check: <code>grep -l actuator Services/*/pom.xml</code> must list the service.</li>
   <li><strong>Node and the frontend:</strong> <code>/</code> usually works. If your auth service answers 404 on <code>/</code>, use a path that answers 200, such as its docs page.</li>
 </ul>
-<p>With questions 2, 3 and 4 answered, the <code>services</code> block is finished:</p>
-<pre><code>services:
+<p>Questions 2 and 3 fill the <code>folders</code> block:</p>
+<pre><code>folders:
   frontend:
     path: Frontend/trading-ui
     type: angular
-    port: 4200
     health: /
-    test: true
   auth:
     path: Services/auth-service
     type: node
-    port: 3000
     health: /
-    routes: [/auth]
-    test: true
   order:
     path: Services/order-service
     type: java
-    port: 8081
     health: /actuator/health
-    routes: [/api/v1]
-    test: false
   executor:
     path: Services/executor-service
     type: java
-    port: 8082
-    health: /actuator/health
-    test: true</code></pre>
-<p><code>routes</code> and <code>test</code> are not used by Docker. They matter later, on Kubernetes and in Jenkins. Leave them as in the blank file for now.</p>
+    health: /actuator/health</code></pre>
 
-<h3>Question 5. What is the database called, and where is its SQL?</h3>
-<p>The name and user are in the same <code>application.properties</code>:</p>
-<pre><code>grep -rn 'datasource' --include='application*.properties' . | grep -v /target/</code></pre>
-<div class="out"><span>What team5 printed (shortened)</span><pre>spring.datasource.url=jdbc:postgresql://${POSTGRES_HOST:postgres}:5432/${POSTGRES_DB:trading_db_1}?currentSchema=${POSTGRES_SCHEMA:trade}
-spring.datasource.username=${POSTGRES_USER:postgres}
-spring.datasource.password=${POSTGRES_PASSWORD:n3u3d4!}</pre></div>
-<p>Database <code>trading_db_1</code>, user <code>postgres</code>. Then find the SQL files that create the tables: <code>find . -name '*.sql' -not -path '*/node_modules/*'</code>. team5 keeps them in two folders, <code>Databases/PostgreSQL/migrations</code> and <code>Databases/PostgreSQL/seed</code>. List them in the order they must run: the tables first, the starting data second. A folder means every <code>.sql</code> file in it, in name order.</p>
-<pre><code>database:
-  host: postgres                  # leave as postgres until step 10
-  port: 5432
-  name: trading_db_1
-  user: postgres
-  password_env: POSTGRES_PASSWORD # the NAME of the setting that holds the password
-  sql:
-    - Databases/PostgreSQL/migrations
-    - Databases/PostgreSQL/seed</code></pre>
+<h4>Question 4. Where is the SQL that creates the tables?</h4>
+<p>Find it with <code>find . -name '*.sql' -not -path '*/node_modules/*'</code>. List the files in the order they must run: the tables first, the starting data second. A folder means every <code>.sql</code> file in it, in name order.</p>
+<pre><code>sql:
+  - Databases/PostgreSQL/migrations
+  - Databases/PostgreSQL/seed</code></pre>
 
-<h3>Question 6. Which settings does the code read?</h3>
-<p>This is the block that takes the most care, and it is the reason one set of files fits every project. One team's code reads <code>DB_HOST</code>, another's reads <code>POSTGRES_HOST</code>. Our files know neither name. Whatever you list under <code>env</code> is handed to every container, under exactly the names you write.</p>
-<p>First, list every name the code reads. Java reads them as <code>${NAME:default}</code>, Node as <code>process.env.NAME</code>.</p>
+<h4>Question 5. Which settings does the code read?</h4>
+<p>One team's code reads <code>DB_HOST</code>, another's reads <code>POSTGRES_HOST</code>. Our files know neither name. Whatever you list under <code>settings</code> is handed to every container, under exactly the names you write. First list every name the code reads: Java reads them as <code>${NAME:default}</code>, Node as <code>process.env.NAME</code>.</p>
 <pre><code>grep -rhoE '\$\{[A-Z_]+' --include='application*.properties' Services/*/src | sort -u
 grep -rhoE 'process\.env\.[A-Z_]+' Services/auth-service/src | sort -u</code></pre>
 <div class="out"><span>What team5 printed (part)</span><pre>${APP_FRONTEND_URL
@@ -304,142 +275,115 @@ ${JWT_SECRET
 ${KAFKA_BOOTSTRAP_SERVERS
 ${POSTGRES_HOST
 ${POSTGRES_PASSWORD
-${SPRING_MAIL_HOST
 ...
 process.env.APP_CORS_ALLOWED_ORIGINS
-process.env.JWT_SECRET
 process.env.POSTGRES_HOST
 process.env.TRADE_API_BASE_URL
 ...</pre></div>
 <p>Then put each name in one of four piles:</p>
 <div class="tablewrap"><table>
   <tr><th>The setting is</th><th>What to do</th><th>team5 example</th></tr>
-  <tr><td>An address, host or port of something we run</td><td>Put it under <code>env</code> with a <strong>placeholder</strong> from the table below. Never type an IP here.</td><td><code>POSTGRES_HOST: "{db_host}"</code></td></tr>
-  <tr><td>A password, key or token</td><td>Put only its <strong>name</strong> under <code>secrets</code>.</td><td><code>JWT_SECRET</code></td></tr>
-  <tr><td>A fixed value that must differ from the code's default</td><td>Put it under <code>env</code> as it is.</td><td><code>POSTGRES_SCHEMA: trade</code></td></tr>
-  <tr><td>Anything whose default in the code is already right</td><td>Leave it out.</td><td><code>JWT_ALGORITHM</code>, <code>KAFKA_ORDERS_TOPIC</code></td></tr>
+  <tr><td>An address, host or port</td><td>Put it under <code>settings</code> with a <strong>placeholder</strong> from the table below. Never type an address here: it comes from <code>application.yaml</code>.</td><td><code>POSTGRES_HOST: "{db_host}"</code></td></tr>
+  <tr><td>A password, key or token</td><td>Put only its <strong>name</strong> under <code>secrets</code> (question 6).</td><td><code>JWT_SECRET</code></td></tr>
+  <tr><td>A fixed value that must differ from the code's default</td><td>Put it under <code>settings</code> as it is.</td><td><code>POSTGRES_SCHEMA: trade</code></td></tr>
+  <tr><td>Anything whose default in the code is already right</td><td>Leave it out.</td><td><code>JWT_ALGORITHM</code></td></tr>
 </table></div>
-<p>A placeholder is a word in curly brackets. <code>apply.py</code> swaps it for the right value, so the same file works on your laptop, in Docker and later on Kubernetes.</p>
+<p>A placeholder is a word in curly brackets. It is how a value from <code>application.yaml</code> reaches your code under your code's own name.</p>
 <div class="tablewrap"><table>
-  <tr><th>Placeholder</th><th>Becomes, in Docker</th><th>Use it for a setting that means</th></tr>
-  <tr><td><code>{db_host}</code> <code>{db_port}</code> <code>{db_name}</code> <code>{db_user}</code></td><td><code>postgres</code>, <code>5432</code>, your database name and user</td><td>where the database is</td></tr>
+  <tr><th>Placeholder</th><th>Filled from <code>application.yaml</code></th><th>Use it for a setting that means</th></tr>
+  <tr><td><code>{db_host}</code> <code>{db_port}</code> <code>{db_name}</code> <code>{db_user}</code></td><td>the <code>database</code> block</td><td>where the database is</td></tr>
   <tr><td><code>{db_sslmode}</code></td><td><code>disable</code> for the container, <code>no-verify</code> for RDS</td><td><code>PGSSLMODE</code>. A Node service needs it to talk to RDS.</td></tr>
-  <tr><td><code>{kafka}</code></td><td><code>kafka:29092</code></td><td>the Kafka bootstrap servers</td></tr>
-  <tr><td><code>{cors_origins}</code></td><td><code>http://&lt;machine IP&gt;:4200</code></td><td>which page address the APIs accept calls from</td></tr>
-  <tr><td><code>{frontend_url}</code></td><td><code>http://&lt;machine IP&gt;:4200</code></td><td>the page address, for example in an emailed link</td></tr>
-  <tr><td><code>{auth_internal}</code> <code>{order_internal}</code></td><td><code>http://auth-service:3000</code>, <code>http://order-service:8081</code></td><td>one service calling another</td></tr>
-  <tr><td><code>{auth_url}</code> <code>{order_url}</code></td><td><code>http://&lt;machine IP&gt;:3000</code>, <code>:8081</code></td><td>the APIs as the browser reaches them</td></tr>
+  <tr><td><code>{kafka}</code></td><td><code>kafka.host</code>:<code>kafka.port</code></td><td>the Kafka bootstrap servers</td></tr>
+  <tr><td><code>{frontend_url}</code></td><td><code>frontend.url</code>:<code>frontend.port</code></td><td>the page address, for example in an emailed link</td></tr>
+  <tr><td><code>{cors_origins}</code></td><td>the same page address</td><td>which page the APIs accept calls from</td></tr>
+  <tr><td><code>{auth_url}</code> <code>{order_url}</code></td><td><code>services.auth</code> and <code>services.order</code>, url:port</td><td>the APIs as the browser reaches them</td></tr>
+  <tr><td><code>{auth_internal}</code> <code>{order_internal}</code></td><td><code>http://auth-service:&lt;port&gt;</code>, <code>http://order-service:&lt;port&gt;</code></td><td>one service calling another, inside Docker</td></tr>
   <tr><td><code>{mail_host}</code> <code>{mail_port}</code></td><td><code>mailpit</code>, <code>1025</code></td><td>the mail server</td></tr>
   <tr><td><code>{cookie_secure}</code></td><td><code>false</code> over plain http</td><td>whether the login cookie is https-only</td></tr>
 </table></div>
-<p>What I wrote for team5, with the reason for each line:</p>
+<p>What I wrote for team5, and why:</p>
 <div class="tablewrap"><table>
-  <tr><th>Line under <code>env</code></th><th>Why</th></tr>
-  <tr><td><code>POSTGRES_HOST: "{db_host}"</code><br><code>POSTGRES_PORT: "{db_port}"</code><br><code>POSTGRES_DB: "{db_name}"</code><br><code>POSTGRES_USER: "{db_user}"</code></td><td>The auth service reads the database in four parts.</td></tr>
-  <tr><td><code>SPRING_DATASOURCE_URL: "jdbc:postgresql://{db_host}:{db_port}/{db_name}?currentSchema=trade"</code><br><code>SPRING_DATASOURCE_USERNAME: "{db_user}"</code></td><td>The two Java services read it as one URL. A placeholder can sit inside a longer value.</td></tr>
-  <tr><td><code>POSTGRES_SCHEMA: trade</code><br><code>POSTGRES_SEARCH_PATH: auth</code></td><td>Fixed values: the two schemas inside the database.</td></tr>
+  <tr><th>Line under <code>settings</code></th><th>Why</th></tr>
+  <tr><td><code>POSTGRES_HOST: "{db_host}"</code> and the three lines after it</td><td>The auth service reads the database in four parts.</td></tr>
+  <tr><td><code>SPRING_DATASOURCE_URL: "jdbc:postgresql://{db_host}:{db_port}/{db_name}?currentSchema=trade"</code></td><td>The two Java services read it as one URL. A placeholder can sit inside a longer value.</td></tr>
+  <tr><td><code>POSTGRES_SCHEMA: trade</code>, <code>POSTGRES_SEARCH_PATH: auth</code></td><td>Fixed values: the two schemas inside the database.</td></tr>
   <tr><td><code>PGSSLMODE: "{db_sslmode}"</code></td><td>Needed by the Node service once the database is RDS.</td></tr>
   <tr><td><code>KAFKA_BOOTSTRAP_SERVERS: "{kafka}"</code></td><td>Where Kafka is.</td></tr>
-  <tr><td><code>APP_CORS_ALLOWED_ORIGINS: "{cors_origins}"</code><br><code>APP_FRONTEND_URL: "{frontend_url}"</code></td><td>Both hold the page address, which depends on the machine.</td></tr>
-  <tr><td><code>AUTH_SERVICE_URL: "{auth_internal}"</code><br><code>TRADE_API_BASE_URL: "{order_internal}"</code></td><td>One service calling another.</td></tr>
-  <tr><td><code>SPRING_MAIL_HOST: "{mail_host}"</code><br><code>SPRING_MAIL_PORT: "{mail_port}"</code></td><td>Sign-up sends an email; Mailpit catches it.</td></tr>
-  <tr><td><code>JWT_ISSUER: auth-service</code> and the remaining fixed lines</td><td>Fixed values the services must agree on.</td></tr>
+  <tr><td><code>APP_CORS_ALLOWED_ORIGINS: "{cors_origins}"</code>, <code>APP_FRONTEND_URL: "{frontend_url}"</code></td><td>Both hold the page address, which is different on every machine.</td></tr>
+  <tr><td><code>AUTH_SERVICE_URL: "{auth_internal}"</code>, <code>TRADE_API_BASE_URL: "{order_internal}"</code></td><td>One service calling another.</td></tr>
+  <tr><td><code>SPRING_MAIL_HOST: "{mail_host}"</code>, <code>SPRING_MAIL_PORT: "{mail_port}"</code></td><td>Sign-up sends an email; Mailpit catches it.</td></tr>
 </table></div>
 
-<h3>Question 7. Which passwords and keys does it need?</h3>
-<p>From the same list in question 6, every name that is a password, key or token. Names only.</p>
+<h4>Question 6. Which passwords and keys does it need?</h4>
+<p>From the same list, every name that is a password, key or token. Names only; you type the values in step 6, on the machine. Then say which of them is the database's password.</p>
 <pre><code>secrets:
   - POSTGRES_PASSWORD
   - JWT_SECRET
   - FAUXNANCE_API_KEY
-  - CURRENCYAPI_API_KEY</code></pre>
-<p>You type the values in step 6, on the machine. A name must not appear under both <code>env</code> and <code>secrets</code>.</p>
+  - CURRENCYAPI_API_KEY
 
-<h3>Question 8. What will people type in the browser?</h3>
-<pre><code>public:
-  scheme: http
-  host: localhost       # step 6 replaces this with the machine's public IP</code></pre>
-<p>This single value decides every browser-facing address. It is the one value that changes from machine to machine.</p>
+database_password: POSTGRES_PASSWORD</code></pre>
+<p><code>mailpit: true</code> gives you a test inbox for the emails the project sends. Set it to <code>false</code> if your project sends none.</p>
 
-<h3>The blocks you leave alone</h3>
-<div class="tablewrap"><table>
-  <tr><th>Block</th><th>Leave it as</th></tr>
-  <tr><td><code>phase</code></td><td><code>docker</code></td></tr>
-  <tr><td><code>kafka</code></td><td><code>kafka</code> and <code>29092</code>. That is our Kafka container.</td></tr>
-  <tr><td><code>mail</code></td><td><code>mailpit: true</code> gives you a test inbox. Set <code>false</code> if your project sends no email.</td></tr>
-  <tr><td><code>aws</code>, <code>smoke</code></td><td>Only used on Kubernetes. Change <code>namespace</code> and <code>image_prefix</code> to your project name and move on.</td></tr>
-</table></div>
-
-<h3>The finished file</h3>
-<p>This is the complete team5 file. Yours has the same blocks with your answers.</p>
-<details open><summary>Finished example: team5's <code>application.yaml</code></summary>
-<pre data-file="deploy/config/examples/team5.yaml"><code># The finished file for Neueda-Learning/chennai-capstone-SE6-team5.
-# GUIDE.html, step 1, shows how each value was found.
-
-phase: docker             # local | docker | eks
-
-project:
-  name: team5
-  root: ..
-
-public:
-  scheme: http
-  host: localhost         # on an EC2 box: its public IP
+<h3>The finished files for team5</h3>
+<details open><summary><code>application.yaml</code>, as it is on a laptop</summary>
+<pre><code>frontend:
+  url: http://localhost
+  port: 4200
 
 services:
-  frontend:
-    path: Frontend/trading-ui
-    type: angular
-    port: 4200
-    health: /
-    test: true
   auth:
-    path: Services/auth-service
-    type: node
+    url: http://localhost
     port: 3000
-    health: /
-    routes: [/auth]
-    test: true
+
   order:
-    path: Services/order-service
-    type: java
+    url: http://localhost
     port: 8081
-    health: /actuator/health
-    routes: [/api/v1]
-    test: false           # one unit test fails on main (PriceAlertEvaluatorTest)
+
   executor:
-    path: Services/executor-service
-    type: java
+    url: http://localhost
     port: 8082
-    health: /actuator/health
-    test: true
 
 database:
-  host: postgres          # postgres = the container; otherwise the RDS endpoint
+  host: localhost
   port: 5432
   name: trading_db_1
   user: postgres
-  password_env: POSTGRES_PASSWORD
-  sql:
-    - Databases/PostgreSQL/migrations
-    - Databases/PostgreSQL/seed
 
 kafka:
   host: kafka
-  port: 29092
+  port: 29092</code></pre></details>
+<details open><summary><code>project.yaml</code></summary>
+<pre data-file="deploy/config/examples/team5/project.yaml"><code># The finished file for Neueda-Learning/chennai-capstone-SE6-team5.
+# GUIDE.html, step 1, shows how each value was found.
 
-mail:
-  mailpit: true
-  host: mailpit
-  port: 1025
+name: team5
 
-aws:
-  region: ap-south-1
-  cluster: capstone
-  namespace: team5
-  image_prefix: team5
+folders:
+  frontend:
+    path: Frontend/trading-ui
+    type: angular
+    health: /
+  auth:
+    path: Services/auth-service
+    type: node
+    health: /
+  order:
+    path: Services/order-service
+    type: java
+    health: /actuator/health
+  executor:
+    path: Services/executor-service
+    type: java
+    health: /actuator/health
 
-env:
+sql:
+  - Databases/PostgreSQL/migrations
+  - Databases/PostgreSQL/seed
+
+mailpit: true
+
+settings:
   POSTGRES_HOST: "{db_host}"
   POSTGRES_PORT: "{db_port}"
   POSTGRES_DB: "{db_name}"
@@ -470,11 +414,20 @@ secrets:
   - FAUXNANCE_API_KEY
   - CURRENCYAPI_API_KEY
 
-smoke:
-  - {path: /, expect: 200}
-  - {path: /auth/me, expect: 401}
-  - {path: /api/v1/accounts/1, expect: 401}</code></pre></details>
-<div class="done"><strong>Done when:</strong> you have your own version of this file saved on your laptop. Keep it open; you paste it in step 5.</div>
+database_password: POSTGRES_PASSWORD
+
+# Kubernetes and Jenkins only. Not read by docker-compose.
+kubernetes:
+  routes:
+    auth: [/auth]
+    order: [/api/v1]
+  skip_tests: [order]     # one unit test fails on main (PriceAlertEvaluatorTest)
+  smoke:
+    - {path: /, expect: 200}
+    - {path: /auth/me, expect: 401}
+    - {path: /api/v1/accounts/1, expect: 401}</code></pre></details>
+<p>The <code>kubernetes</code> block at the bottom is not read by Docker. Leave it out until you reach Kubernetes.</p>
+<div class="done"><strong>Done when:</strong> you have your own two files saved on your laptop. Keep them open; you paste them in step 5.</div>
 
 <!-- ====================================================================== -->
 <h2 id="s2"><span class="n">Step 2</span>Create the EC2 machine</h2>
@@ -496,7 +449,7 @@ smoke:
 </table></div>
 <ol start="4">
   <li>Click <strong>Launch instance</strong>, then <strong>View all instances</strong>. Wait until Instance state is <strong>Running</strong> and Status check is <strong>2/2 checks passed</strong>.</li>
-  <li>Click the instance and write down its <strong>Public IPv4 address</strong>. You need it in steps 6 and 8.</li>
+  <li>Click the instance and write down its <strong>Public IPv4 address</strong>. You type it into the config in step 6.</li>
 </ol>
 <h3>Open the ports</h3>
 <p>Click the instance, the <strong>Security</strong> tab, the security group's name, then <strong>Edit inbound rules</strong>. Add one rule per port. For each: Type <strong>Custom TCP</strong>, the port, Source <strong>My IP</strong>.</p>
@@ -507,8 +460,8 @@ smoke:
   <tr><td>8081</td><td>The trade API (your order <code>port</code>)</td></tr>
   <tr><td>8025</td><td>The Mailpit inbox, if <code>mailpit: true</code></td></tr>
 </table></div>
-<p>Use your own ports from step 1 if they differ. Do not open 5432, 9092 or the executor's port: only containers use those. Click <strong>Save rules</strong>.</p>
-<div class="callout">The public IP changes every time the machine is stopped and started. If that happens, repeat the short "change the address" block in step 8. Your own IP can change too; if the page stops loading one morning, edit the rules and choose My IP again.</div>
+<p>Use your own ports from <code>application.yaml</code> if they differ. Do not open 5432, 9092 or the executor's port: only containers use those. Click <strong>Save rules</strong>.</p>
+<div class="callout">The public IP changes every time the machine is stopped and started. If that happens, follow "Change the address" in step 8. Your own IP can change too; if the page stops loading one morning, edit the rules and choose My IP again.</div>
 <div class="done"><strong>Done when:</strong> the instance is Running, and you have its public IP written down.</div>
 
 <!-- ====================================================================== -->
@@ -783,11 +736,11 @@ ENV APP_ENTRY=${APP_ENTRY}
 ENTRYPOINT ["sh", "-c", "$APP_ENTRY"]</code></pre></details>
 
 <h3>File 5. <code>docker/postgres-init.sh</code></h3>
-<p>A short script that loads your SQL files (the <code>database.sql</code> list from step 1) into the empty database, the first time Postgres starts.</p>
+<p>A short script that loads your SQL files (the <code>sql</code> list in <code>project.yaml</code>) into the empty database, the first time Postgres starts.</p>
 <pre><code>curl -fsSL -o docker/postgres-init.sh https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/docker/postgres-init.sh</code></pre>
 <details><summary>Show the file: <code>docker/postgres-init.sh</code></summary>
 <pre data-file="deploy/docker/postgres-init.sh"><code>#!/bin/sh
-# Loads the project's SQL (database.sql in application.yaml) into an empty
+# Loads the project's SQL (`sql` in project.yaml) into an empty
 # database, in order. A folder means all its *.sql files in name order.
 load_sql() {
   for path in $SQL_PATHS; do
@@ -903,7 +856,7 @@ services:
         create trade-events.DLT 3 2592000000
         create market-data.DLT 6 86400000
         echo "=== topics ready ==="
-  # Started only when application.yaml has mail.mailpit: true.
+  # Started only when project.yaml has mailpit: true.
   mailpit:
     image: axllent/mailpit:latest
     profiles: [mail]
@@ -1010,19 +963,23 @@ volumes:
   kafka_data:</code></pre></details>
 
 <h3>File 7. <code>config/apply.py</code></h3>
-<p>The program that reads your <code>application.yaml</code> and writes <code>.env</code> from it, swapping each placeholder for a real value. You run it; you do not edit it.</p>
+<p>The program that reads your two config files and writes <code>.env</code> from them, swapping each placeholder for a real value. You run it; you do not edit it.</p>
 <pre><code>curl -fsSL -o config/apply.py https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/config/apply.py</code></pre>
 <details><summary>Show the file: <code>config/apply.py</code></summary>
 <pre data-file="deploy/config/apply.py"><code>#!/usr/bin/env python3
-"""Write config/application.yaml into the files the deployment reads.
+"""Write the two config files into the files the deployment reads.
 
-  python3 deploy/config/apply.py            apply the phase set in application.yaml
-  python3 deploy/config/apply.py eks        apply another phase than the one in the file
+  config/application.yaml   addresses and ports; changed for each machine
+  config/project.yaml       folders, types and the settings your code reads; written once
+
+  python3 deploy/config/apply.py            for docker-compose on a machine
+  python3 deploy/config/apply.py local      services started by hand on a laptop
+  python3 deploy/config/apply.py eks        for Kubernetes
   python3 deploy/config/apply.py --check    change nothing; exit 1 if a file is out of date
 
 What it writes:
-  deploy/build.env   every phase   folders, ports and names for the scripts (commit it)
-  deploy/.env        local, docker settings for docker-compose, plus the secrets
+  deploy/build.env   always        folders, ports and names for the scripts (commit it)
+  deploy/.env        docker, local settings for docker-compose, plus the secrets
                                    you type in (never committed)
   deploy/k8s/        eks           the Kubernetes files (commit them)
 """
@@ -1030,6 +987,7 @@ import json
 import shutil
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 try:
     import yaml
@@ -1047,7 +1005,7 @@ VERSIONS = {"java": "21", "node": "22", "angular": "22", "python": "3.11"}
 # scripts/deploy.sh replaces it once AWS has built the load balancer.
 LB = "LOAD_BALANCER_ADDRESS"
 SECRETS_HEAD = "# ---- Secrets: type the values here. This file is never committed. ----"
-MANAGED_HEAD = "# ---- Written by config/apply.py from application.yaml. Do not edit below. ----"
+MANAGED_HEAD = "# ---- Written by config/apply.py from the two config files. Do not edit below. ----"
 # Requests and limits per kind of service, sized for two t3.medium nodes.
 RESOURCES = {
     "java": ("100m", "320Mi", "500m", "768Mi"),
@@ -1066,6 +1024,50 @@ WAIT_FOR_KAFKA = """\
 """
 
 
+def load_config():
+    """Both files as one dictionary, in the shape the rest of this program reads."""
+    folder = DEPLOY / "config"
+    app = yaml.safe_load((folder / "application.yaml").read_text())
+    project = yaml.safe_load((folder / "project.yaml").read_text())
+    k8s = project.get("kubernetes") or {}
+    name = project["name"]
+    addresses = {"frontend": app["frontend"], **app["services"]}
+    services = {}
+    for role in NAMES:
+        if role not in addresses or role not in project["folders"]:
+            sys.exit(f"'{role}' must be in both application.yaml and project.yaml (folders)")
+        services[role] = {
+            **project["folders"][role],
+            "url": str(addresses[role]["url"]).rstrip("/"),
+            "port": addresses[role]["port"],
+            "routes": (k8s.get("routes") or {}).get(role, []),
+            "test": role not in (k8s.get("skip_tests") or []),
+        }
+    return {
+        "project": {"name": name, "root": project.get("root", "..")},
+        "services": services,
+        "database": {**app["database"], "password_env": project["database_password"],
+                     "sql": project.get("sql") or []},
+        "kafka": app["kafka"],
+        "mail": {"mailpit": project.get("mailpit", False), "host": "mailpit", "port": 1025,
+                 **(project.get("mail") or {})},
+        "aws": {"region": "ap-south-1", "cluster": "capstone", "namespace": name,
+                "image_prefix": name, **(k8s.get("aws") or {})},
+        "env": project.get("settings") or {},
+        "secrets": project.get("secrets") or [],
+        "smoke": k8s.get("smoke") or [{"path": "/", "expect": 200}],
+    }
+
+
+def check_docker(cfg):
+    """Addresses that work on a laptop but cannot work inside a container."""
+    for block in ("database", "kafka"):
+        if str(cfg[block]["host"]) in LOCAL_HOSTS:
+            sys.exit(f"application.yaml: {block}.host is {cfg[block]['host']}. Inside a container that means "
+                     f"the container itself. Use the container's name"
+                     + (" (postgres) or the RDS endpoint." if block == "database" else " (kafka)."))
+
+
 def listen_port(service):
     """The port inside the container. nginx serves an Angular build on 80."""
     return 80 if service["type"] == "angular" else service["port"]
@@ -1073,8 +1075,13 @@ def listen_port(service):
 
 def placeholders(cfg, phase):
     """The values an `env` entry can refer to as {name}, for this phase."""
-    svc, db, kafka, mail, pub = cfg["services"], cfg["database"], cfg["kafka"], cfg["mail"], cfg["public"]
-    scheme, host = pub.get("scheme", "http"), str(pub["host"])
+    svc, db, kafka, mail = cfg["services"], cfg["database"], cfg["kafka"], cfg["mail"]
+
+    def address(role):
+        return f"{svc[role]['url']}:{svc[role]['port']}"
+
+    page = urlsplit(svc["frontend"]["url"])
+    scheme, host = page.scheme or "http", page.hostname or ""
     if phase == "eks":
         # One load balancer serves the page and both APIs, so the browser
         # needs no API address, and services find each other by name.
@@ -1083,13 +1090,12 @@ def placeholders(cfg, phase):
                "cookie_secure": "false"}
         internal = {role: f"http://{NAMES[role]}:{svc[role]['port']}" for role in ("auth", "order")}
     else:
-        base = f"{scheme}://{host}"
-        origins = [f"{base}:{svc['frontend']['port']}"]
+        origins = [address("frontend")]
         if host in LOCAL_HOSTS:
             origins += [f"{scheme}://{h}:{svc['frontend']['port']}" for h in LOCAL_HOSTS if h != host]
         out = {"frontend_url": origins[0],
-               "auth_url": f"{base}:{svc['auth']['port']}",
-               "order_url": f"{base}:{svc['order']['port']}",
+               "auth_url": address("auth"),
+               "order_url": address("order"),
                "cors_origins": ",".join(origins),
                # Browsers drop Secure cookies over plain http, except on localhost.
                "cookie_secure": "true" if scheme == "https" or host in LOCAL_HOSTS else "false"}
@@ -1102,7 +1108,7 @@ def placeholders(cfg, phase):
         # Started by hand, the services reach Postgres, Kafka and Mailpit
         # through the ports docker-compose publishes on the machine.
         out.update({"db_host": "localhost" if db["host"] == "postgres" else db["host"],
-                    "kafka": "localhost:9092",
+                    "kafka": "localhost:9092" if kafka["host"] == "kafka" else f"{kafka['host']}:{kafka['port']}",
                     "mail_host": "localhost" if mailpit else mail["host"]})
     else:
         out.update({"db_host": db["host"], "kafka": f"{kafka['host']}:{kafka['port']}",
@@ -1123,11 +1129,11 @@ def app_env(cfg, phase):
         try:
             out[key] = str(value).format(**values)
         except KeyError as err:
-            sys.exit(f"env.{key} uses an unknown placeholder {{{err.args[0]}}}; "
+            sys.exit(f"project.yaml: settings.{key} uses an unknown placeholder {{{err.args[0]}}}; "
                      f"known: {', '.join(sorted(values))}")
     clash = sorted(set(out) &amp; set(cfg.get("secrets") or []))
     if clash:
-        sys.exit(f"listed under both env and secrets: {', '.join(clash)}")
+        sys.exit(f"project.yaml: listed under both settings and secrets: {', '.join(clash)}")
     return out
 
 
@@ -1153,7 +1159,7 @@ def build_settings(cfg):
     for role, name in NAMES.items():
         service, key = cfg["services"][role], role.upper()
         if service["type"] not in VERSIONS:
-            sys.exit(f"services.{role}.type is '{service['type']}'; choose one of: {', '.join(VERSIONS)}")
+            sys.exit(f"project.yaml: folders.{role}.type is '{service['type']}'; choose one of: {', '.join(VERSIONS)}")
         out.update({
             f"{key}_PATH": service["path"],
             f"{key}_TYPE": service["type"],
@@ -1174,7 +1180,7 @@ def env_line(key, value):
 
 def build_env(cfg):
     lines = ["# Folders, ports and names for the scripts in deploy/scripts.",
-             "# Written by config/apply.py from application.yaml. Do not edit.",
+             "# Written by config/apply.py from the two config files. Do not edit.",
              "# No secrets: this file is committed, so the pipeline can read it."]
     lines += [env_line(k, v) for k, v in build_settings(cfg).items()
               # These two are different on every machine.
@@ -1206,7 +1212,7 @@ def dot_env(cfg, phase):
     lines += [env_line("COMPOSE_PROFILES", ",".join(profiles)),
               env_line("AUTH_URL", values["auth_url"]),
               env_line("BACKEND_URL", values["order_url"]),
-              "", "# The project's own settings (the `env` section)."]
+              "", "# The project's own settings (`settings` in project.yaml)."]
     lines += [env_line(k, v) for k, v in app_env(cfg, phase).items()]
     return "\n".join(lines) + "\n"
 
@@ -1274,10 +1280,12 @@ def k8s_files(cfg):
 def main():
     args = [a for a in sys.argv[1:] if a != "--check"]
     check = "--check" in sys.argv[1:]
-    cfg = yaml.safe_load((DEPLOY / "config" / "application.yaml").read_text())
-    phase = args[0] if args else cfg["phase"]
+    cfg = load_config()
+    phase = args[0] if args else "docker"
     if phase not in PHASES:
         sys.exit(f"unknown phase '{phase}'; choose one of: {', '.join(PHASES)}")
+    if phase == "docker":
+        check_docker(cfg)
 
     targets = {DEPLOY / "build.env": build_env(cfg)}
     if phase == "eks":
@@ -1292,7 +1300,7 @@ def main():
     if check:
         if stale or extra:
             sys.exit(f"out of date for phase {phase}: {names}\nrun: python3 deploy/config/apply.py {phase}")
-        print(f"everything matches config/application.yaml (phase {phase})")
+        print(f"everything matches the config files (phase {phase})")
         return
 
     if phase == "eks":
@@ -1304,9 +1312,11 @@ def main():
     print(f"phase {phase}: {'updated ' + names if stale or extra else 'already up to date'}")
 
     if phase == "eks":
-        if cfg["database"]["host"] == "postgres":
-            print("Warning: database.host is still 'postgres'. There is no Postgres container on EKS; "
+        if cfg["database"]["host"] in ("postgres",) + LOCAL_HOSTS:
+            print(f"Warning: database.host is still '{cfg['database']['host']}'. There is no Postgres container on EKS; "
                   "set it to the RDS endpoint and run this again.")
+        if not any(cfg["services"][role]["routes"] for role in ("auth", "order")):
+            print("Warning: project.yaml has no kubernetes.routes, so the load balancer sends every path to the frontend.")
         print("Commit and push deploy/k8s and deploy/build.env; the pipeline deploys them.")
         return
     empty = [k for k, v in secret_values(DEPLOY / ".env", cfg.get("secrets") or []).items() if not v.strip()]
@@ -1326,11 +1336,15 @@ if __name__ == "__main__":
     main()</code></pre></details>
 
 <h3>File 8. <code>config/application.yaml</code> (yours, from step 1)</h3>
-<p>This one does not come from GitHub. Open an empty file, paste the config you wrote in step 1, and save.</p>
+<p>This one does not come from GitHub. Open an empty file, paste the <code>application.yaml</code> you wrote in step 1, and save.</p>
 <pre><code>nano config/application.yaml</code></pre>
-<p>Paste, then Ctrl+O, Enter, Ctrl+X. In a YAML file the spaces at the start of a line matter: keep them exactly as in the example, two spaces per level, never a tab.</p>
+<p>Paste, then Ctrl+O, Enter, Ctrl+X. Paste it as it is on your laptop, with <code>localhost</code>; step 6 changes it for this machine.</p>
 
-<h3>File 9. <code>.gitignore</code></h3>
+<h3>File 9. <code>config/project.yaml</code> (yours, from step 1)</h3>
+<pre><code>nano config/project.yaml</code></pre>
+<p>Paste your <code>project.yaml</code>, then Ctrl+O, Enter, Ctrl+X. In a YAML file the spaces at the start of a line matter: keep them exactly as in the example, two spaces per level, never a tab.</p>
+
+<h3>File 10. <code>.gitignore</code></h3>
 <p>Two lines that stop git from ever committing your passwords.</p>
 <pre><code>printf '.env\nbuild/\n' > .gitignore</code></pre>
 
@@ -1339,6 +1353,7 @@ if __name__ == "__main__":
 <div class="out"><span>Expected (python.Dockerfile only if you fetched it)</span><pre>./.gitignore
 ./config/application.yaml
 ./config/apply.py
+./config/project.yaml
 ./docker-compose.yml
 ./docker/angular.Dockerfile
 ./docker/java.Dockerfile
@@ -1347,29 +1362,94 @@ if __name__ == "__main__":
 <div class="done"><strong>Done when:</strong> your list matches, and <code>head -3 docker-compose.yml</code> shows text, not "404: Not Found".</div>
 
 <!-- ====================================================================== -->
-<h2 id="s6"><span class="n">Step 6</span>Apply the config and type the passwords</h2>
+<h2 id="s6"><span class="n">Step 6</span>Change the addresses and ports for this machine, and type the passwords</h2>
 <span class="where">Where: the terminal on the machine, inside <code>deploy</code></span>
+<p>The <code>application.yaml</code> you pasted describes your laptop. This machine is a different place, so some lines are no longer true. You go through the file from top to bottom and decide each line by hand. Have the machine's <strong>public IP</strong> from step 2 in front of you; the examples use <code>13.201.4.242</code>.</p>
+<pre><code>nano config/application.yaml</code></pre>
 
-<h3>6.1 Put the machine's public IP in the config</h3>
-<p>People open the page from their own laptop, so every browser-facing address must be the machine's public IP, not <code>localhost</code>. This command looks the IP up and writes it into <code>public.host</code>:</p>
-<pre><code>IP=$(curl -s https://checkip.amazonaws.com)
-echo $IP
-sed -i "/^public:/,/^$/ s|^  host: .*|  host: $IP|" config/application.yaml
-grep -A2 '^public:' config/application.yaml</code></pre>
-<div class="out"><span>Expected: the IP you wrote down in step 2</span><pre>13.201.4.242
-public:
-  scheme: http
-  host: 13.201.4.242</pre></div>
+<h3>6.1 The three addresses the browser uses</h3>
+<p>One idea explains all three: <strong><code>localhost</code> means "this same computer"</strong>. The page runs in the browser on your laptop. If the page is told the auth service is at <code>localhost</code>, the browser looks for it on your laptop, where nothing is running.</p>
+<div class="tablewrap"><table>
+  <tr><th>Line</th><th>Change to</th><th>Why</th></tr>
+  <tr><td><code>frontend:</code><br><code>&nbsp;&nbsp;url: http://localhost</code></td><td><code>url: http://13.201.4.242</code></td><td>This is what people type to open the page. It is also the address the two APIs are told to accept calls from; if it is wrong, the browser blocks every call with a CORS error.</td></tr>
+  <tr><td><code>auth:</code><br><code>&nbsp;&nbsp;url: http://localhost</code></td><td><code>url: http://13.201.4.242</code></td><td>Register and login are sent by the browser, straight to the auth service.</td></tr>
+  <tr><td><code>order:</code><br><code>&nbsp;&nbsp;url: http://localhost</code></td><td><code>url: http://13.201.4.242</code></td><td>Orders and portfolio calls are sent by the browser, straight to the trade API.</td></tr>
+</table></div>
+<p>Write <code>http://</code>, the IP, and nothing after it: no port, no slash. The port has its own line.</p>
 
-<h3>6.2 Turn the config into <code>.env</code></h3>
+<h3>6.2 The executor's address</h3>
+<div class="tablewrap"><table>
+  <tr><th>Line</th><th>Change to</th><th>Why</th></tr>
+  <tr><td><code>executor:</code><br><code>&nbsp;&nbsp;url: http://localhost</code></td><td><code>url: http://13.201.4.242</code></td><td>Nothing calls the executor by address: it takes its work from Kafka. The value is not used. Set it like the others so the file says one thing.</td></tr>
+</table></div>
+
+<h3>6.3 The four ports</h3>
+<p>A port is the door number on the machine. Three things must agree on each number: the port your code listens on (step 1), the number in this file, and for the first three, the port you opened in the security group (step 2).</p>
+<div class="tablewrap"><table>
+  <tr><th>Line</th><th>Value</th><th>Change it?</th></tr>
+  <tr><td><code>frontend: port</code></td><td><code>4200</code></td><td>Keep. It is what people type after the colon. If you change it, open the new number in the security group.</td></tr>
+  <tr><td><code>auth: port</code></td><td><code>3000</code></td><td>Keep the number your code uses. Docker starts the service on this port and publishes the same number on the machine.</td></tr>
+  <tr><td><code>order: port</code></td><td><code>8081</code></td><td>The same.</td></tr>
+  <tr><td><code>executor: port</code></td><td><code>8082</code></td><td>The same. It is used only for the health check, so it is not opened in the security group.</td></tr>
+</table></div>
+<p>If two of your services use the same number, change one of them here; both cannot have the same door.</p>
+
+<h3>6.4 The database</h3>
+<div class="tablewrap"><table>
+  <tr><th>Line</th><th>Change to</th><th>Why</th></tr>
+  <tr><td><code>host: localhost</code></td><td><code>host: postgres</code></td><td>Each container is its own small computer. Inside the trade API's container, <code>localhost</code> is that container, and there is no database in it. Docker gives every container a name, and containers reach each other by that name. Ours is called <code>postgres</code>.</td></tr>
+  <tr><td><code>port: 5432</code></td><td>Keep</td><td>The Postgres container listens on 5432.</td></tr>
+  <tr><td><code>name: ...</code></td><td>Keep your database's name</td><td>The container creates a database with this name, and your SQL is loaded into it.</td></tr>
+  <tr><td><code>user: postgres</code></td><td>Keep</td><td>The user your services log in as.</td></tr>
+</table></div>
+
+<h3>6.5 Kafka</h3>
+<div class="tablewrap"><table>
+  <tr><th>Line</th><th>Change to</th><th>Why</th></tr>
+  <tr><td><code>host: kafka</code></td><td>Keep</td><td>The same rule as the database: <code>kafka</code> is the Kafka container's name.</td></tr>
+  <tr><td><code>port: 29092</code></td><td>Keep</td><td>Kafka has two doors. 29092 is the one for other containers. 9092 is for programs running directly on the machine, which you do not have.</td></tr>
+</table></div>
+
+<h3>6.6 The file afterwards</h3>
+<pre><code>frontend:
+  url: http://13.201.4.242
+  port: 4200
+
+services:
+  auth:
+    url: http://13.201.4.242
+    port: 3000
+
+  order:
+    url: http://13.201.4.242
+    port: 8081
+
+  executor:
+    url: http://13.201.4.242
+    port: 8082
+
+database:
+  host: postgres
+  port: 5432
+  name: trading_db_1
+  user: postgres
+
+kafka:
+  host: kafka
+  port: 29092</code></pre>
+<p>Five lines changed: four <code>url</code> lines and <code>database.host</code>. Save with Ctrl+O, Enter, Ctrl+X.</p>
+<div class="callout"><strong>One kind of address is not in the file.</strong> When one service calls another, for example the auth service calling the trade API, it uses the container's name: <code>http://order-service:8081</code>. Docker provides those names, so there is nothing for you to type.</div>
+
+<h3>6.7 Turn the config into <code>.env</code></h3>
+<p>docker-compose does not read the two config files. It reads one file called <code>.env</code>. This program writes it from them:</p>
 <pre><code>python3 config/apply.py</code></pre>
 <div class="out"><span>Expected</span><pre>phase docker: updated build.env, .env
 Still empty in deploy/.env: POSTGRES_PASSWORD, JWT_SECRET, FAUXNANCE_API_KEY, CURRENCYAPI_API_KEY
 Page: http://13.201.4.242:4200   auth: http://13.201.4.242:3000   trade API: http://13.201.4.242:8081
 Now, in deploy/: docker-compose up -d --build</pre></div>
-<p>The third line shows the three addresses the browser will use. They must contain the machine's IP. If the command stops with an error, it names the line of <code>application.yaml</code> to fix; fix it and run it again.</p>
+<p>The third line repeats the three browser addresses back to you. Check each against 6.1. If the program stops with a message instead, the message names the line to fix; for example it refuses <code>database.host: localhost</code> and says why.</p>
 
-<h3>6.3 Type the passwords and keys</h3>
+<h3>6.8 Type the passwords and keys</h3>
 <pre><code>nano .env</code></pre>
 <p>The top of the file has one empty line for each name you listed under <code>secrets</code>. Type each value straight after the <code>=</code>, with no spaces and no quotes:</p>
 <pre><code># ---- Secrets: type the values here. This file is never committed. ----
@@ -1378,10 +1458,10 @@ JWT_SECRET=any-long-random-text-of-at-least-32-characters
 FAUXNANCE_API_KEY=your-key
 CURRENCYAPI_API_KEY=your-key
 
-# ---- Written by config/apply.py from application.yaml. Do not edit below. ----</code></pre>
+# ---- Written by config/apply.py from the two config files. Do not edit below. ----</code></pre>
 <p>Choose the database password now and remember it: in step 9 you give RDS the same one. Do not change anything below the second line. Save with Ctrl+O, Enter, Ctrl+X.</p>
-<div class="callout">Whenever you change <code>application.yaml</code>, run <code>python3 config/apply.py</code> again. It keeps the passwords you typed and rewrites everything below them.</div>
-<div class="done"><strong>Done when:</strong> <code>python3 config/apply.py</code> no longer prints a "Still empty" line.</div>
+<div class="callout">Whenever you change a config file, run <code>python3 config/apply.py</code> again. It keeps the passwords you typed and rewrites everything below them.</div>
+<div class="done"><strong>Done when:</strong> <code>python3 config/apply.py</code> prints the machine's IP in all three addresses and no "Still empty" line.</div>
 
 <!-- ====================================================================== -->
 <h2 id="s7"><span class="n">Step 7</span>Run it with docker-compose</h2>
@@ -1405,10 +1485,10 @@ team5-postgres-1           Up 2 minutes (healthy)</pre></div>
 <p>Put the name of the unhealthy service at the end: <code>auth-service</code>, <code>order-service</code>, <code>executor-service</code>, <code>frontend</code> or <code>postgres</code>. The reason is in the last lines.</p>
 <div class="tablewrap"><table>
   <tr><th>What you see</th><th>Cause</th><th>Fix</th></tr>
-  <tr><td>The build stops with <code>COPY ... not found</code> or <code>pom.xml: not found</code></td><td>A <code>path</code> in the config is wrong</td><td>Correct it (step 1, question 2), run <code>apply.py</code>, run <code>up</code> again</td></tr>
-  <tr><td><code>postgres</code> is unhealthy; its log says <code>SQL path not found</code></td><td>A line under <code>database.sql</code> is wrong</td><td>Correct it, then start clean (below)</td></tr>
+  <tr><td>The build stops with <code>COPY ... not found</code> or <code>pom.xml: not found</code></td><td>A <code>path</code> in <code>project.yaml</code> is wrong</td><td>Correct it (step 1, question 2), run <code>apply.py</code>, run <code>up</code> again</td></tr>
+  <tr><td><code>postgres</code> is unhealthy; its log says <code>SQL path not found</code></td><td>A line under <code>sql</code> in <code>project.yaml</code> is wrong</td><td>Correct it, then start clean (below)</td></tr>
   <tr><td>A service restarts; its log says <code>password authentication failed</code></td><td>The password was changed after the database was first created</td><td>Start clean (below)</td></tr>
-  <tr><td>A service is unhealthy but its log shows it started</td><td>Its <code>health</code> path or <code>port</code> is wrong</td><td>Correct it (step 1, questions 3 and 4)</td></tr>
+  <tr><td>A service is unhealthy but its log shows it started</td><td>Its <code>health</code> path in <code>project.yaml</code> or its <code>port</code> in <code>application.yaml</code> is wrong</td><td>Correct it (step 1)</td></tr>
   <tr><td>The terminal freezes during the build</td><td>The machine is too small</td><td>It must be t3.medium (step 2)</td></tr>
 </table></div>
 <p><strong>Start clean.</strong> This stops everything and deletes the database's data, so the SQL loads again from the beginning:</p>
@@ -1448,9 +1528,9 @@ trade API  200</pre></div>
 <p>There are three kinds of address in a running project. Only one of them ever needs changing for Docker.</p>
 <div class="tablewrap"><table>
   <tr><th>Who calls whom</th><th>Address used</th><th>Where it comes from</th><th>Change it?</th></tr>
-  <tr><td>Your browser → the page, the auth service, the trade API</td><td><code>http://&lt;machine IP&gt;:port</code></td><td><code>public.host</code></td><td><strong>Yes</strong>, whenever the machine's public IP is different. Step 6.1 set it.</td></tr>
-  <tr><td>One service → another service</td><td><code>http://auth-service:3000</code>, <code>http://order-service:8081</code></td><td><code>{auth_internal}</code>, <code>{order_internal}</code></td><td>No. Docker gives each container a name, and containers find each other by it.</td></tr>
-  <tr><td>A service → Postgres, Kafka, Mailpit</td><td><code>postgres:5432</code>, <code>kafka:29092</code>, <code>mailpit:1025</code></td><td><code>{db_host}</code>, <code>{kafka}</code>, <code>{mail_host}</code></td><td>No, until step 10 moves the database to RDS.</td></tr>
+  <tr><td>Your browser → the page, the auth service, the trade API</td><td><code>http://&lt;machine IP&gt;:port</code></td><td>The <code>url</code> lines in <code>application.yaml</code></td><td><strong>Yes</strong>, whenever the machine's public IP is different. Step 6.1 set them.</td></tr>
+  <tr><td>One service → another service</td><td><code>http://auth-service:3000</code>, <code>http://order-service:8081</code></td><td>Nothing you type; Docker's container names</td><td>No. Containers find each other by name.</td></tr>
+  <tr><td>A service → Postgres, Kafka, Mailpit</td><td><code>postgres:5432</code>, <code>kafka:29092</code>, <code>mailpit:1025</code></td><td><code>database.host</code>, <code>kafka.host</code></td><td>No, until step 10 moves the database to RDS.</td></tr>
 </table></div>
 <p>See the addresses that are in use right now:</p>
 <pre><code>grep -E '^(AUTH_URL|BACKEND_URL)=|CORS|FRONTEND_URL' .env
@@ -1467,14 +1547,17 @@ window.__APP_CONFIG__ = {
 <div class="tablewrap"><table>
   <tr><th>In the browser</th><th>Meaning</th><th>Fix</th></tr>
   <tr><td>The page never loads</td><td>The port is closed, or your own IP changed</td><td>Step 2, "Open the ports"</td></tr>
-  <tr><td>The page loads; calls go to <code>localhost</code></td><td><code>public.host</code> is still <code>localhost</code>, or the Angular edits are missing</td><td>The block below; step 5, file 3</td></tr>
+  <tr><td>The page loads; calls go to <code>localhost</code></td><td>A <code>url</code> line is still <code>localhost</code>, or the Angular edits are missing</td><td>The block below; step 5, file 3</td></tr>
   <tr><td>The page loads; calls go to an old IP</td><td>The machine was stopped and started</td><td>The block below</td></tr>
-  <tr><td>Calls are red with a CORS error</td><td>The APIs were told a different page address</td><td>The block below. If it stays, your CORS setting's name is missing under <code>env</code> (step 1, question 6)</td></tr>
+  <tr><td>Calls are red with a CORS error</td><td>The APIs were told a different page address</td><td>The block below. If it stays, your CORS setting's name is missing under <code>settings</code> (step 1, question 5)</td></tr>
 </table></div>
 <h4>Change the address</h4>
-<pre><code>IP=$(curl -s https://checkip.amazonaws.com)
-sed -i "/^public:/,/^$/ s|^  host: .*|  host: $IP|" config/application.yaml
-python3 config/apply.py
+<ol>
+  <li>Find the machine's current public IP in the EC2 console (step 2).</li>
+  <li><code>nano config/application.yaml</code> and type the new IP into the four <code>url</code> lines, as in step 6.1. Save.</li>
+  <li>Apply it and restart:</li>
+</ol>
+<pre><code>python3 config/apply.py
 docker-compose up -d</code></pre>
 <p>No rebuild is needed. The containers read their addresses when they start, so <code>up -d</code> restarts only the ones whose settings changed.</p>
 <div class="done"><strong>Done when:</strong> you can register, log in and place an order from your laptop, with no red call in the Network tab.</div>
@@ -1493,7 +1576,7 @@ docker-compose up -d</code></pre>
   <tr><td>Engine</td><td>PostgreSQL, version 16.x</td><td>The same version as the container you just tested with.</td></tr>
   <tr><td>Template</td><td>Free tier, or Dev/Test</td><td></td></tr>
   <tr><td>DB instance identifier</td><td>Your team name, for example <code>team5-db</code></td><td>Its name in the console.</td></tr>
-  <tr><td>Master username</td><td><code>postgres</code></td><td>Must equal <code>database.user</code> in your config.</td></tr>
+  <tr><td>Master username</td><td><code>postgres</code></td><td>Must equal <code>database.user</code> in <code>application.yaml</code>.</td></tr>
   <tr><td>Credentials management</td><td>Self managed. Type the <strong>same password</strong> you put in <code>.env</code> in step 6.3.</td><td>The services log in with the password from <code>.env</code>.</td></tr>
   <tr><td>Instance class</td><td>Burstable, <strong>db.t4g.micro</strong></td><td>The smallest class the account allows.</td></tr>
   <tr><td>Storage</td><td>gp3, 20 GiB</td><td></td></tr>
@@ -1530,13 +1613,13 @@ docker-compose up -d</code></pre>
 <h3>10.1 Fetch two more files</h3>
 <p>The Postgres container loaded your SQL by itself. RDS does not, so a script does it once.</p>
 <h4><code>scripts/load-schema.sh</code></h4>
-<p>Creates your database on RDS and runs your SQL files into it, in the order from your config.</p>
+<p>Creates your database on RDS and runs your SQL files into it, in the order listed in <code>project.yaml</code>.</p>
 <pre><code>mkdir -p scripts
 curl -fsSL -o scripts/load-schema.sh https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/scripts/load-schema.sh</code></pre>
 <details><summary>Show the file: <code>scripts/load-schema.sh</code></summary>
 <pre data-file="deploy/scripts/load-schema.sh"><code>#!/usr/bin/env bash
 # Create the database on RDS (or any Postgres) and load the project's SQL
-# into it: the files under database.sql in config/application.yaml, in order.
+# into it: the files under `sql` in config/project.yaml, in order.
 # Run once, against an empty database. psql comes from the Postgres image,
 # so nothing is installed on the machine.
 #
@@ -1571,7 +1654,7 @@ chmod +x scripts/load-schema.sh</code></pre>
 <details><summary>Show the file: <code>scripts/pipeline-env.sh</code></summary>
 <pre data-file="deploy/scripts/pipeline-env.sh"><code># Shared settings for the scripts in this folder. Sourced, not run.
 # The values come from deploy/build.env, which config/apply.py writes from
-# config/application.yaml.
+# the files in config/.
 DEPLOY="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." &amp;&amp; pwd)"
 [ -f "$DEPLOY/build.env" ] || { echo "deploy/build.env is missing. Run: python3 deploy/config/apply.py" &gt;&amp;2; exit 1; }
 set -a
@@ -1617,12 +1700,12 @@ registry() {
 docker-compose rm -f postgres</code></pre>
 
 <h3>10.4 Point the config at RDS</h3>
-<p>One value changes: <code>database.host</code>. Open the config and replace <code>postgres</code> with your endpoint.</p>
+<p>One line changes: <code>database.host</code>. Replace <code>postgres</code> with your endpoint. The database is no longer a container on this machine, so it is no longer reached by a container name; it is reached by the address AWS gave it.</p>
 <pre><code>nano config/application.yaml</code></pre>
 <pre><code>database:
   host: team5-db.c94cwk4g097q.ap-south-1.rds.amazonaws.com
   port: 5432</code></pre>
-<p>Check that <code>env</code> contains the line <code>PGSSLMODE: "{db_sslmode}"</code>. RDS accepts only encrypted connections, and a Node service needs this setting to open one. Java services encrypt on their own.</p>
+<p>Then check that <code>settings</code> in <code>config/project.yaml</code> contains the line <code>PGSSLMODE: "{db_sslmode}"</code>. RDS accepts only encrypted connections, and a Node service needs this setting to open one. Java services encrypt on their own.</p>
 
 <h3>10.5 Apply and restart</h3>
 <pre><code>python3 config/apply.py
@@ -1719,7 +1802,7 @@ git push</code></pre>
   <tr><td>Stop everything</td><td><code>docker-compose down</code></td></tr>
 </table></div>
 <h3>After Docker: Kubernetes and Jenkins</h3>
-<p>The next stages run the same images on an EKS cluster behind one load balancer, deployed by a Jenkins pipeline on every push. The same <code>application.yaml</code> drives them, with <code>phase: eks</code>. Those stages are written up, with every command and error met, in <a href="ETP-history.html">ETP-history.html</a>, the record of the first project deployed this way. The files they use are below.</p>
+<p>The next stages run the same images on an EKS cluster behind one load balancer, deployed by a Jenkins pipeline on every push. The same two config files drive them: <code>python3 config/apply.py eks</code> writes the Kubernetes files, and the <code>kubernetes</code> block of <code>project.yaml</code> adds the load balancer's routes. Those stages are written up, with every command and error met, in <a href="ETP-history.html">ETP-history.html</a>, the record of the first project deployed this way. The files they use are below.</p>
 <div class="callout">The Kubernetes files and pipeline scripts below are adapted from the ones that deployed the first project. In this generic form they pass a dry run but have not yet been applied to a cluster.</div>
 <details><summary><code>k8s-templates/namespace.yaml</code></summary><pre data-file="deploy/k8s-templates/namespace.yaml"><code>apiVersion: v1
 kind: Namespace
@@ -1735,7 +1818,7 @@ parameters:
   encrypted: "true"
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true</code></pre></details>
-<details><summary><code>k8s-templates/configmap.yaml</code></summary><pre data-file="deploy/k8s-templates/configmap.yaml"><code># The project's settings (the `env` section of config/application.yaml), with
+<details><summary><code>k8s-templates/configmap.yaml</code></summary><pre data-file="deploy/k8s-templates/configmap.yaml"><code># The project's settings (`settings` in config/project.yaml), with
 # this phase's values. Every application pod receives all of them.
 # LOAD_BALANCER_ADDRESS is replaced by scripts/deploy.sh at deploy time.
 apiVersion: v1
@@ -2135,7 +2218,7 @@ helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-contro
 kubectl -n kube-system rollout status deployment/aws-load-balancer-controller --timeout=5m</code></pre></details>
 <details><summary><code>scripts/create-secret.sh</code></summary><pre data-file="deploy/scripts/create-secret.sh"><code>#!/usr/bin/env bash
 # Create or update the Secret `app-secrets` from deploy/.env. It gets one key
-# for each name under `secrets` in config/application.yaml, so passwords and
+# for each name under `secrets` in config/project.yaml, so passwords and
 # keys never reach git. Run it again after changing a value, then restart
 # the pods.
 #
@@ -2155,8 +2238,8 @@ done
 kubectl -n "$NS" create secret generic app-secrets "${args[@]}" --dry-run=client -o yaml |
   kubectl apply -f -</code></pre></details>
 <details><summary><code>scripts/test.sh</code></summary><pre data-file="deploy/scripts/test.sh"><code>#!/usr/bin/env bash
-# Run the unit tests of every service that has `test: true` in
-# config/application.yaml. Each runs in a throwaway Maven or Node container,
+# Run the unit tests of every service, except those listed under
+# kubernetes.skip_tests in config/project.yaml. Each runs in a throwaway Maven or Node container,
 # so the machine needs neither Java nor Node installed.
 #
 #   deploy/scripts/test.sh
@@ -2292,7 +2375,7 @@ echo
 echo "Open:  http://$(lb_host)"</code></pre></details>
 <details><summary><code>scripts/smoke-test.sh</code></summary><pre data-file="deploy/scripts/smoke-test.sh"><code>#!/usr/bin/env bash
 # Prove the deployed application answers through the load balancer. The
-# checks are the `smoke` list in config/application.yaml: a path and the
+# checks are the `smoke` list in config/project.yaml: a path and the
 # status it must return. A path that needs a login should expect 401, which
 # proves both the route and the login check.
 set -euo pipefail
@@ -2324,7 +2407,7 @@ echo "Smoke test passed: $BASE"</code></pre></details>
 //
 // In the Jenkins job, set Script Path to deploy/Jenkinsfile.
 // What is built, where it goes and what is tested all come from
-// deploy/build.env, which config/apply.py writes from config/application.yaml.
+// deploy/build.env, which config/apply.py writes from the files in config/.
 // One-time cluster preparation is deploy/scripts/bootstrap.sh, not this pipeline.
 pipeline {
   agent any

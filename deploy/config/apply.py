@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-"""Write config/application.yaml into the files the deployment reads.
+"""Write the two config files into the files the deployment reads.
 
-  python3 deploy/config/apply.py            apply the phase set in application.yaml
-  python3 deploy/config/apply.py eks        apply another phase than the one in the file
+  config/application.yaml   addresses and ports; changed for each machine
+  config/project.yaml       folders, types and the settings your code reads; written once
+
+  python3 deploy/config/apply.py            for docker-compose on a machine
+  python3 deploy/config/apply.py local      services started by hand on a laptop
+  python3 deploy/config/apply.py eks        for Kubernetes
   python3 deploy/config/apply.py --check    change nothing; exit 1 if a file is out of date
 
 What it writes:
-  deploy/build.env   every phase   folders, ports and names for the scripts (commit it)
-  deploy/.env        local, docker settings for docker-compose, plus the secrets
+  deploy/build.env   always        folders, ports and names for the scripts (commit it)
+  deploy/.env        docker, local settings for docker-compose, plus the secrets
                                    you type in (never committed)
   deploy/k8s/        eks           the Kubernetes files (commit them)
 """
@@ -15,6 +19,7 @@ import json
 import shutil
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 try:
     import yaml
@@ -32,7 +37,7 @@ VERSIONS = {"java": "21", "node": "22", "angular": "22", "python": "3.11"}
 # scripts/deploy.sh replaces it once AWS has built the load balancer.
 LB = "LOAD_BALANCER_ADDRESS"
 SECRETS_HEAD = "# ---- Secrets: type the values here. This file is never committed. ----"
-MANAGED_HEAD = "# ---- Written by config/apply.py from application.yaml. Do not edit below. ----"
+MANAGED_HEAD = "# ---- Written by config/apply.py from the two config files. Do not edit below. ----"
 # Requests and limits per kind of service, sized for two t3.medium nodes.
 RESOURCES = {
     "java": ("100m", "320Mi", "500m", "768Mi"),
@@ -51,6 +56,50 @@ WAIT_FOR_KAFKA = """\
 """
 
 
+def load_config():
+    """Both files as one dictionary, in the shape the rest of this program reads."""
+    folder = DEPLOY / "config"
+    app = yaml.safe_load((folder / "application.yaml").read_text())
+    project = yaml.safe_load((folder / "project.yaml").read_text())
+    k8s = project.get("kubernetes") or {}
+    name = project["name"]
+    addresses = {"frontend": app["frontend"], **app["services"]}
+    services = {}
+    for role in NAMES:
+        if role not in addresses or role not in project["folders"]:
+            sys.exit(f"'{role}' must be in both application.yaml and project.yaml (folders)")
+        services[role] = {
+            **project["folders"][role],
+            "url": str(addresses[role]["url"]).rstrip("/"),
+            "port": addresses[role]["port"],
+            "routes": (k8s.get("routes") or {}).get(role, []),
+            "test": role not in (k8s.get("skip_tests") or []),
+        }
+    return {
+        "project": {"name": name, "root": project.get("root", "..")},
+        "services": services,
+        "database": {**app["database"], "password_env": project["database_password"],
+                     "sql": project.get("sql") or []},
+        "kafka": app["kafka"],
+        "mail": {"mailpit": project.get("mailpit", False), "host": "mailpit", "port": 1025,
+                 **(project.get("mail") or {})},
+        "aws": {"region": "ap-south-1", "cluster": "capstone", "namespace": name,
+                "image_prefix": name, **(k8s.get("aws") or {})},
+        "env": project.get("settings") or {},
+        "secrets": project.get("secrets") or [],
+        "smoke": k8s.get("smoke") or [{"path": "/", "expect": 200}],
+    }
+
+
+def check_docker(cfg):
+    """Addresses that work on a laptop but cannot work inside a container."""
+    for block in ("database", "kafka"):
+        if str(cfg[block]["host"]) in LOCAL_HOSTS:
+            sys.exit(f"application.yaml: {block}.host is {cfg[block]['host']}. Inside a container that means "
+                     f"the container itself. Use the container's name"
+                     + (" (postgres) or the RDS endpoint." if block == "database" else " (kafka)."))
+
+
 def listen_port(service):
     """The port inside the container. nginx serves an Angular build on 80."""
     return 80 if service["type"] == "angular" else service["port"]
@@ -58,8 +107,13 @@ def listen_port(service):
 
 def placeholders(cfg, phase):
     """The values an `env` entry can refer to as {name}, for this phase."""
-    svc, db, kafka, mail, pub = cfg["services"], cfg["database"], cfg["kafka"], cfg["mail"], cfg["public"]
-    scheme, host = pub.get("scheme", "http"), str(pub["host"])
+    svc, db, kafka, mail = cfg["services"], cfg["database"], cfg["kafka"], cfg["mail"]
+
+    def address(role):
+        return f"{svc[role]['url']}:{svc[role]['port']}"
+
+    page = urlsplit(svc["frontend"]["url"])
+    scheme, host = page.scheme or "http", page.hostname or ""
     if phase == "eks":
         # One load balancer serves the page and both APIs, so the browser
         # needs no API address, and services find each other by name.
@@ -68,13 +122,12 @@ def placeholders(cfg, phase):
                "cookie_secure": "false"}
         internal = {role: f"http://{NAMES[role]}:{svc[role]['port']}" for role in ("auth", "order")}
     else:
-        base = f"{scheme}://{host}"
-        origins = [f"{base}:{svc['frontend']['port']}"]
+        origins = [address("frontend")]
         if host in LOCAL_HOSTS:
             origins += [f"{scheme}://{h}:{svc['frontend']['port']}" for h in LOCAL_HOSTS if h != host]
         out = {"frontend_url": origins[0],
-               "auth_url": f"{base}:{svc['auth']['port']}",
-               "order_url": f"{base}:{svc['order']['port']}",
+               "auth_url": address("auth"),
+               "order_url": address("order"),
                "cors_origins": ",".join(origins),
                # Browsers drop Secure cookies over plain http, except on localhost.
                "cookie_secure": "true" if scheme == "https" or host in LOCAL_HOSTS else "false"}
@@ -87,7 +140,7 @@ def placeholders(cfg, phase):
         # Started by hand, the services reach Postgres, Kafka and Mailpit
         # through the ports docker-compose publishes on the machine.
         out.update({"db_host": "localhost" if db["host"] == "postgres" else db["host"],
-                    "kafka": "localhost:9092",
+                    "kafka": "localhost:9092" if kafka["host"] == "kafka" else f"{kafka['host']}:{kafka['port']}",
                     "mail_host": "localhost" if mailpit else mail["host"]})
     else:
         out.update({"db_host": db["host"], "kafka": f"{kafka['host']}:{kafka['port']}",
@@ -108,11 +161,11 @@ def app_env(cfg, phase):
         try:
             out[key] = str(value).format(**values)
         except KeyError as err:
-            sys.exit(f"env.{key} uses an unknown placeholder {{{err.args[0]}}}; "
+            sys.exit(f"project.yaml: settings.{key} uses an unknown placeholder {{{err.args[0]}}}; "
                      f"known: {', '.join(sorted(values))}")
     clash = sorted(set(out) & set(cfg.get("secrets") or []))
     if clash:
-        sys.exit(f"listed under both env and secrets: {', '.join(clash)}")
+        sys.exit(f"project.yaml: listed under both settings and secrets: {', '.join(clash)}")
     return out
 
 
@@ -138,7 +191,7 @@ def build_settings(cfg):
     for role, name in NAMES.items():
         service, key = cfg["services"][role], role.upper()
         if service["type"] not in VERSIONS:
-            sys.exit(f"services.{role}.type is '{service['type']}'; choose one of: {', '.join(VERSIONS)}")
+            sys.exit(f"project.yaml: folders.{role}.type is '{service['type']}'; choose one of: {', '.join(VERSIONS)}")
         out.update({
             f"{key}_PATH": service["path"],
             f"{key}_TYPE": service["type"],
@@ -159,7 +212,7 @@ def env_line(key, value):
 
 def build_env(cfg):
     lines = ["# Folders, ports and names for the scripts in deploy/scripts.",
-             "# Written by config/apply.py from application.yaml. Do not edit.",
+             "# Written by config/apply.py from the two config files. Do not edit.",
              "# No secrets: this file is committed, so the pipeline can read it."]
     lines += [env_line(k, v) for k, v in build_settings(cfg).items()
               # These two are different on every machine.
@@ -191,7 +244,7 @@ def dot_env(cfg, phase):
     lines += [env_line("COMPOSE_PROFILES", ",".join(profiles)),
               env_line("AUTH_URL", values["auth_url"]),
               env_line("BACKEND_URL", values["order_url"]),
-              "", "# The project's own settings (the `env` section)."]
+              "", "# The project's own settings (`settings` in project.yaml)."]
     lines += [env_line(k, v) for k, v in app_env(cfg, phase).items()]
     return "\n".join(lines) + "\n"
 
@@ -259,10 +312,12 @@ def k8s_files(cfg):
 def main():
     args = [a for a in sys.argv[1:] if a != "--check"]
     check = "--check" in sys.argv[1:]
-    cfg = yaml.safe_load((DEPLOY / "config" / "application.yaml").read_text())
-    phase = args[0] if args else cfg["phase"]
+    cfg = load_config()
+    phase = args[0] if args else "docker"
     if phase not in PHASES:
         sys.exit(f"unknown phase '{phase}'; choose one of: {', '.join(PHASES)}")
+    if phase == "docker":
+        check_docker(cfg)
 
     targets = {DEPLOY / "build.env": build_env(cfg)}
     if phase == "eks":
@@ -277,7 +332,7 @@ def main():
     if check:
         if stale or extra:
             sys.exit(f"out of date for phase {phase}: {names}\nrun: python3 deploy/config/apply.py {phase}")
-        print(f"everything matches config/application.yaml (phase {phase})")
+        print(f"everything matches the config files (phase {phase})")
         return
 
     if phase == "eks":
@@ -289,9 +344,11 @@ def main():
     print(f"phase {phase}: {'updated ' + names if stale or extra else 'already up to date'}")
 
     if phase == "eks":
-        if cfg["database"]["host"] == "postgres":
-            print("Warning: database.host is still 'postgres'. There is no Postgres container on EKS; "
+        if cfg["database"]["host"] in ("postgres",) + LOCAL_HOSTS:
+            print(f"Warning: database.host is still '{cfg['database']['host']}'. There is no Postgres container on EKS; "
                   "set it to the RDS endpoint and run this again.")
+        if not any(cfg["services"][role]["routes"] for role in ("auth", "order")):
+            print("Warning: project.yaml has no kubernetes.routes, so the load balancer sends every path to the frontend.")
         print("Commit and push deploy/k8s and deploy/build.env; the pipeline deploys them.")
         return
     empty = [k for k, v in secret_values(DEPLOY / ".env", cfg.get("secrets") or []).items() if not v.strip()]

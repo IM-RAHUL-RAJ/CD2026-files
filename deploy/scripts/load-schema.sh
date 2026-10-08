@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Create the database on RDS (or any Postgres) and load the project's SQL
-# into it: the files under database.sql in config/application.yaml, in order.
+# into it: the files under `sql` in config/project.yaml, in order.
 # Run once, against an empty database. psql comes from the Postgres image,
 # so nothing is installed on the machine.
 #

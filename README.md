@@ -14,14 +14,15 @@ Open `GUIDE.html` in a browser and follow it from step 1. It goes from
 writing the config file, to an EC2 machine, to copying each file, to
 `docker-compose`, to the database on RDS. Every file is printed in it.
 
-`deploy/config/examples/team5.yaml` is a complete, working config.
+`deploy/config/examples/team5/` holds a complete, working pair of config files.
 
 ## What is in `deploy/`
 
 | Path | What it is |
 |---|---|
-| `config/application.yaml` | The one file you edit: folders, ports, addresses, the settings your code reads, the names of your secrets |
-| `config/apply.py` | Writes that file into `.env` (docker-compose) or `k8s/` (Kubernetes) |
+| `config/application.yaml` | Addresses and ports, in the shape shared in class. Changed for each machine |
+| `config/project.yaml` | Written once: your folders, the settings your code reads, the names of your secrets |
+| `config/apply.py` | Writes those two files into `.env` (docker-compose) or `k8s/` (Kubernetes) |
 | `docker/java.Dockerfile` | Any Maven project that produces one runnable jar |
 | `docker/node.Dockerfile` | Any npm project with a build step, such as NestJS |
 | `docker/angular.Dockerfile` | Any npm-built single-page app, served by nginx |

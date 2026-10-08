@@ -6,7 +6,7 @@
 //
 // In the Jenkins job, set Script Path to deploy/Jenkinsfile.
 // What is built, where it goes and what is tested all come from
-// deploy/build.env, which config/apply.py writes from config/application.yaml.
+// deploy/build.env, which config/apply.py writes from the files in config/.
 // One-time cluster preparation is deploy/scripts/bootstrap.sh, not this pipeline.
 pipeline {
   agent any

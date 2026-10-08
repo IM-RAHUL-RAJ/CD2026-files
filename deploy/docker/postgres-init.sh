@@ -1,5 +1,5 @@
 #!/bin/sh
-# Loads the project's SQL (database.sql in application.yaml) into an empty
+# Loads the project's SQL (`sql` in project.yaml) into an empty
 # database, in order. A folder means all its *.sql files in name order.
 load_sql() {
   for path in $SQL_PATHS; do

@@ -16,9 +16,9 @@ services:
     port: 8082
 
 database:
-  host: localhost
+  host: postgres
   port: 5432
-  name: trading_system_db
+  name: trading_db_1
   user: postgres
 
 kafka:

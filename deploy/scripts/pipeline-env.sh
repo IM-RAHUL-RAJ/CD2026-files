@@ -1,6 +1,6 @@
 # Shared settings for the scripts in this folder. Sourced, not run.
 # The values come from deploy/build.env, which config/apply.py writes from
-# config/application.yaml.
+# the files in config/.
 DEPLOY="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -f "$DEPLOY/build.env" ] || { echo "deploy/build.env is missing. Run: python3 deploy/config/apply.py" >&2; exit 1; }
 set -a

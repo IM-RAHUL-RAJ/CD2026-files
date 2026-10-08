@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Create or update the Secret `app-secrets` from deploy/.env. It gets one key
-# for each name under `secrets` in config/application.yaml, so passwords and
+# for each name under `secrets` in config/project.yaml, so passwords and
 # keys never reach git. Run it again after changing a value, then restart
 # the pods.
 #

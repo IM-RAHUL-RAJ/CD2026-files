@@ -89,7 +89,7 @@ services:
         create trade-events.DLT 3 2592000000
         create market-data.DLT 6 86400000
         echo "=== topics ready ==="
-  # Started only when application.yaml has mail.mailpit: true.
+  # Started only when project.yaml has mailpit: true.
   mailpit:
     image: axllent/mailpit:latest
     profiles: [mail]

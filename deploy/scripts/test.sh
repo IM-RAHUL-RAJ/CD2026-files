@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Run the unit tests of every service that has `test: true` in
-# config/application.yaml. Each runs in a throwaway Maven or Node container,
+# Run the unit tests of every service, except those listed under
+# kubernetes.skip_tests in config/project.yaml. Each runs in a throwaway Maven or Node container,
 # so the machine needs neither Java nor Node installed.
 #
 #   deploy/scripts/test.sh

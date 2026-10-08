@@ -1,4 +1,4 @@
-# The project's settings (the `env` section of config/application.yaml), with
+# The project's settings (`settings` in config/project.yaml), with
 # this phase's values. Every application pod receives all of them.
 # LOAD_BALANCER_ADDRESS is replaced by scripts/deploy.sh at deploy time.
 apiVersion: v1

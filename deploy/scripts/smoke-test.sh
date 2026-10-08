@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Prove the deployed application answers through the load balancer. The
-# checks are the `smoke` list in config/application.yaml: a path and the
+# checks are the `smoke` list in config/project.yaml: a path and the
 # status it must return. A path that needs a login should expect 401, which
 # proves both the route and the login check.
 set -euo pipefail
