@@ -164,6 +164,90 @@ Services/auth-service/src/config/runtime-config.ts:74:  const rawPort = process.
 spring.datasource.username=${POSTGRES_USER:postgres}</pre></div>
 <p>So <code>name: trading_db_1</code> and <code>user: postgres</code>. The <code>kafka</code> block stays as it is.</p>
 
+<h3>Make your code read these values</h3>
+<p>The config files only work if your code <strong>asks</strong> for its addresses, ports and keys instead of having them typed in. A value typed into the code is baked into the image and is the same on every machine. So before writing <code>project.yaml</code>, replace each typed-in value with a <strong>named setting that has a default</strong>. The default keeps your laptop working exactly as before; on the machine, Docker supplies the real value under that name.</p>
+<p>Find what is typed in:</p>
+<pre><code>grep -rnE 'localhost|127\.0\.0\.1|amazonaws\.com|api[_-]?key' --include='*.java' --include='*.properties' --include='*.yml' --include='*.ts' --include='*.py' . | grep -v -e node_modules -e /target/ -e '\.spec\.'</code></pre>
+<p>Every line it prints is a candidate. The snippets below show the change for each language, with team5's real names. Pick your own names; write them in capitals with underscores.</p>
+
+<h4>Java (Spring): <code>src/main/resources/application.properties</code></h4>
+<p>The form is <code>${NAME:default}</code>: use the setting called NAME, and if nobody set it, use the default.</p>
+<pre><code># before: typed in
+server.port=8081
+spring.datasource.url=jdbc:postgresql://localhost:5432/trading_db_1
+spring.datasource.username=postgres
+spring.datasource.password=n3u3d4!
+spring.kafka.bootstrap-servers=localhost:9092
+fauxnance.base-url=https://y4t9nq2bqf.execute-api.eu-west-2.amazonaws.com/v1
+fauxnance.api-key=fnx_dev_abc123</code></pre>
+<pre><code># after: asked for by name
+server.port=${SERVER_PORT:8081}
+spring.datasource.url=jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:trading_db_1}
+spring.datasource.username=${POSTGRES_USER:postgres}
+spring.datasource.password=${POSTGRES_PASSWORD:}
+spring.kafka.bootstrap-servers=${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+fauxnance.base-url=${FAUXNANCE_BASE_URL:https://y4t9nq2bqf.execute-api.eu-west-2.amazonaws.com/v1}
+fauxnance.api-key=${FAUXNANCE_API_KEY:}</code></pre>
+<p>If the value is typed into a Java class, move it to <code>application.properties</code> as above and read it with <code>@Value</code>:</p>
+<pre><code>// before
+private final String baseUrl = "https://y4t9nq2bqf.execute-api.eu-west-2.amazonaws.com/v1";
+private final String apiKey  = "fnx_dev_abc123";
+
+// after
+public FauxnanceClient(@Value("${fauxnance.base-url}") String baseUrl,
+                       @Value("${fauxnance.api-key:}") String apiKey) {
+    this.baseUrl = baseUrl;
+    this.apiKey  = apiKey;
+}</code></pre>
+
+<h4>Node (NestJS, Express): the <code>.ts</code> or <code>.js</code> file that holds the value</h4>
+<p>The form is <code>process.env.NAME || 'default'</code>.</p>
+<pre><code>// before: typed in
+await app.listen(3000);
+app.enableCors({ origin: 'http://localhost:4200' });
+const tradeApi = 'http://localhost:8081';
+const dbHost   = 'localhost';
+const secret   = 'my-jwt-secret';</code></pre>
+<pre><code>// after: asked for by name
+await app.listen(Number(process.env.PORT || 3000));
+app.enableCors({ origin: (process.env.APP_CORS_ALLOWED_ORIGINS || 'http://localhost:4200').split(',') });
+const tradeApi = process.env.TRADE_API_BASE_URL || 'http://localhost:8081';
+const dbHost   = process.env.POSTGRES_HOST || 'localhost';
+const secret   = process.env.JWT_SECRET;</code></pre>
+
+<h4>Python (Flask, FastAPI)</h4>
+<p>The form is <code>os.environ.get("NAME", "default")</code>.</p>
+<pre><code># before
+BACKEND_URL = "http://localhost:8081"
+app.run(port=4200)
+
+# after
+import os
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8081")
+app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "4200")))</code></pre>
+
+<h4>Angular frontend</h4>
+<p>A page in the browser cannot read settings this way. It gets its two API addresses from a small file the container writes when it starts. The three edits are in step 5, file 3.</p>
+
+<h4>Three rules for the names</h4>
+<div class="tablewrap"><table>
+  <tr><th>Kind of value</th><th>Rule</th><th>Why</th></tr>
+  <tr><td>The port the service listens on</td><td>Java must read <code>SERVER_PORT</code>, Node and Python must read <code>PORT</code>.</td><td>Our compose file sets exactly these two names from the <code>port</code> lines in <code>application.yaml</code>. Any other name is ignored and the service stays on its default.</td></tr>
+  <tr><td>A password, key or token</td><td>Leave the default empty: <code>${FAUXNANCE_API_KEY:}</code>. Never a real key.</td><td>Whatever is typed in the code is pushed to GitHub for everyone to read.</td></tr>
+  <tr><td>Everything else</td><td>Any name you like. The default is the laptop value.</td><td>You tell our files the name in question 5 below.</td></tr>
+</table></div>
+
+<h4>How a value then travels from the config to your code</h4>
+<div class="tablewrap"><table>
+  <tr><th>Your code asks for</th><th>You write in <code>project.yaml</code></th><th>The value comes from</th></tr>
+  <tr><td><code>${POSTGRES_HOST:localhost}</code></td><td>under <code>settings</code>:<br><code>POSTGRES_HOST: "{db_host}"</code></td><td><code>database.host</code> in <code>application.yaml</code></td></tr>
+  <tr><td><code>process.env.APP_CORS_ALLOWED_ORIGINS</code></td><td>under <code>settings</code>:<br><code>APP_CORS_ALLOWED_ORIGINS: "{cors_origins}"</code></td><td><code>frontend.url</code> and <code>frontend.port</code> in <code>application.yaml</code></td></tr>
+  <tr><td><code>${SERVER_PORT:8081}</code></td><td>nothing</td><td><code>services.order.port</code> in <code>application.yaml</code></td></tr>
+  <tr><td><code>${FAUXNANCE_BASE_URL:...}</code></td><td>under <code>settings</code>:<br><code>FAUXNANCE_BASE_URL: https://...</code></td><td>the fixed value you wrote</td></tr>
+  <tr><td><code>${FAUXNANCE_API_KEY:}</code></td><td>under <code>secrets</code>:<br><code>- FAUXNANCE_API_KEY</code></td><td>the line you type into <code>.env</code> on the machine (step 6.8)</td></tr>
+</table></div>
+<p>Commit and push these code changes from your laptop. Run the project on your laptop once more: with no setting given, every default applies and it must behave exactly as before.</p>
+
 <h3>File B. <code>project.yaml</code>: about your code</h3>
 <p>Copy the blank file into a text editor, then answer six questions.</p>
 <details><summary>The blank file: <code>deploy/config/project.yaml</code></summary>
@@ -266,7 +350,7 @@ database_password: DB_PASSWORD</code></pre></details>
   - Databases/PostgreSQL/seed</code></pre>
 
 <h4>Question 5. Which settings does the code read?</h4>
-<p>One team's code reads <code>DB_HOST</code>, another's reads <code>POSTGRES_HOST</code>. Our files know neither name. Whatever you list under <code>settings</code> is handed to every container, under exactly the names you write. First list every name the code reads: Java reads them as <code>${NAME:default}</code>, Node as <code>process.env.NAME</code>.</p>
+<p>These are the names you gave in "Make your code read these values" above. One team's code reads <code>DB_HOST</code>, another's reads <code>POSTGRES_HOST</code>. Our files know neither name. Whatever you list under <code>settings</code> is handed to every container, under exactly the names you write. First list every name the code reads: Java reads them as <code>${NAME:default}</code>, Node as <code>process.env.NAME</code>.</p>
 <pre><code>grep -rhoE '\$\{[A-Z_]+' --include='application*.properties' Services/*/src | sort -u
 grep -rhoE 'process\.env\.[A-Z_]+' Services/auth-service/src | sort -u</code></pre>
 <div class="out"><span>What team5 printed (part)</span><pre>${APP_FRONTEND_URL
