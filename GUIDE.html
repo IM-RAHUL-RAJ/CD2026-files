@@ -1584,7 +1584,7 @@ docker-compose up -d</code></pre>
   <tr><td>VPC</td><td>The <strong>same VPC as your EC2 machine</strong> (the default VPC)</td><td>Machines in the same VPC can talk on private addresses. Step 11 explains.</td></tr>
   <tr><td>Public access</td><td><strong>No</strong></td><td>The database is not reachable from the internet.</td></tr>
   <tr><td>VPC security group</td><td>Create new, name <code>team5-db-sg</code></td><td>The database's own firewall.</td></tr>
-  <tr><td>Additional configuration, Initial database name</td><td>Leave empty</td><td>Step 10 creates the database with the right name.</td></tr>
+  <tr><td>Additional configuration, Initial database name</td><td>Leave empty</td><td>Step 10.3 creates the database with the right name.</td></tr>
 </table></div>
 <ol start="3">
   <li>Click <strong>Create database</strong>. Wait until Status is <strong>Available</strong>, about 5 to 10 minutes.</li>
@@ -1608,98 +1608,71 @@ docker-compose up -d</code></pre>
 <!-- ====================================================================== -->
 <h2 id="s10"><span class="n">Step 10</span>Replace the Postgres container with RDS</h2>
 <span class="where">Where: the terminal on the machine, inside <code>deploy</code></span>
-<p>Three things happen: the tables are created on RDS, the config is pointed at RDS, and the Postgres container is removed.</p>
+<p>Three things happen: your schema and seed data are loaded into RDS, the Postgres container is removed, and the config is pointed at RDS. No extra script is needed.</p>
 
-<h3>10.1 Fetch two more files</h3>
-<p>The Postgres container loaded your SQL by itself. RDS does not, so a script does it once.</p>
-<h4><code>scripts/load-schema.sh</code></h4>
-<p>Creates your database on RDS and runs your SQL files into it, in the order listed in <code>project.yaml</code>.</p>
-<pre><code>mkdir -p scripts
-curl -fsSL -o scripts/load-schema.sh https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/scripts/load-schema.sh</code></pre>
-<details><summary>Show the file: <code>scripts/load-schema.sh</code></summary>
-<pre data-file="deploy/scripts/load-schema.sh"><code>#!/usr/bin/env bash
-# Create the database on RDS (or any Postgres) and load the project's SQL
-# into it: the files under `sql` in config/project.yaml, in order.
-# Run once, against an empty database. psql comes from the Postgres image,
-# so nothing is installed on the machine.
-#
-#   deploy/scripts/load-schema.sh &lt;database host&gt;
-#
-# The password is read from deploy/.env. The connection is encrypted, as RDS
-# requires; for a Postgres without encryption, run it with PGSSLMODE=disable.
-set -euo pipefail
-. "$(dirname "$0")/pipeline-env.sh"
-HOST="${1:?usage: load-schema.sh &lt;database host&gt;}"
-PASSWORD="$(grep -m1 "^${DB_PASSWORD_ENV}=" "$DEPLOY/.env" | cut -d= -f2- || true)"
-[ -n "$PASSWORD" ] || { echo "$DB_PASSWORD_ENV is empty in deploy/.env" &gt;&amp;2; exit 1; }
+<h3>10.1 Install the Postgres client</h3>
+<p>The Postgres container loaded your SQL by itself. RDS is empty, so you load the same two files into it once, by hand. <code>psql</code> is the program that sends SQL to a Postgres database.</p>
+<pre><code>dnf install -y postgresql16
+psql --version</code></pre>
+<div class="out"><span>Expected</span><pre>psql (PostgreSQL) 16.x</pre></div>
 
-psql_run() {
-  docker run --rm -i -e PGPASSWORD="$PASSWORD" -e PGHOST="$HOST" \
-    -e PGPORT="${PGPORT:-5432}" -e PGSSLMODE="${PGSSLMODE:-require}" \
-    -e POSTGRES_USER="$DB_USER" -e POSTGRES_DB="$DB_NAME" -e SQL_PATHS="$DB_SQL" \
-    -v "$PROJECT_DIR":/project:ro -v "$DEPLOY/docker/postgres-init.sh":/load.sh:ro \
-    postgres:16-alpine "$@"
-}
+<h3>10.2 Find your schema and seed files</h3>
+<p>They are in your project's database folder: the same files you listed under <code>sql</code> in <code>project.yaml</code>. From inside <code>deploy</code>, the project's top folder is <code>..</code></p>
+<pre><code>ls ../db</code></pre>
+<div class="out"><span>Typical</span><pre>schema.sql
+seed-data.sql</pre></div>
+<div class="tablewrap"><table>
+  <tr><th>File</th><th>What it does</th></tr>
+  <tr><td><code>schema.sql</code></td><td>Creates the tables. Runs first.</td></tr>
+  <tr><td><code>seed-data.sql</code></td><td>Puts the starting rows in them. Runs second.</td></tr>
+</table></div>
+<p>Your folder may have another name, such as <code>Databases</code>. Use your own paths below.</p>
 
-if [ "$(psql_run psql -U "$DB_USER" -d postgres -Atc "select 1 from pg_database where datname='$DB_NAME'")" != 1 ]; then
-  psql_run psql -U "$DB_USER" -d postgres -c "CREATE DATABASE \"$DB_NAME\""
-fi
-psql_run sh /load.sh
-psql_run psql -U "$DB_USER" -d "$DB_NAME" -c \
-  "select table_schema, count(*) as tables from information_schema.tables where table_schema not in ('pg_catalog','information_schema') group by 1 order by 1"</code></pre></details>
-<h4><code>scripts/pipeline-env.sh</code></h4>
-<p>A helper the script above reads its settings through.</p>
-<pre><code>curl -fsSL -o scripts/pipeline-env.sh https://raw.githubusercontent.com/IM-RAHUL-RAJ/CD2026-files/main/deploy/scripts/pipeline-env.sh
-chmod +x scripts/load-schema.sh</code></pre>
-<details><summary>Show the file: <code>scripts/pipeline-env.sh</code></summary>
-<pre data-file="deploy/scripts/pipeline-env.sh"><code># Shared settings for the scripts in this folder. Sourced, not run.
-# The values come from deploy/build.env, which config/apply.py writes from
-# the files in config/.
-DEPLOY="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." &amp;&amp; pwd)"
-[ -f "$DEPLOY/build.env" ] || { echo "deploy/build.env is missing. Run: python3 deploy/config/apply.py" &gt;&amp;2; exit 1; }
-set -a
-. "$DEPLOY/build.env"
-set +a
-PROJECT_DIR="$(cd "$DEPLOY/$PROJECT_ROOT" &amp;&amp; pwd)"
-export AWS_REGION
+<h3>10.3 Create the database and load the two files</h3>
+<p>Put your endpoint from step 9, the database password from <code>.env</code>, and your database name from <code>application.yaml</code> in the first three lines.</p>
+<pre><code>export PGHOST=&lt;endpoint&gt;
+export PGPASSWORD='&lt;database password&gt;'
+DB=trading_system_db
 
-# role -&gt; the name of its image, container and Kubernetes objects
-ROLES=(FRONTEND AUTH ORDER EXECUTOR)
-name_of() {
-  case "$1" in
-    FRONTEND) echo frontend ;;
-    AUTH)     echo auth-service ;;
-    ORDER)    echo order-service ;;
-    EXECUTOR) echo executor-service ;;
-  esac
-}
-# value_of AUTH PORT -&gt; the value of AUTH_PORT
-value_of() { local key="$1_$2"; echo "${!key}"; }
-
-registry() {
-  echo "$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
-}</code></pre></details>
-
-<h3>10.2 Create the tables on RDS</h3>
-<p>Put your endpoint from step 9 in place of <code>&lt;endpoint&gt;</code>.</p>
-<pre><code>scripts/load-schema.sh &lt;endpoint&gt;</code></pre>
-<div class="out"><span>What team5 printed (shortened)</span><pre>CREATE DATABASE
-== /project/Databases/PostgreSQL/migrations/001_initial_schema.sql
-== /project/Databases/PostgreSQL/migrations/002_add_indexes.sql
+psql -U postgres -d postgres -c "CREATE DATABASE $DB"
+psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f ../db/schema.sql
+psql -U postgres -d $DB -v ON_ERROR_STOP=1 -f ../db/seed-data.sql</code></pre>
+<div class="out"><span>Expected (shortened)</span><pre>CREATE DATABASE
+CREATE SCHEMA
+CREATE TABLE
+CREATE TABLE
 ...
-== /project/Databases/PostgreSQL/seed/001_seed_data.sql
-== SQL loaded
- table_schema | tables
---------------+--------
- auth         |      2
- trade        |     12</pre></div>
-<p>The table at the end must show the same counts as in step 8.1. <code>password authentication failed</code> means the password in <code>.env</code> is not the one you gave RDS. Run this script once only. A second run stops with an "already exists" error and changes nothing.</p>
+INSERT 0 5
+INSERT 0 12</pre></div>
+<div class="tablewrap"><table>
+  <tr><th>Line</th><th>What it does</th></tr>
+  <tr><td><code>export PGHOST</code>, <code>PGPASSWORD</code></td><td>Tells <code>psql</code> where the database is and how to log in, so the next lines stay short.</td></tr>
+  <tr><td><code>CREATE DATABASE</code></td><td>RDS starts with only an empty database called <code>postgres</code>. This creates yours.</td></tr>
+  <tr><td><code>-f ../db/schema.sql</code></td><td>Runs the file. <code>ON_ERROR_STOP=1</code> stops at the first error instead of carrying on.</td></tr>
+</table></div>
+<p>Check that the tables are there:</p>
+<pre><code>psql -U postgres -d $DB -c "select table_schema, count(*) from information_schema.tables where table_schema not in ('pg_catalog','information_schema') group by 1"</code></pre>
+<div class="out"><span>What team5 printed</span><pre> table_schema | count
+--------------+-------
+ auth         |     2
+ trade        |    12</pre></div>
+<p>The counts must be the same as in step 8.1.</p>
+<div class="tablewrap"><table>
+  <tr><th>What you see</th><th>Meaning</th></tr>
+  <tr><td><code>password authentication failed</code></td><td>The password is not the one you gave RDS in step 9.</td></tr>
+  <tr><td>Nothing happens, then <code>timeout</code></td><td>The machine cannot reach the database: the security group rule in step 9.</td></tr>
+  <tr><td><code>already exists</code></td><td>The file was already loaded. Load each file once only.</td></tr>
+</table></div>
+<p><strong>If your schema is a folder of numbered files</strong> instead of one file, as in team5, run them in name order. This replaces the two <code>-f</code> lines:</p>
+<pre><code>for f in ../Databases/PostgreSQL/migrations/*.sql ../Databases/PostgreSQL/seed/*.sql; do
+  psql -U postgres -d $DB -v ON_ERROR_STOP=1 -q -f "$f"
+done</code></pre>
 
-<h3>10.3 Remove the Postgres container</h3>
+<h3>10.4 Remove the Postgres container</h3>
 <pre><code>docker-compose stop postgres
 docker-compose rm -f postgres</code></pre>
 
-<h3>10.4 Point the config at RDS</h3>
+<h3>10.5 Point the config at RDS</h3>
 <p>One line changes: <code>database.host</code>. Replace <code>postgres</code> with your endpoint. The database is no longer a container on this machine, so it is no longer reached by a container name; it is reached by the address AWS gave it.</p>
 <pre><code>nano config/application.yaml</code></pre>
 <pre><code>database:
@@ -1707,7 +1680,7 @@ docker-compose rm -f postgres</code></pre>
   port: 5432</code></pre>
 <p>Then check that <code>settings</code> in <code>config/project.yaml</code> contains the line <code>PGSSLMODE: "{db_sslmode}"</code>. RDS accepts only encrypted connections, and a Node service needs this setting to open one. Java services encrypt on their own.</p>
 
-<h3>10.5 Apply and restart</h3>
+<h3>10.6 Apply and restart</h3>
 <pre><code>python3 config/apply.py
 docker-compose up -d
 docker-compose ps -a</code></pre>
@@ -2145,6 +2118,33 @@ spec:
     - http:
         paths:
 @@PATHS@@</code></pre></details>
+<details><summary><code>scripts/pipeline-env.sh</code></summary><pre data-file="deploy/scripts/pipeline-env.sh"><code># Shared settings for the scripts in this folder. Sourced, not run.
+# The values come from deploy/build.env, which config/apply.py writes from
+# the files in config/.
+DEPLOY="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." &amp;&amp; pwd)"
+[ -f "$DEPLOY/build.env" ] || { echo "deploy/build.env is missing. Run: python3 deploy/config/apply.py" &gt;&amp;2; exit 1; }
+set -a
+. "$DEPLOY/build.env"
+set +a
+PROJECT_DIR="$(cd "$DEPLOY/$PROJECT_ROOT" &amp;&amp; pwd)"
+export AWS_REGION
+
+# role -&gt; the name of its image, container and Kubernetes objects
+ROLES=(FRONTEND AUTH ORDER EXECUTOR)
+name_of() {
+  case "$1" in
+    FRONTEND) echo frontend ;;
+    AUTH)     echo auth-service ;;
+    ORDER)    echo order-service ;;
+    EXECUTOR) echo executor-service ;;
+  esac
+}
+# value_of AUTH PORT -&gt; the value of AUTH_PORT
+value_of() { local key="$1_$2"; echo "${!key}"; }
+
+registry() {
+  echo "$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
+}</code></pre></details>
 <details><summary><code>scripts/bootstrap.sh</code></summary><pre data-file="deploy/scripts/bootstrap.sh"><code>#!/usr/bin/env bash
 # One-time preparation of the cluster for this project. Safe to run again:
 # every step checks before it creates.
@@ -2152,8 +2152,8 @@ spec:
 #   deploy/scripts/bootstrap.sh
 #
 # Not done here, because they involve the network or are done once per
-# database (see GUIDE.html): the VPC peering to RDS, and loading the schema
-# (scripts/load-schema.sh).
+# database (see GUIDE.html, steps 10 and 11): the VPC peering to RDS, and
+# loading the schema and seed data.
 set -euo pipefail
 . "$(dirname "$0")/pipeline-env.sh"
 HERE="$(dirname "$0")"

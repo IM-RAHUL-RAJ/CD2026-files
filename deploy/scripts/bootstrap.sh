@@ -5,8 +5,8 @@
 #   deploy/scripts/bootstrap.sh
 #
 # Not done here, because they involve the network or are done once per
-# database (see GUIDE.html): the VPC peering to RDS, and loading the schema
-# (scripts/load-schema.sh).
+# database (see GUIDE.html, steps 10 and 11): the VPC peering to RDS, and
+# loading the schema and seed data.
 set -euo pipefail
 . "$(dirname "$0")/pipeline-env.sh"
 HERE="$(dirname "$0")"

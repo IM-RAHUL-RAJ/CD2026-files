@@ -31,7 +31,6 @@ writing the config file, to an EC2 machine, to copying each file, to
 | `docker-compose.yml` | Postgres, Kafka, Mailpit and the four applications on one machine. Postgres is left out once `database.host` is an RDS endpoint |
 | `k8s-templates/` | The Kubernetes files before your values are filled in |
 | `scripts/bootstrap.sh` | One-time cluster preparation: ECR repositories, disk add-on, load balancer controller, namespace, Secret |
-| `scripts/load-schema.sh` | Creates the database on RDS and loads your SQL |
 | `scripts/create-secret.sh` | Makes the Kubernetes Secret from `.env` |
 | `scripts/test.sh`, `build-push.sh`, `deploy.sh`, `smoke-test.sh` | The four pipeline steps; each also runs by hand |
 | `Jenkinsfile` | The pipeline. In the Jenkins job, set Script Path to `deploy/Jenkinsfile` |
