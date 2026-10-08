@@ -185,7 +185,10 @@ def dot_env(cfg, phase):
     lines += [f"{k}={v}" for k, v in secret_values(path, cfg.get("secrets") or []).items()]
     lines += ["", MANAGED_HEAD, f"# phase: {phase}"]
     lines += [env_line(k, v) for k, v in build_settings(cfg).items()]
-    lines += [env_line("COMPOSE_PROFILES", "mail" if cfg["mail"].get("mailpit") else ""),
+    # Optional containers: Postgres unless the database is elsewhere (RDS), Mailpit if asked for.
+    profiles = [name for name, wanted in (("localdb", cfg["database"]["host"] == "postgres"),
+                                          ("mail", cfg["mail"].get("mailpit"))) if wanted]
+    lines += [env_line("COMPOSE_PROFILES", ",".join(profiles)),
               env_line("AUTH_URL", values["auth_url"]),
               env_line("BACKEND_URL", values["order_url"]),
               "", "# The project's own settings (the `env` section)."]

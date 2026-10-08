@@ -1,15 +1,6 @@
 #!/bin/sh
-# Load the project's SQL into an empty database, in the order listed in
-# config/application.yaml (database.sql). A folder means all its *.sql files
-# in name order.
-#
-# Used in two places:
-#   docker-compose  mounted into the Postgres container, which runs it once,
-#                   the first time it starts with an empty data volume
-#   RDS             run by scripts/load-schema.sh
-#
-# Reads: SQL_PATHS (space separated, relative to /project), POSTGRES_USER,
-# POSTGRES_DB. Connection settings come from the usual PG* variables.
+# Loads the project's SQL (database.sql in application.yaml) into an empty
+# database, in order. A folder means all its *.sql files in name order.
 load_sql() {
   for path in $SQL_PATHS; do
     if [ -d "/project/$path" ]; then

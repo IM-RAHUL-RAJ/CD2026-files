@@ -1,6 +1,5 @@
-# config/application.yaml as used for Neueda-Learning/chennai-capstone-SE6-team5.
-# A worked example: copy it over application.yaml to see a complete setup.
-# The docker phase was run with exactly these values on 7 October 2026.
+# The finished file for Neueda-Learning/chennai-capstone-SE6-team5.
+# GUIDE.html, step 1, shows how each value was found.
 
 phase: docker             # local | docker | eks
 
@@ -10,7 +9,7 @@ project:
 
 public:
   scheme: http
-  host: localhost         # on the EC2 box: its public IP
+  host: localhost         # on an EC2 box: its public IP
 
 services:
   frontend:
@@ -32,9 +31,7 @@ services:
     port: 8081
     health: /actuator/health
     routes: [/api/v1]
-    # One test in this repository fails on main (PriceAlertEvaluatorTest), so
-    # the pipeline would stop here. Set to true once it is fixed.
-    test: false
+    test: false           # one unit test fails on main (PriceAlertEvaluatorTest)
   executor:
     path: Services/executor-service
     type: java
@@ -43,7 +40,7 @@ services:
     test: true
 
 database:
-  host: postgres
+  host: postgres          # postgres = the container; otherwise the RDS endpoint
   port: 5432
   name: trading_db_1
   user: postgres
@@ -57,7 +54,7 @@ kafka:
   port: 29092
 
 mail:
-  mailpit: true           # the trade API emails the sign-up link
+  mailpit: true
   host: mailpit
   port: 1025
 
@@ -68,7 +65,6 @@ aws:
   image_prefix: team5
 
 env:
-  # database: the auth service reads the parts, the Spring services the URL
   POSTGRES_HOST: "{db_host}"
   POSTGRES_PORT: "{db_port}"
   POSTGRES_DB: "{db_name}"
@@ -77,23 +73,18 @@ env:
   POSTGRES_SEARCH_PATH: auth
   SPRING_DATASOURCE_URL: "jdbc:postgresql://{db_host}:{db_port}/{db_name}?currentSchema=trade"
   SPRING_DATASOURCE_USERNAME: "{db_user}"
-  # read by the auth service's Postgres driver; the Spring services encrypt on their own
   PGSSLMODE: "{db_sslmode}"
   KAFKA_BOOTSTRAP_SERVERS: "{kafka}"
   JWT_ISSUER: auth-service
-  # browser-facing
   APP_CORS_ALLOWED_ORIGINS: "{cors_origins}"
   APP_FRONTEND_URL: "{frontend_url}"
-  # service to service
   AUTH_SERVICE_URL: "{auth_internal}"
   TRADE_API_BASE_URL: "{order_internal}"
-  # mail
   SPRING_MAIL_HOST: "{mail_host}"
   SPRING_MAIL_PORT: "{mail_port}"
   SPRING_MAIL_AUTH: "false"
   SPRING_MAIL_STARTTLS: "false"
   APP_MAIL_FROM: noreply@holdmystocks.com
-  # outside services
   FAUXNANCE_BASE_URL: https://y4t9nq2bqf.execute-api.eu-west-2.amazonaws.com/v1
   CURRENCYAPI_BASE_URL: https://api.currencyapi.com
   POLL_INTERVAL_SECONDS: "60"

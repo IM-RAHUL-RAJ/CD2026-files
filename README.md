@@ -10,23 +10,11 @@ trade API and an executor) with Postgres and Kafka.
 
 ## Use it
 
-```bash
-sudo dnf install -y git                # a new machine has none
-git clone https://github.com/IM-RAHUL-RAJ/CD2026-files.git
-cp -r CD2026-files/deploy <your-project>/deploy
-cd <your-project>
+Open `GUIDE.html` in a browser and follow it from step 1. It goes from
+writing the config file, to an EC2 machine, to copying each file, to
+`docker-compose`, to the database on RDS. Every file is printed in it.
 
-sudo dnf install -y python3-pyyaml
-vi deploy/config/application.yaml      # folders, ports, the settings your code reads
-python3 deploy/config/apply.py         # writes deploy/.env
-vi deploy/.env                         # type the passwords and keys at the top
-
-cd deploy
-docker-compose up -d --build
-docker-compose ps
-```
-
-`deploy/config/examples/team5.yaml` is a complete, working example.
+`deploy/config/examples/team5.yaml` is a complete, working config.
 
 ## What is in `deploy/`
 
@@ -39,7 +27,7 @@ docker-compose ps
 | `docker/angular.Dockerfile` | Any npm-built single-page app, served by nginx |
 | `docker/python.Dockerfile` | Any `pip install -r requirements.txt` project |
 | `docker/postgres-init.sh` | Loads your SQL into an empty database |
-| `docker-compose.yml` | Postgres, Kafka, Mailpit and the four applications on one machine |
+| `docker-compose.yml` | Postgres, Kafka, Mailpit and the four applications on one machine. Postgres is left out once `database.host` is an RDS endpoint |
 | `k8s-templates/` | The Kubernetes files before your values are filled in |
 | `scripts/bootstrap.sh` | One-time cluster preparation: ECR repositories, disk add-on, load balancer controller, namespace, Secret |
 | `scripts/load-schema.sh` | Creates the database on RDS and loads your SQL |
@@ -56,13 +44,22 @@ by git.
 An Angular build is static files, so the image cannot read a setting later
 the way a server can. The image writes the API addresses into
 `/app-config.js` when its container starts; your app has to load that file
-and prefer its values. The two edits are at the top of
-`deploy/docker/angular.Dockerfile`.
+and prefer its values. The edits are in `GUIDE.html`, step 5, file 3.
+
+## Other files here
+
+`ETP-history.html` is the full record of the first project deployed this
+way, including the EKS and Jenkins stages. `update-guide-files.py` copies
+the current files into `GUIDE.html`; run it after changing any file in
+`deploy/`.
 
 ## What has been run
 
-The `docker` phase was run end to end on 7 October 2026 against
-`Neueda-Learning/chennai-capstone-SE6-team5`. The Kubernetes files and the
+The `docker` phase was run end to end on 8 October 2026 against
+`Neueda-Learning/chennai-capstone-SE6-team5`, first with the Postgres
+container and then switched to a separate Postgres that accepts only
+encrypted connections, standing in for RDS. It has not yet been run against
+a real RDS instance. The Kubernetes files and the
 pipeline scripts are adapted from the ones that deployed `ETP-testing` to
 EKS; in this generic form they render and pass a dry run, but they have not
 yet been applied to a cluster.

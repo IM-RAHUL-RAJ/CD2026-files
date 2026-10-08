@@ -1,34 +1,23 @@
-# ==============================================================================
-# The whole application on one machine: Postgres, Kafka, the four services
-# and, optionally, a Mailpit test inbox.
-#
-# Nothing in this file names a project. Folders, ports and Dockerfile types
-# come from deploy/.env, which config/apply.py writes from
-# config/application.yaml. Change values there, not here.
-#
-#   cd deploy
-#   python3 config/apply.py
-#   docker-compose up -d --build
-#   docker-compose ps
-# ==============================================================================
+# Postgres, Kafka, Mailpit and the four applications on one machine.
+# Every ${VALUE} comes from .env, which config/apply.py writes.
 name: ${PROJECT_NAME}
 
-# Shared by the four application services. Every one receives every setting
-# in .env, so this file does not need to know which names the code reads.
 x-app: &app
   env_file: .env
   networks: [app]
   restart: unless-stopped
 
 services:
+  # Started only while database.host is `postgres`. With an RDS endpoint
+  # there, this container is left out.
   postgres:
     image: postgres:16-alpine
+    profiles: [localdb]
     env_file: .env
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       SQL_PATHS: ${DB_SQL}
-    # The password is whichever secret application.yaml names (database.password_env).
     entrypoint:
       - sh
       - -c
@@ -41,7 +30,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ${PROJECT_DIR}:/project:ro
-      # Runs once, when the data volume is empty: loads the project's SQL.
       - ./docker/postgres-init.sh:/docker-entrypoint-initdb.d/00-load.sh:ro
     networks: [app]
     restart: unless-stopped
@@ -59,7 +47,6 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: "broker,controller"
-      # Containers use kafka:29092. Programs on the machine itself use localhost:9092.
       KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:9092"
       KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
@@ -69,8 +56,6 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      # Off, so a missing topic fails loudly instead of being created with
-      # one partition and default retention.
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     volumes:
       - kafka_data:/var/lib/kafka/data
@@ -82,9 +67,6 @@ services:
       timeout: 10s
       retries: 10
       start_period: 15s
-
-  # Runs once: creates the six topics, then exits. The trade API and the
-  # executor wait for it, so they never meet a broker with no topics.
   kafka-init:
     image: apache/kafka:3.8.0
     depends_on:
@@ -107,15 +89,13 @@ services:
         create trade-events.DLT 3 2592000000
         create market-data.DLT 6 86400000
         echo "=== topics ready ==="
-
-  # A test inbox: catches every email the application sends.
   # Started only when application.yaml has mail.mailpit: true.
   mailpit:
     image: axllent/mailpit:latest
     profiles: [mail]
     ports:
-      - "8025:8025"     # the inbox, in a browser
-      - "1025:1025"     # SMTP
+      - "8025:8025"
+      - "1025:1025"
     networks: [app]
     restart: unless-stopped
 
@@ -137,6 +117,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+        required: false
 
   order-service:
     <<: *app
@@ -156,6 +137,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+        required: false
       kafka-init:
         condition: service_completed_successfully
       auth-service:
@@ -179,6 +161,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+        required: false
       kafka-init:
         condition: service_completed_successfully
 
@@ -194,11 +177,9 @@ services:
     image: ${IMAGE_PREFIX}-frontend
     environment:
       PORT: ${FRONTEND_LISTEN}
-      # Handed to the browser, so they must be reachable from the user's machine.
       AUTH_URL: ${AUTH_URL}
       BACKEND_URL: ${BACKEND_URL}
     ports:
-      # An nginx-served frontend listens on 80 inside its container.
       - "${FRONTEND_PORT}:${FRONTEND_LISTEN}"
     depends_on:
       auth-service:
