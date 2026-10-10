@@ -1,0 +1,359 @@
+
+<!-- ============ CH5 ACCESS ============ -->
+<section class="slide chapter" data-title="Chapter 5 · SSH and SSM">
+  <div class="num">05</div>
+  <div class="eyebrow">Chapter 5</div>
+  <h2>Getting inside a server</h2>
+  <p class="q">Kabir needs a terminal on his server. The old way opens a door. The new way doesn't.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--steel)">SSH</span><span class="tile sm" style="--c:var(--teal)">SSM</span><span class="tile sm" style="--c:var(--amber)">EIC</span></div>
+  <aside class="notes"><p>SSH, EC2 Instance Connect, Session Manager, bastion hosts.</p></aside>
+</section>
+
+<section class="slide" data-title="Open door vs no door" data-phase="pic" data-ch="Access">
+  <h2>An open door, or no door at all</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <text x="340" y="40" text-anchor="middle" style="font:700 26px var(--f-body)">SSH</text>
+      <text x="1060" y="40" text-anchor="middle" class="tt" style="font:700 26px var(--f-body)">Session Manager</text>
+      <line x1="704" y1="20" x2="704" y2="540" class="w-l"/>
+      <!-- SSH side -->
+      <g transform="translate(460,150)"><rect width="200" height="220" rx="20" class="fa"/><text x="100" y="120" text-anchor="middle" class="tink" style="font:800 28px var(--f-display)">EC2</text></g>
+      <rect x="436" y="230" width="24" height="70" rx="6" class="fk" style="stroke:var(--rose);stroke-width:3"/><text x="448" y="330" text-anchor="middle" class="tr tm" style="font-size:16px">:22 open</text>
+      <g transform="translate(40,230)"><circle cx="40" cy="40" r="38" class="bx-t"/><text x="40" y="47" text-anchor="middle" class="tt tm" style="font-size:16px">Kabir</text></g>
+      <path id="ss1" d="M118 270 H436" class="w-l"/><circle r="10" class="ft glow-t"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#ss1"/></animateMotion></circle>
+      <g class="f" data-f="1">
+        <path id="bot1" d="M60 100 C 200 120, 330 200, 436 250" class="w-r dash"/><path id="bot2" d="M80 460 C 220 430, 340 340, 436 285" class="w-r dash"/>
+        <circle r="9" class="fr glow-r"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#bot1"/></animateMotion></circle>
+        <circle r="9" class="fr glow-r"><animateMotion dur="1.5s" repeatCount="indefinite"><mpath href="#bot2"/></animateMotion></circle>
+        <text x="40" y="90" class="tr tm" style="font-size:16px">bots scanning port 22</text><text x="40" y="500" class="tr tm" style="font-size:16px">password guessing</text>
+      </g>
+      <!-- SSM side -->
+      <g class="f" data-f="2">
+        <g transform="translate(1160,300)"><rect width="200" height="200" rx="20" class="fa"/><text x="100" y="95" text-anchor="middle" class="tink" style="font:800 28px var(--f-display)">EC2</text><text x="100" y="135" text-anchor="middle" class="tink tm" style="font-size:15px">SSM agent</text></g>
+        <g transform="translate(900,90)"><ellipse cx="120" cy="60" rx="140" ry="60" class="bx-t"/><text x="120" y="68" text-anchor="middle" class="tt" style="font:700 22px var(--f-body)">AWS SSM</text></g>
+        <path id="ag" d="M1260 300 C 1260 220, 1150 180, 1100 150" class="w-t" style="stroke-width:4"/>
+        <circle r="10" class="fa glow-a"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#ag"/></animateMotion></circle>
+        <text x="1280" y="250" class="ta tm" style="font-size:16px">dials OUT</text><text x="1280" y="272" class="ta tm" style="font-size:16px">on 443</text>
+        <g transform="translate(760,330)"><circle cx="40" cy="40" r="38" class="bx-t"/><text x="40" y="47" text-anchor="middle" class="tt tm" style="font-size:16px">Kabir</text></g>
+        <path id="kb" d="M838 350 C 880 250, 920 200, 960 160" class="w-t dash"/>
+        <text x="760" y="460" class="tg" style="font:600 20px var(--f-body)">0 inbound ports · 0 keys</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Left: SSH needs port 22 open. Click: the moment it's open to the internet, bots start knocking. Click: Session Manager. The agent on the server dials out to AWS; Kabir connects through AWS. Nothing needs to come in.</p></aside>
+</section>
+
+<section class="slide" data-title="SSH in practice" data-phase="concept" data-ch="Access">
+  <h2>SSH: a lock on the server, a key in your pocket</h2>
+  <div class="row grow">
+    <div class="grow" style="display:flex;flex-direction:column;gap:16px">
+<pre class="code f" data-f="1"><span class="c"># only you may read the key</span>
+chmod 400 chaicart.pem
+<span class="c"># the username depends on the AMI</span>
+ssh -i chaicart.pem <span class="s">ec2-user</span>@13.233.41.7  <span class="c"># Amazon Linux</span>
+ssh -i chaicart.pem <span class="s">ubuntu</span>@13.233.41.7    <span class="c"># Ubuntu</span></pre>
+      <p class="small f" data-f="1">AWS keeps the public key (the lock) on the server. You download the private key once. AWS never stores it.</p>
+    </div>
+    <div style="width:520px;flex:none;display:flex;flex-direction:column;gap:12px">
+      <div class="card f" data-f="2" style="--c:var(--rose)"><h3 style="font-size:20px" class="mono">Connection timed out</h3><p class="what">The network blocked you: SG rule, no public IP, or no route to the IGW.</p></div>
+      <div class="card f" data-f="3" style="--c:var(--amber)"><h3 style="font-size:20px" class="mono">Permission denied (publickey)</h3><p class="what">You reached the server. Wrong username or wrong key.</p></div>
+      <div class="card f" data-f="4" style="--c:var(--violet)"><h3 style="font-size:20px" class="mono">UNPROTECTED PRIVATE KEY FILE</h3><p class="what">Run <span class="mono">chmod 400</span> on the key.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>The most useful debugging tip of the day: timeout = network problem, permission denied = login problem.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: ways in" data-phase="compare" data-ch="Access">
+  <h2>Four ways into a server</h2>
+  <div class="cmp g4 grow">
+    <div class="card f" data-f="1" style="--c:var(--steel)"><h3>SSH + key</h3><p class="what">Port 22 open · .pem to guard · little audit trail.</p><p class="use"><b>Use for</b>Labs, quick tests.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--amber)"><h3>EC2 Instance Connect</h3><p class="what">Pushes a one-time key valid for 60 seconds. Still needs port 22.</p><p class="use"><b>Use for</b>Console SSH without managing keys.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--teal)"><h3>Session Manager</h3><p class="what">No ports · no keys · IAM decides · every session can be logged.</p><p class="use"><b>Use for</b>Production. The modern default.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--rose)"><h3>Bastion host</h3><p class="what">A public jump server in front of private ones. One more server to patch.</p><p class="use"><b>Use for</b>Legacy setups. Being replaced by SSM.</p></div>
+  </div>
+  <aside class="notes"><p>Production direction: close port 22 everywhere, use Session Manager, and log every session.</p></aside>
+</section>
+
+<section class="slide" data-title="How SSM works" data-phase="behind" data-ch="Access">
+  <div><span class="wowtag">Behind the scenes</span></div>
+  <h2 style="margin-top:6px">How Session Manager reaches a private server</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <rect x="760" y="30" width="620" height="500" rx="24" class="bx-v" style="fill:rgba(161,147,255,.04)"/><text x="784" y="66" class="tv tm">private subnet</text>
+      <g transform="translate(1060,200)"><rect width="280" height="200" rx="20" class="fa"/><text x="140" y="80" text-anchor="middle" class="tink" style="font:800 26px var(--f-display)">EC2</text><text x="140" y="120" text-anchor="middle" class="tink tm" style="font-size:15px">SSM agent + role</text></g>
+      <g transform="translate(800,240)" class="f" data-f="2"><rect width="200" height="120" rx="16" class="bx-v"/><text x="100" y="52" text-anchor="middle" class="tv tm" style="font-size:16px">VPC endpoints</text><text x="100" y="80" text-anchor="middle" class="tmut tm" style="font-size:13px">ssm · ssmmessages</text><text x="100" y="100" text-anchor="middle" class="tmut tm" style="font-size:13px">ec2messages</text></g>
+      <g transform="translate(330,60)"><ellipse cx="160" cy="70" rx="180" ry="70" class="bx-t"/><text x="160" y="64" text-anchor="middle" class="tt" style="font:700 22px var(--f-body)">Systems Manager</text><text x="160" y="94" text-anchor="middle" class="tmut" style="font-size:16px">regional service</text></g>
+      <g class="f" data-f="1"><path id="sm1" d="M1060 280 C 900 200, 760 150, 680 130" class="w-a" style="stroke-width:4"/><circle r="10" class="fa glow-a"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#sm1"/></animateMotion></circle><text x="830" y="160" class="ta tm" style="font-size:16px">1 · agent opens HTTPS, keeps it open</text></g>
+      <g transform="translate(40,330)"><circle cx="60" cy="60" r="58" class="bx-t"/><text x="60" y="68" text-anchor="middle" class="tt tm" style="font-size:17px">Kabir</text></g>
+      <g class="f" data-f="3"><path id="sm2" d="M150 360 C 260 260, 360 200, 420 160" class="w-t" style="stroke-width:4"/><circle r="10" class="ft glow-t"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#sm2"/></animateMotion></circle><text x="120" y="260" class="tt tm" style="font-size:16px">2 · start-session (IAM checks)</text></g>
+      <g class="f" data-f="4"><rect x="40" y="470" width="660" height="60" rx="14" class="bx-g"/><text x="64" y="508" class="tg" style="font-size:20px">3 · keystrokes flow over the agent's channel · logged to S3 / CloudWatch</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>The agent makes outbound HTTPS connections to the Systems Manager endpoints and keeps a channel open. When you start a session, IAM checks your permission and your keystrokes travel over that channel.</p><p>Private subnet with no NAT? Add interface VPC endpoints for ssm, ssmmessages and ec2messages. The instance role needs the AmazonSSMManagedInstanceCore policy.</p></aside>
+</section>
+
+<!-- ============ CH6 AMI ============ -->
+<section class="slide chapter" data-title="Chapter 6 · AMI">
+  <div class="num">06</div>
+  <div class="eyebrow">Chapter 6</div>
+  <h2>Stamp out identical servers</h2>
+  <p class="q">Set one server up perfectly, then copy it twenty times next Diwali.</p>
+  <div class="tiles"><span class="tile sm">AMI</span><span class="tile sm" style="--c:var(--blue)">SNAP</span><span class="tile sm" style="--c:var(--green)">LT</span></div>
+  <aside class="notes"><p>AMI = Amazon Machine Image.</p></aside>
+</section>
+
+<section class="slide" data-title="The cookie cutter" data-phase="pic" data-ch="AMI">
+  <h2>An AMI is a cookie cutter for servers</h2>
+  <div class="row grow" style="align-items:center">
+    <div class="ami-stage" style="width:520px;height:420px;flex:none"><div class="ami-stack"><div class="ami-card">copy</div><div class="ami-card">copy</div><div class="ami-card">copy</div><div class="ami-card">chaicart-v3</div></div></div>
+    <div class="vis" style="height:420px">
+      <svg class="d" viewBox="0 0 800 420">
+        <g class="f" data-f="1"><text x="0" y="40" class="lbl">1 · set up one server</text><rect x="0" y="60" width="140" height="100" rx="14" class="fa"/><text x="70" y="118" text-anchor="middle" class="tink tm" style="font-size:15px">nginx + app</text></g>
+        <g class="f" data-f="2"><path d="M150 110 H250" class="w-a"/><text x="270" y="40" class="lbl">2 · create image</text><rect x="270" y="60" width="140" height="100" rx="14" class="bx-a"/><text x="340" y="118" text-anchor="middle" class="ta tm" style="font-size:15px">AMI</text></g>
+        <g class="f" data-f="3"><path d="M420 110 H500" class="w-a"/><text x="520" y="40" class="lbl">3 · launch many</text>
+          <g class="fa"><rect x="520" y="60" width="70" height="50" rx="8"/><rect x="600" y="60" width="70" height="50" rx="8"/><rect x="680" y="60" width="70" height="50" rx="8"/><rect x="520" y="120" width="70" height="50" rx="8"/><rect x="600" y="120" width="70" height="50" rx="8"/><rect x="680" y="120" width="70" height="50" rx="8"/><rect x="520" y="180" width="70" height="50" rx="8"/><rect x="600" y="180" width="70" height="50" rx="8"/><rect x="680" y="180" width="70" height="50" rx="8"/></g></g>
+        <g class="f" data-f="4"><text x="0" y="320" style="font:600 26px var(--f-body)">Every copy boots identical, in minutes.</text><text x="0" y="360" class="tmut" style="font-size:20px">AMIs are regional. Copy one to use it in another Region.</text></g>
+      </svg>
+    </div>
+  </div>
+  <aside class="notes"><p>An AMI holds the disk snapshot(s), the architecture and boot settings, and launch permissions. Sources: AWS-provided, Marketplace, community, or your own "golden AMI".</p></aside>
+</section>
+
+<section class="slide" data-title="Snapshots are incremental" data-phase="behind" data-ch="AMI" data-hook="snap" data-steps="3">
+  <div><span class="wowtag">Behind the scenes</span></div>
+  <h2 style="margin-top:6px">Snapshots only save what changed</h2>
+  <div class="row grow">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 900 560" id="snapSvg"></svg>
+    </div>
+    <div style="width:470px;flex:none;display:flex;flex-direction:column;gap:18px;justify-content:center">
+      <p class="say f" data-f="1">Snapshot 1 copies every used block.</p>
+      <p class="say f" data-f="2">Snapshot 2 copies only <em>changed</em> blocks.</p>
+      <p class="small f" data-f="3">Stored durably in S3, managed by AWS. An AMI points at snapshots like these, so deleting an old snapshot never breaks a newer one.</p>
+      <table class="t f" data-f="3" style="font-size:17px"><tr><th>Thing</th><th>What it is</th></tr><tr><td class="hl-a">AMI</td><td>Snapshot + boot settings</td></tr><tr><td class="hl-b">Snapshot</td><td>Point-in-time copy of one disk</td></tr><tr><td class="hl-g">Launch template</td><td>AMI + type + SG + role</td></tr><tr><td class="hl-t">Container image</td><td>App only, no OS kernel</td></tr></table>
+    </div>
+  </div>
+  <aside class="notes"><p>The grid is a disk's blocks. Snapshot 1 copies all used blocks. Then the app changes a few; snapshot 2 copies only those (amber). Each snapshot can still restore a full disk because it references unchanged blocks from earlier ones.</p></aside>
+</section>
+
+<section class="slide" data-title="Production: golden AMI pipeline" data-phase="prod" data-ch="AMI">
+  <h2>Production: a golden AMI pipeline</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 500">
+      <path id="gp" d="M80 200 H1330" class="w-l" style="stroke-width:6"/>
+      <g style="font:600 18px var(--f-body)" text-anchor="middle">
+        <g transform="translate(80,200)"><circle r="56" class="bx-s"/><text y="6">Base AMI</text></g>
+        <g transform="translate(330,200)"><circle r="56" class="bx-a"/><text y="-2" class="ta">Patch +</text><text y="20" class="ta">harden</text></g>
+        <g transform="translate(580,200)"><circle r="56" class="bx-t"/><text y="6" class="tt">Test</text></g>
+        <g transform="translate(830,200)"><circle r="56" class="bx-v"/><text y="6" class="tv">AMI v42</text></g>
+        <g transform="translate(1080,200)"><circle r="56" class="bx-b"/><text y="-2" class="tb">Copy to</text><text y="20" class="tb">Regions</text></g>
+        <g transform="translate(1330,200)"><circle r="56" class="bx-g"/><text y="-2" class="tg">Instance</text><text y="20" class="tg">refresh</text></g>
+      </g>
+      <circle r="14" class="fa glow-a"><animateMotion dur="6s" repeatCount="indefinite"><mpath href="#gp"/></animateMotion></circle>
+      <text x="704" y="340" text-anchor="middle" style="font:600 26px var(--f-body)">Every week, automatically, with EC2 Image Builder.</text>
+      <text x="704" y="380" text-anchor="middle" class="tmut" style="font-size:20px">Servers are never patched by hand. They're replaced.</text>
+    </svg>
+  </div>
+  <aside class="notes"><p>"Cattle, not pets": instead of logging in to patch servers, build a new image and roll the Auto Scaling group onto it with instance refresh.</p></aside>
+</section>
+
+<!-- ============ CH7 S3 ============ -->
+<section class="slide chapter" data-title="Chapter 7 · S3">
+  <div class="num">07</div>
+  <div class="eyebrow">Chapter 7</div>
+  <h2>A warehouse that never fills</h2>
+  <p class="q">Menu photos, invoices, backups, logs. Meera wants all of it safe forever.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--green)">S3</span></div>
+  <aside class="notes"><p>S3 is the oldest AWS service still at the heart of almost everything, launched in March 2006.</p></aside>
+</section>
+
+<section class="slide" data-title="Buckets and keys" data-phase="pic" data-ch="S3">
+  <h2>Buckets hold objects. Keys find them.</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <g transform="translate(120,120)">
+        <ellipse cx="190" cy="40" rx="190" ry="40" class="fg" opacity=".9"/>
+        <path d="M0 40 L40 380 Q190 420 340 380 L380 40 Q190 80 0 40Z" class="fg" opacity=".55"/>
+        <ellipse cx="190" cy="40" rx="160" ry="28" class="fk"/>
+        <g style="font:700 14px var(--f-mono)">
+          <g><rect x="-24" y="-24" width="48" height="48" rx="8" class="fa"/><text y="5" text-anchor="middle" class="tink">JPG</text><animateMotion dur="3s" repeatCount="indefinite" path="M120 -160 V60"/><animate attributeName="opacity" values="0;1;1;0" dur="3s" repeatCount="indefinite"/></g>
+          <g><rect x="-24" y="-24" width="48" height="48" rx="8" class="ft"/><text y="5" text-anchor="middle" class="tink">PDF</text><animateMotion dur="3s" begin="1s" repeatCount="indefinite" path="M200 -160 V60"/><animate attributeName="opacity" values="0;1;1;0" dur="3s" begin="1s" repeatCount="indefinite"/></g>
+          <g><rect x="-24" y="-24" width="48" height="48" rx="8" class="fv"/><text y="5" text-anchor="middle" class="tink">CSV</text><animateMotion dur="3s" begin="2s" repeatCount="indefinite" path="M270 -160 V60"/><animate attributeName="opacity" values="0;1;1;0" dur="3s" begin="2s" repeatCount="indefinite"/></g>
+        </g>
+      </g>
+      <g class="f" data-f="1" transform="translate(620,140)">
+        <text x="0" y="0" class="lbl">one object, one address</text>
+        <text x="0" y="60" style="font:700 34px var(--f-mono)"><tspan class="tmut">s3://</tspan><tspan class="tg">chaicart-menu</tspan>/<tspan class="ta">img/masala.jpg</tspan></text>
+        <text x="0" y="110" class="tg" style="font-size:20px">bucket · globally unique name</text>
+        <text x="330" y="110" class="ta" style="font-size:20px">key · the full name</text>
+      </g>
+      <g class="f" data-f="2" transform="translate(620,300)">
+        <text x="0" y="0" style="font:600 28px var(--f-body)">“img/” isn't a folder.</text>
+        <text x="0" y="40" class="tmut" style="font-size:21px">It's part of the key. The console draws it as a folder.</text>
+      </g>
+      <g class="f" data-f="3" transform="translate(620,420)">
+        <text x="0" y="0" style="font:600 28px var(--f-body)">Up to <tspan class="ta">50 TB</tspan> per object. No limit on count.</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>S3 is object storage: you PUT and GET whole objects over HTTPS. It's not a disk you mount and edit in place.</p><p>The maximum object size was raised to 50 TB (per AWS's 20-years-of-S3 post, March 2026). Since December 2020 S3 has strong read-after-write consistency.</p></aside>
+</section>
+
+<section class="slide" data-title="Storage classes" data-phase="concept" data-ch="S3">
+  <h2>Data cools down. So should its price.</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <g style="font-size:22px">
+        <g transform="translate(0,40)"><rect x="300" y="0" width="1000" height="70" rx="14" class="bx-a"/><text x="0" y="44" class="ta" style="font-weight:700">Standard</text><text x="330" y="44" class="tmut">hot · read any time · milliseconds</text></g>
+        <g transform="translate(0,140)"><rect x="300" y="0" width="1000" height="70" rx="14" class="bx-t"/><text x="0" y="44" class="tt" style="font-weight:700">Standard-IA</text><text x="330" y="44" class="tmut">read rarely · cheaper storage, pay per read</text></g>
+        <g transform="translate(0,240)"><rect x="300" y="0" width="1000" height="70" rx="14" class="bx-b"/><text x="0" y="44" class="tb" style="font-weight:700">Glacier Instant</text><text x="330" y="44" class="tmut">archive · still milliseconds</text></g>
+        <g transform="translate(0,340)"><rect x="300" y="0" width="1000" height="70" rx="14" class="bx-v"/><text x="0" y="44" class="tv" style="font-weight:700">Glacier Deep Archive</text><text x="330" y="44" class="tmut">cheapest · restore takes hours</text></g>
+      </g>
+      <g class="f" data-f="1"><g><rect x="-26" y="-26" width="52" height="52" rx="10" class="fa"/><text y="6" text-anchor="middle" class="tink tm" style="font-size:13px">bill.pdf</text>
+        <animateMotion dur="8s" repeatCount="indefinite" path="M1220 75 V75 L1220 175 V175 L1220 275 V275 L1220 375" keyPoints="0;0.33;0.66;1" keyTimes="0;0.3;0.6;1"/></g>
+        <g class="tm" style="font-size:16px"><text x="1320" y="80" class="ta">day 0</text><text x="1320" y="180" class="tt">day 30</text><text x="1320" y="280" class="tb">day 90</text><text x="1320" y="380" class="tv">day 365</text></g>
+        <text x="300" y="480" style="font-size:22px">A <tspan class="ta" font-weight="700">lifecycle rule</tspan> moves objects down automatically. Or use <tspan class="tg" font-weight="700">Intelligent-Tiering</tspan> to let S3 decide.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Every class keeps the same 11-nines durability design; they differ in price, retrieval time and minimum storage duration. One Zone-IA is the exception: it stores data in a single AZ.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: storage" data-phase="compare" data-ch="S3">
+  <h2>Object, block or file?</h2>
+  <div class="cmp g4 grow">
+    <div class="card f" data-f="1" style="--c:var(--green)"><div class="ico"><svg width="100" height="80" viewBox="0 0 100 80"><path d="M14 16 h72 l-8 56 h-56z" class="bx-g"/></svg></div><h3>S3</h3><p class="what">Objects over HTTPS. Unlimited. Many readers.</p><p class="use"><b>Use for</b>Media, backups, data lakes, static sites.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--blue)"><div class="ico"><svg width="100" height="80" viewBox="0 0 100 80"><g class="bx-b"><rect x="20" y="14" width="18" height="18"/><rect x="41" y="14" width="18" height="18"/><rect x="62" y="14" width="18" height="18"/><rect x="20" y="35" width="18" height="18"/><rect x="41" y="35" width="18" height="18"/><rect x="62" y="35" width="18" height="18"/></g></svg></div><h3>EBS</h3><p class="what">A block disk for one instance, in one AZ.</p><p class="use"><b>Use for</b>Boot disks, databases on EC2.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--teal)"><div class="ico"><svg width="100" height="80" viewBox="0 0 100 80"><path d="M16 22 h24 l6 6 h38 v40 h-68z" class="bx-t"/></svg></div><h3>EFS</h3><p class="what">A shared Linux folder (NFS). Grows by itself.</p><p class="use"><b>Use for</b>Many servers sharing files.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--violet)"><div class="ico"><svg width="100" height="80" viewBox="0 0 100 80"><path d="M16 22 h24 l6 6 h38 v40 h-68z" class="bx-v"/><text x="50" y="58" text-anchor="middle" class="tv tm" style="font-size:12px">SMB</text></svg></div><h3>FSx</h3><p class="what">Managed Windows, Lustre, NetApp, OpenZFS file systems.</p><p class="use"><b>Use for</b>Windows shares, HPC.</p></div>
+  </div>
+  <aside class="notes"><p>Interview favourite: "Where would you store user-uploaded images?" S3. "Where does the database's data live?" EBS (or let RDS handle it).</p></aside>
+</section>
+
+<section class="slide" data-title="How S3 never loses data (3D)" data-phase="behind" data-ch="S3" data-hook="s3" data-steps="3" style="padding:24px">
+  <div class="row grow" style="gap:20px">
+    <div class="three-wrap grow"><canvas class="three" id="s33d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
+      <div class="overlay" style="max-width:520px">
+        <div class="step-cap cur" data-s="0"><b class="k2">Upload</b><p>Kabir uploads <span class="mono">masala.jpg</span>.</p></div>
+        <div class="step-cap" data-s="1"><b class="k2">Split and spread</b><p>S3 stores it redundantly across at least 3 AZs before saying “200 OK”.</p></div>
+        <div class="step-cap" data-s="2"><b class="k2">An AZ goes dark</b><p>A whole data center group is offline.</p></div>
+        <div class="step-cap" data-s="3"><b class="k2">Still there</b><p>The remaining pieces rebuild the object. Repair systems re-create the lost pieces elsewhere.</p></div>
+      </div>
+    </div>
+    <div style="width:330px;flex:none;display:flex;flex-direction:column;gap:22px;justify-content:center">
+      <span class="wowtag" style="align-self:flex-start">Behind the scenes</span>
+      <div class="stat" style="--c:var(--green)"><b>500T+</b><span>objects stored</span></div>
+      <div class="stat" style="--c:var(--amber)"><b>200M+</b><span>requests per second</span></div>
+      <div class="stat" style="--c:var(--violet)"><b>10M+</b><span>hard drives (tens of millions)</span></div>
+      <p class="small">AWS figures, March 2026.</p>
+    </div>
+  </div>
+  <aside class="notes"><p>For S3 Standard, AWS stores objects redundantly across a minimum of three AZs. Internally it uses techniques like erasure coding: the data is split into pieces plus extra parity pieces, so it can be rebuilt from a subset.</p><p>The scale numbers are from AWS's "Twenty years of Amazon S3" post, March 2026: over 500 trillion objects, over 200 million requests per second, tens of millions of hard drives. Auditor processes continuously check every byte and trigger repairs.</p></aside>
+</section>
+
+<section class="slide" data-title="Production: S3 patterns" data-phase="prod" data-ch="S3">
+  <h2>Three ways production apps use S3</h2>
+  <div class="grid g3 grow">
+    <div class="panel f" data-f="1"><h3 class="hl-g">Website + CDN</h3>
+      <svg class="d" viewBox="0 0 400 220" style="height:220px"><g style="font:600 15px var(--f-mono)" text-anchor="middle"><circle cx="50" cy="110" r="40" class="bx-t"/><text x="50" y="116">user</text><rect x="140" y="70" width="120" height="80" rx="12" class="bx-b"/><text x="200" y="116">CloudFront</text><path d="M290 70 h80 l-8 80 h-64z" class="bx-g"/><text x="330" y="116">S3</text></g><path id="pa1" d="M90 110 H300" class="w-l"/><circle r="7" class="fg glow-g"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#pa1"/></animateMotion></circle></svg>
+      <p class="small">HTML, JS and images served from edge caches. No servers.</p></div>
+    <div class="panel f" data-f="2"><h3 class="hl-a">Direct upload</h3>
+      <svg class="d" viewBox="0 0 400 220" style="height:220px"><g style="font:600 15px var(--f-mono)" text-anchor="middle"><circle cx="50" cy="110" r="40" class="bx-t"/><text x="50" y="116">app</text><rect x="140" y="20" width="120" height="60" rx="12" class="bx-a"/><text x="200" y="56">API</text><path d="M290 70 h80 l-8 80 h-64z" class="bx-g"/><text x="330" y="116">S3</text></g><path d="M90 90 L140 55" class="w-a"/><text x="110" y="40" class="ta tm" style="font-size:12px">presigned URL</text><path id="pa2" d="M90 120 H300" class="w-l"/><circle r="7" class="fa glow-a"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#pa2"/></animateMotion></circle></svg>
+      <p class="small">A link valid for minutes. Files skip your servers.</p></div>
+    <div class="panel f" data-f="3"><h3 class="hl-v">Data lake</h3>
+      <svg class="d" viewBox="0 0 400 220" style="height:220px"><g style="font:600 15px var(--f-mono)" text-anchor="middle"><rect x="10" y="30" width="100" height="44" rx="10" class="bx"/><text x="60" y="58">logs</text><rect x="10" y="90" width="100" height="44" rx="10" class="bx"/><text x="60" y="118">orders</text><rect x="10" y="150" width="100" height="44" rx="10" class="bx"/><text x="60" y="178">clicks</text><path d="M160 70 h80 l-8 80 h-64z" class="bx-g"/><text x="200" y="116">S3</text><rect x="290" y="80" width="100" height="60" rx="12" class="bx-v"/><text x="340" y="116">Athena</text></g><path d="M110 52 L170 95 M110 112 H170 M110 172 L170 130 M240 110 H290" class="w"/></svg>
+      <p class="small">Dump everything in S3, query it with SQL later.</p></div>
+  </div>
+  <p class="say f" data-f="4">Keep <em>Block Public Access</em> on. Most S3 leaks in the news were buckets someone opened to the world.</p>
+  <aside class="notes"><p>Block Public Access is on by default for new buckets (since April 2023). Turning it off plus a bucket policy with Principal "*" is how most S3 data leaks happened.</p></aside>
+</section>
+
+<!-- ============ CH8 LAMBDA ============ -->
+<section class="slide chapter" data-title="Chapter 8 · Lambda">
+  <div class="num">08</div>
+  <div class="eyebrow">Chapter 8</div>
+  <h2>A chef who appears only when an order arrives</h2>
+  <p class="q">Every new menu photo needs a thumbnail. Kabir doesn't want a server sitting idle all day for that.</p>
+  <div class="tiles"><span class="tile sm">λ</span><span class="tile sm" style="--c:var(--violet)">FC</span></div>
+  <aside class="notes"><p>Serverless: there are still servers. You just never see, patch or pay for them while idle.</p></aside>
+</section>
+
+<section class="slide" data-title="Events in, functions out" data-phase="pic" data-ch="Lambda" data-hook="lambdaPic">
+  <h2>Zero to a thousand, and back to zero</h2>
+  <div class="row grow">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 900 560" id="lamSvg">
+        <text x="20" y="40" class="lbl">events</text><text x="460" y="40" class="lbl">function copies running</text>
+        <rect x="440" y="60" width="440" height="460" rx="20" class="bx-a" style="fill:rgba(255,181,71,.04)"/>
+        <g id="lamEvents"></g><g id="lamFns"></g>
+      </svg>
+    </div>
+    <div style="width:420px;flex:none;display:flex;flex-direction:column;gap:20px;justify-content:center">
+      <div class="stat" style="--c:var(--amber)"><b id="lamCount">0</b><span>copies running now</span></div>
+      <p class="say">No events, no copies, <em>no bill</em>.</p>
+      <p class="small">Each copy handles one event at a time. Lambda adds copies as events pile up.</p>
+    </div>
+  </div>
+  <aside class="notes"><p>The squares on the left are events (an upload, an API call, a message). Lambda starts more copies of your function as events arrive and removes them when it's quiet.</p></aside>
+</section>
+
+<section class="slide" data-title="Cold and warm starts" data-phase="concept" data-ch="Lambda">
+  <h2>Cold start, warm start</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 480">
+      <text x="0" y="60" style="font:700 24px var(--f-body)">Cold</text>
+      <g transform="translate(160,30)">
+        <rect width="0" height="54" rx="10" class="fs" style="animation:gw1 6s infinite"/><rect x="0" width="0" height="54" rx="10" class="fv" style="animation:gw2 6s infinite"/><rect width="0" height="54" rx="10" class="fb" style="animation:gw3 6s infinite"/><rect width="0" height="54" rx="10" class="fa" style="animation:gw4 6s infinite"/>
+      </g>
+      <g class="tm" style="font-size:15px"><text x="170" y="120" class="tmut">download code</text><text x="400" y="120" class="tv">start microVM</text><text x="620" y="120" class="tb">init runtime + your imports</text><text x="960" y="120" class="ta">handler</text></g>
+      <text x="0" y="230" style="font:700 24px var(--f-body)">Warm</text>
+      <g transform="translate(160,200)"><rect width="0" height="54" rx="10" class="fa" style="animation:gw5 6s infinite"/></g>
+      <text x="170" y="290" class="ta tm" style="font-size:15px">handler only · environment reused</text>
+      <style>
+        @keyframes gw1{0%{width:0}10%,100%{width:220px}}
+        @keyframes gw2{0%,10%{width:0;x:220px}20%,100%{width:220px;x:230px}}
+        @keyframes gw3{0%,20%{width:0;x:460px}40%,100%{width:330px;x:460px}}
+        @keyframes gw4{0%,40%{width:0;x:800px}55%,100%{width:200px;x:800px}}
+        @keyframes gw5{0%{width:0}15%,100%{width:200px}}
+      </style>
+      <g class="f" data-f="1" style="font-size:21px">
+        <g transform="translate(0,340)"><rect width="260" height="90" rx="14" class="bx-a"/><text x="20" y="40" class="ta tm">15 min</text><text x="20" y="70" class="tmut" style="font-size:17px">max per run</text></g>
+        <g transform="translate(290,340)"><rect width="300" height="90" rx="14" class="bx-t"/><text x="20" y="40" class="tt tm">128 MB – 10 GB</text><text x="20" y="70" class="tmut" style="font-size:17px">memory · CPU scales with it</text></g>
+        <g transform="translate(620,340)"><rect width="300" height="90" rx="14" class="bx-v"/><text x="20" y="40" class="tv tm">per-ms billing</text><text x="20" y="70" class="tmut" style="font-size:17px">requests + GB-seconds</text></g>
+        <g transform="translate(950,340)"><rect width="440" height="90" rx="14" class="bx-r"/><text x="20" y="40" class="tr tm">execution role</text><text x="20" y="70" class="tmut" style="font-size:17px">what the function may touch</text></g>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>A cold start happens when there's no ready environment: Lambda downloads your code, starts an isolated microVM, starts the runtime and runs your initialisation code. Warm invocations reuse that environment.</p><p>Reduce cold starts: keep packages small, do heavy setup outside the handler, or use provisioned concurrency / SnapStart where it fits.</p></aside>
+</section>
+
+<section class="slide" data-title="Firecracker microVMs (3D)" data-phase="behind" data-ch="Lambda" data-hook="fc" data-steps="1" style="padding:24px">
+  <div class="row grow" style="gap:20px">
+    <div class="three-wrap grow"><canvas class="three" id="fc3d"></canvas><div class="drag-hint">→ for a traffic burst · drag to rotate</div>
+      <div class="overlay"><div class="step-cap cur" data-s="0"><b class="k2">One physical host</b><p>Each glowing cube is a <b class="hl-a">Firecracker microVM</b> running one function's environment.</p></div>
+        <div class="step-cap" data-s="1"><b class="k2">Traffic burst</b><p>Thousands of microVMs can share one host, each fully isolated from its neighbours.</p></div></div>
+    </div>
+    <div style="width:330px;flex:none;display:flex;flex-direction:column;gap:22px;justify-content:center">
+      <span class="wowtag" style="align-self:flex-start">Behind the scenes</span>
+      <div class="stat" style="--c:var(--amber)"><b>~125 ms</b><span>to boot a microVM</span></div>
+      <div class="stat" style="--c:var(--violet)"><b>~5 MiB</b><span>memory overhead each</span></div>
+      <div class="stat" style="--c:var(--teal)"><b>Rust</b><span>open source · also powers Fargate</span></div>
+      <p class="small">Figures from AWS's Firecracker launch post.</p>
+    </div>
+  </div>
+  <aside class="notes"><p>Firecracker is AWS's open-source virtual machine monitor, written in Rust. It gives each function the isolation of a VM with nearly the speed and density of a container. The launch post quoted boot in as little as 125 ms and about 5 MiB of memory overhead per microVM.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: Lambda and friends" data-phase="compare" data-ch="Lambda">
+  <h2>When Lambda, when not?</h2>
+  <div class="cmp g4 grow">
+    <div class="card f" data-f="1" style="--c:var(--amber)"><h3>Lambda</h3><p class="what">Event-driven, ≤ 15 min, scales to zero.</p><p class="use"><b>Use for</b>Thumbnails, webhooks, cron jobs, glue code.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--violet)"><h3>Fargate</h3><p class="what">Containers without servers. No time limit.</p><p class="use"><b>Use for</b>Web APIs, workers that run for hours.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--steel)"><h3>EC2</h3><p class="what">Full control, always on, cheapest at steady load.</p><p class="use"><b>Use for</b>Heavy steady traffic, GPUs, special OS.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--teal)"><h3>Step Functions</h3><p class="what">A workflow that chains Lambdas, with retries and waits.</p><p class="use"><b>Use for</b>Order flows, anything longer than 15 minutes.</p></div>
+  </div>
+  <div class="panel f" data-f="5" style="padding:14px 20px">
+    <div class="row" style="align-items:center;gap:0"><span class="eyebrow" style="color:var(--green);width:200px;flex:none">In production</span>
+    <svg class="d" viewBox="0 0 1100 100" style="height:100px"><g style="font:600 16px var(--f-mono)" text-anchor="middle"><rect x="0" y="20" width="200" height="60" rx="12" class="bx-g"/><text x="100" y="56">S3 upload</text><rect x="300" y="20" width="200" height="60" rx="12" class="bx-a"/><text x="400" y="56">λ resize</text><rect x="600" y="20" width="200" height="60" rx="12" class="bx-g"/><text x="700" y="56">thumbs/</text><rect x="900" y="20" width="200" height="60" rx="12" class="bx-v"/><text x="1000" y="56">SNS notify</text></g><path id="lp" d="M200 50 H900" class="w-l"/><circle r="8" class="fa glow-a"><animateMotion dur="3s" repeatCount="indefinite"><mpath href="#lp"/></animateMotion></circle></svg></div>
+  </div>
+  <aside class="notes"><p>ChaiCart's thumbnail pipeline: upload to S3 triggers a Lambda, which writes to a different prefix (never the same one, or you trigger yourself forever!) and notifies via SNS.</p></aside>
+</section>

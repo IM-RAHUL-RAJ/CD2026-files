@@ -1,0 +1,372 @@
+
+<!-- ================= ACT 3 OPENER ================= -->
+<section class="slide chapter" data-title="Act 3 · Ship it">
+  <div class="num">III</div><div class="eyebrow">Act 3</div>
+  <h2>Ship it: from laptop to production</h2>
+  <p class="q">Rahul's code works on his laptop. Between that and 2 million fans, there's Docker, Kubernetes, security checks, pipelines and release strategies.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--teal)">DOCKER</span><span class="tile sm" style="--c:var(--teal)">ECR</span><span class="tile sm" style="--c:var(--violet)">ECS</span><span class="tile sm" style="--c:var(--blue)">K8S</span><span class="tile sm" style="--c:var(--blue)">HELM</span><span class="tile sm" style="--c:var(--rose)">JENKINS</span></div>
+</section>
+
+<!-- ================= CH16 CONTAINERS ================= -->
+<section class="slide chapter" data-title="Chapter 16 · Docker and containers">
+  <div class="num">16</div><div class="eyebrow">Act 3 · Chapter 16</div>
+  <h2>“It works on my machine”</h2>
+  <p class="q">Rahul's service runs perfectly on his laptop. On the test server it crashes: wrong Python version, missing library, different OS.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--teal)">DOCKER</span><span class="tile sm" style="--c:var(--teal)">IMAGE</span><span class="tile sm" style="--c:var(--amber)">CONTAINER</span></div>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: works on my machine" data-ch="Containers">
+  <div class="t-q">Why does code that works on my laptop break on someone else's machine?</div>
+  <div class="t-who">Every developer, at least once a week</div>
+  <div class="t-hint">Same code. Different Python, different libraries, different OS settings. Which one broke it?</div>
+</section>
+
+<section class="slide" data-title="The shipping container idea" data-phase="pic" data-ch="Containers" data-steps="1">
+  <h2>Before shipping containers, every cargo was a puzzle</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <g class="hide-on-1">
+        <text x="704" y="40" text-anchor="middle" class="tr" style="font:700 24px var(--f-body)">Without containers: app + “install these 14 things, in this order”</text>
+        <g transform="translate(200,120)"><rect width="1000" height="320" rx="20" class="bx"/>
+          <g style="font:600 17px var(--f-mono)"><rect x="40" y="40" width="200" height="60" rx="10" class="bx-a"/><text x="140" y="76" text-anchor="middle">python 3.12?</text>
+          <rect x="280" y="80" width="200" height="60" rx="10" class="bx-r"/><text x="380" y="116" text-anchor="middle">libssl 1.1?</text>
+          <rect x="520" y="30" width="200" height="60" rx="10" class="bx-v"/><text x="620" y="66" text-anchor="middle">node 18 or 20?</text>
+          <rect x="760" y="100" width="200" height="60" rx="10" class="bx-b"/><text x="860" y="136" text-anchor="middle">ENV vars?</text>
+          <rect x="120" y="190" width="200" height="60" rx="10" class="bx-t"/><text x="220" y="226" text-anchor="middle">Ubuntu 22?</text>
+          <rect x="400" y="210" width="200" height="60" rx="10" class="bx-a"/><text x="500" y="246" text-anchor="middle">timezone?</text>
+          <rect x="680" y="200" width="240" height="60" rx="10" class="bx-r"/><text x="800" y="236" text-anchor="middle">pip freeze diff?</text></g></g>
+      </g>
+      <g class="show-on-1">
+        <text x="704" y="40" text-anchor="middle" class="tt" style="font:700 24px var(--f-body)">With containers: one standard box that runs the same everywhere</text>
+        <g transform="translate(440,120)"><rect width="520" height="260" rx="20" class="ft" opacity=".9"/>
+          <g class="tink" style="font:700 20px var(--f-mono)"><text x="40" y="70">your code</text><text x="40" y="110">python 3.12 + libraries</text><text x="40" y="150">OS files (Ubuntu base)</text><text x="40" y="190">config + start command</text></g>
+          <path d="M0 230 H520" style="stroke:var(--ink);stroke-width:3;opacity:.4"/></g>
+        <g style="font:600 19px var(--f-body)" text-anchor="middle"><text x="200" y="470">Rahul's laptop ✓</text><text x="540" y="470">test server ✓</text><text x="870" y="470">EKS in prod ✓</text><text x="1200" y="470">teammate's Mac ✓</text></g>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Click: the container packages the code with its runtime, libraries and OS files. The same box runs the same way on any machine with a container runtime. That's the whole idea behind Docker.</p></aside>
+</section>
+
+<section class="slide" data-title="Containers vs VMs" data-phase="compare" data-ch="Containers">
+  <h2>Containerization vs virtualization</h2>
+  <div class="grid g2 grow" style="gap:28px">
+    <div class="panel f" data-f="1"><h3 class="hl-v">Virtual machines</h3>
+      <svg class="d" viewBox="0 0 600 320" style="height:320px"><g style="font:600 16px var(--f-body)" text-anchor="middle">
+        <rect x="20" y="270" width="560" height="40" rx="8" class="bx-s"/><text x="300" y="296">Hardware</text>
+        <rect x="20" y="222" width="560" height="40" rx="8" class="bx-v"/><text x="300" y="248" class="tv">Hypervisor</text>
+        <g><rect x="20" y="20" width="176" height="194" rx="10" class="bx-t" style="fill:rgba(63,213,194,.05)"/><rect x="32" y="150" width="152" height="54" rx="8" class="bx-b"/><text x="108" y="182" class="tb">Guest OS · 1 GB</text><rect x="32" y="40" width="152" height="100" rx="8" class="bx-a"/><text x="108" y="96" class="ta">App A</text></g>
+        <g><rect x="212" y="20" width="176" height="194" rx="10" class="bx-t" style="fill:rgba(63,213,194,.05)"/><rect x="224" y="150" width="152" height="54" rx="8" class="bx-b"/><text x="300" y="182" class="tb">Guest OS · 1 GB</text><rect x="224" y="40" width="152" height="100" rx="8" class="bx-a"/><text x="300" y="96" class="ta">App B</text></g>
+        <g><rect x="404" y="20" width="176" height="194" rx="10" class="bx-t" style="fill:rgba(63,213,194,.05)"/><rect x="416" y="150" width="152" height="54" rx="8" class="bx-b"/><text x="492" y="182" class="tb">Guest OS · 1 GB</text><rect x="416" y="40" width="152" height="100" rx="8" class="bx-a"/><text x="492" y="96" class="ta">App C</text></g></g></svg>
+      <p class="small">Each VM carries a whole OS. Boots in minutes. Strong isolation.</p></div>
+    <div class="panel f" data-f="2" style="border-color:var(--teal)"><h3 class="hl-t">Containers</h3>
+      <svg class="d" viewBox="0 0 600 320" style="height:320px"><g style="font:600 16px var(--f-body)" text-anchor="middle">
+        <rect x="20" y="270" width="560" height="40" rx="8" class="bx-s"/><text x="300" y="296">Hardware (or a VM)</text>
+        <rect x="20" y="222" width="560" height="40" rx="8" class="bx-b"/><text x="300" y="248" class="tb">One host OS kernel</text>
+        <rect x="20" y="174" width="560" height="40" rx="8" class="bx-t"/><text x="300" y="200" class="tt">Container runtime (Docker / containerd)</text>
+        <g class="bx-a"><rect x="20" y="40" width="100" height="124" rx="8"/><rect x="135" y="40" width="100" height="124" rx="8"/><rect x="250" y="40" width="100" height="124" rx="8"/><rect x="365" y="40" width="100" height="124" rx="8"/><rect x="480" y="40" width="100" height="124" rx="8"/></g>
+        <g class="ta"><text x="70" y="108">A</text><text x="185" y="108">B</text><text x="300" y="108">C</text><text x="415" y="108">D</text><text x="530" y="108">E</text></g></g></svg>
+      <p class="small">Containers share the host kernel. Start in seconds. Megabytes, not gigabytes.</p></div>
+  </div>
+  <p class="say f" data-f="3">In AWS you usually get <em>both</em>: containers running inside EC2 VMs, or on Fargate.</p>
+  <aside class="notes"><p>VMs virtualize hardware; containers virtualize the operating system. That's why containers are smaller and faster to start, while VMs give stronger isolation. Production often runs containers on VMs (EKS worker nodes are EC2 instances).</p></aside>
+</section>
+
+<section class="slide" data-title="Dockerfile to container" data-phase="concept" data-ch="Containers" data-steps="3">
+  <h2>Recipe → frozen meal → hot plate</h2>
+  <div class="row grow" style="gap:24px;align-items:center">
+<pre class="code" style="width:560px;flex:none;font-size:17px"><span class="c"># Dockerfile</span>
+<span class="k">FROM</span> python:3.12-slim
+<span class="k">WORKDIR</span> /app
+<span class="k">COPY</span> requirements.txt .
+<span class="k">RUN</span> pip install -r requirements.txt
+<span class="k">COPY</span> . .
+<span class="k">EXPOSE</span> 8080
+<span class="k">CMD</span> [<span class="s">"python"</span>, <span class="s">"app.py"</span>]</pre>
+    <div class="vis" style="height:420px">
+      <svg class="d" viewBox="0 0 760 420">
+        <g transform="translate(20,40)"><rect width="200" height="140" rx="16" class="bx-s"/><text x="100" y="64" text-anchor="middle" style="font:700 20px var(--f-body)">Dockerfile</text><text x="100" y="96" text-anchor="middle" class="tmut" style="font-size:16px">the recipe</text></g>
+        <g class="show-on-1"><path d="M220 110 H290" class="w-t"/><text x="255" y="96" text-anchor="middle" class="tt tm" style="font-size:13px">build</text>
+          <g transform="translate(290,40)"><rect width="200" height="140" rx="16" class="bx-t"/><text x="100" y="64" text-anchor="middle" class="tt" style="font:700 20px var(--f-body)">Image</text><text x="100" y="96" text-anchor="middle" class="tmut" style="font-size:16px">frozen, read-only</text></g></g>
+        <g class="show-on-2"><path d="M490 110 H540" class="w-a"/><text x="515" y="96" text-anchor="middle" class="ta tm" style="font-size:13px">run</text>
+          <g transform="translate(540,10)"><rect width="200" height="64" rx="12" class="fa"/><text x="100" y="40" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">container 1</text></g>
+          <g transform="translate(540,82)"><rect width="200" height="64" rx="12" class="fa"/><text x="100" y="40" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">container 2</text></g>
+          <g transform="translate(540,154)"><rect width="200" height="64" rx="12" class="fa"/><text x="100" y="40" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">container 3</text></g></g>
+        <g class="show-on-3"><rect x="20" y="260" width="720" height="140" rx="16" class="bx"/>
+          <text x="44" y="300" class="tm" style="font-size:17px">$ docker build -t ticketwave-api:v3 .</text>
+          <text x="44" y="334" class="tm" style="font-size:17px">$ docker run -d -p 80:8080 ticketwave-api:v3</text>
+          <text x="44" y="368" class="tm" style="font-size:17px">$ docker ps        <tspan class="c"># see what's running</tspan></text></g>
+      </svg>
+    </div>
+  </div>
+  <aside class="notes"><p>Dockerfile = recipe. Image = the frozen, versioned result of following the recipe. Container = a running instance of the image. One image can run as many containers.</p><p>The RDS and DynamoDB labs in the PDFs use exactly this: docker pull, then docker run with -p and -e flags.</p></aside>
+</section>
+
+<!--OLD:Layers-->
+
+<section class="slide" data-tpl="perf" data-title="Perf: containers" data-ch="Containers">
+  <div class="t-h2">Before vs after: VM per service vs containers</div>
+  <div class="t-how">What changed: <b>packaged every service as a Docker image</b></div>
+  <script type="application/json">{"rows":[
+    ["Start time","new copy of a service",90,"VM boot · minutes",6,"container · seconds","~20×","faster"],
+    ["Size on disk","per service",100,"~10 GB VM image",8,"~150 MB image","~60×","smaller"],
+    ["Services per server","8 GB host",20,"~3 VMs",100,"~20 containers","~6×","denser"],
+    ["“Works on my machine”","bugs per release",70,"weekly",5,"rare","same","everywhere"]],
+    "note":"Illustrative figures; sizes and densities vary by app."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: works everywhere" data-ch="Containers">
+  <div class="t-recap">Why does code break on someone else's machine?</div>
+  <div class="t-ans">Because you shipped the code but not its world. A container ships <em>the code and its world</em> together.</div>
+  <div class="t-x">Same image on the laptop, in testing, and in production. If it ran once, it runs everywhere.</div>
+</section>
+
+<!-- ================= CH17 ECR ================= -->
+<section class="slide chapter" data-title="Chapter 17 · ECR">
+  <div class="num">17</div><div class="eyebrow">Act 3 · Chapter 17</div>
+  <h2>A private library for images</h2>
+  <p class="q">TicketWave has 60 services. Each build makes a new image. Where do thousands of images live, safely?</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--teal)">ECR</span><span class="tile sm" style="--c:var(--green)">JFROG</span><span class="tile sm" style="--c:var(--blue)">HUB</span></div>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: where do images live?" data-ch="ECR">
+  <div class="t-q">If every company builds thousands of Docker images, where do they keep them, and who's allowed to pull them?</div>
+  <div class="t-who">Rahul, after his first docker push</div>
+</section>
+
+<!--OLD:Inside ECR-->
+
+<section class="slide" data-title="ECR architecture" data-phase="prod" data-ch="ECR">
+  <h2>How images flow through ECR</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <g transform="translate(30,200)"><rect width="220" height="120" rx="16" class="bx-r"/><text x="110" y="52" text-anchor="middle" class="tr" style="font:700 20px var(--f-body)">Jenkins / CI</text><text x="110" y="84" text-anchor="middle" class="tmut tm" style="font-size:14px">docker build + push</text></g>
+      <g transform="translate(480,120)"><rect width="440" height="290" rx="22" class="bx-t" style="fill:rgba(63,213,194,.05)"/><text x="24" y="40" class="tt tm">Amazon ECR · ap-south-1</text>
+        <g class="f" data-f="1"><rect x="24" y="64" width="190" height="60" rx="12" class="bx"/><text x="119" y="100" text-anchor="middle" style="font-size:17px">repositories</text></g>
+        <g class="f" data-f="2"><rect x="226" y="64" width="190" height="60" rx="12" class="bx-r"/><text x="321" y="100" text-anchor="middle" class="tr" style="font-size:17px">vuln scan</text></g>
+        <g class="f" data-f="3"><rect x="24" y="140" width="190" height="60" rx="12" class="bx-a"/><text x="119" y="176" text-anchor="middle" class="ta" style="font-size:17px">lifecycle rules</text></g>
+        <g class="f" data-f="3"><rect x="226" y="140" width="190" height="60" rx="12" class="bx-v"/><text x="321" y="176" text-anchor="middle" class="tv" style="font-size:17px">tag immutability</text></g>
+        <g class="f" data-f="4"><rect x="24" y="216" width="392" height="54" rx="12" class="bx-g"/><text x="220" y="250" text-anchor="middle" class="tg" style="font-size:17px">layers stored in S3 · replicated to other Regions</text></g></g>
+      <path id="push" d="M250 260 H480" class="w-r" style="stroke-width:3"/><circle r="9" class="fr glow-r"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#push"/></animateMotion></circle>
+      <g class="f" data-f="5">
+        <g transform="translate(1110,90)"><rect width="260" height="90" rx="14" class="bx-v"/><text x="130" y="52" text-anchor="middle" class="tv" style="font:700 19px var(--f-body)">ECS / Fargate</text></g>
+        <g transform="translate(1110,225)"><rect width="260" height="90" rx="14" class="bx-b"/><text x="130" y="52" text-anchor="middle" class="tb" style="font:700 19px var(--f-body)">EKS nodes</text></g>
+        <g transform="translate(1110,360)"><rect width="260" height="90" rx="14" class="bx-a"/><text x="130" y="52" text-anchor="middle" class="ta" style="font:700 19px var(--f-body)">Lambda (container)</text></g>
+        <path id="pull1" d="M920 230 C 1000 230, 1030 135, 1110 135" class="w-t"/><path id="pull2" d="M920 265 H1110" class="w-t"/><path id="pull3" d="M920 300 C 1000 300, 1030 405, 1110 405" class="w-t"/>
+        <circle r="8" class="ft"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#pull1"/></animateMotion></circle><circle r="8" class="ft"><animateMotion dur="1.4s" begin=".4s" repeatCount="indefinite"><mpath href="#pull2"/></animateMotion></circle><circle r="8" class="ft"><animateMotion dur="1.4s" begin=".8s" repeatCount="indefinite"><mpath href="#pull3"/></animateMotion></circle>
+        <text x="1015" y="490" text-anchor="middle" class="tmut" style="font-size:17px">pull via IAM role · VPC endpoint keeps it private</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>The pipeline pushes, ECR scans, lifecycle rules delete old images, tag immutability stops someone overwriting v3, and runtimes pull using IAM roles. Interface VPC endpoints let private subnets pull without a NAT gateway.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: ECR, JFrog, Docker Hub" data-phase="compare" data-ch="ECR">
+  <h2>ECR vs JFrog Artifactory vs Docker Hub</h2>
+  <div class="cmp g3 grow">
+    <div class="card f" data-f="1" style="--c:var(--teal)"><h3>Amazon ECR</h3><p class="what">Container images (and other OCI artifacts) inside your AWS account. IAM-controlled, in your Region, built-in scanning.</p><p class="use"><b>Pick when</b>You deploy to AWS. Simplest, least to run.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--green)"><h3>JFrog Artifactory</h3><p class="what">Universal artifact store: Docker, Maven JARs, npm, PyPI, Helm charts and more. Cloud or self-hosted. Xray scanning.</p><p class="use"><b>Pick when</b>One place for every artifact type, many clouds, on-prem too.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--blue)"><h3>Docker Hub</h3><p class="what">The public default. Official base images like python, nginx, mysql. Private repos on paid plans.</p><p class="use"><b>Pick when</b>Pulling public base images. Watch pull rate limits.</p></div>
+  </div>
+  <aside class="notes"><p>Many enterprises use Artifactory as the central store for everything (JARs, npm packages, images) and ECR close to the AWS runtimes. Both are valid; the choice depends on how many artifact types and platforms you have.</p></aside>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: where images live" data-ch="ECR">
+  <div class="t-recap">Where do companies keep thousands of images?</div>
+  <div class="t-ans">In a <em>private registry</em> (ECR or Artifactory) where every image is scanned, versioned by digest, and pulled only by roles allowed to.</div>
+  <div class="t-x">The image that passed tests is byte-for-byte the image that runs in prod. The sha256 digest proves it.</div>
+</section>
+
+<!-- ================= CH18 ECS ================= -->
+<section class="slide chapter" data-title="Chapter 18 · ECS">
+  <div class="num">18</div><div class="eyebrow">Act 3 · Chapter 18</div>
+  <h2>Someone to run the containers</h2>
+  <p class="q">50 containers across 10 servers. One crashes at 3 am. Who restarts it? Who decides which server it goes on?</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--violet)">ECS</span><span class="tile sm" style="--c:var(--violet)">FARGATE</span></div>
+  <aside class="notes"><p>Based on the AWS ECS PDF.</p></aside>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: who restarts containers?" data-ch="ECS">
+  <div class="t-q">I have 50 containers. Who restarts them at 3 am, and who decides where they run?</div>
+  <div class="t-who">Rahul, setting a 3 am alarm, just in case</div>
+</section>
+
+<section class="slide" data-title="ECS cluster, service, task" data-phase="concept" data-ch="ECS">
+  <h2>ECS in three words: cluster, service, task</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <rect x="40" y="30" width="1328" height="480" rx="26" class="bx-v" style="fill:rgba(161,147,255,.04)"/><text x="70" y="72" class="tv" style="font:700 24px var(--f-body)">Cluster</text><text x="180" y="72" class="tmut" style="font-size:19px">· hosts all the resources and infrastructure</text>
+      <g class="f" data-f="1"><rect x="80" y="110" width="600" height="360" rx="20" class="bx-a" style="fill:rgba(255,181,71,.05)"/><text x="104" y="148" class="ta" style="font:700 21px var(--f-body)">Service · ticketwave-api</text><text x="104" y="176" class="tmut" style="font-size:17px">“keep 3 running, behind the ALB, scale on CPU”</text>
+        <g class="fa"><rect x="110" y="210" width="160" height="110" rx="14"/><rect x="290" y="210" width="160" height="110" rx="14"/><rect x="470" y="210" width="160" height="110" rx="14"/></g>
+        <g class="tink" style="font:700 17px var(--f-mono)" text-anchor="middle"><text x="190" y="272">task</text><text x="370" y="272">task</text><text x="550" y="272">task</text></g>
+        <text x="104" y="370" class="tmut" style="font-size:17px">A task = your running container(s), from a task definition.</text></g>
+      <g class="f" data-f="2"><rect x="730" y="110" width="600" height="360" rx="20" class="bx-t" style="fill:rgba(63,213,194,.05)"/><text x="754" y="148" class="tt" style="font:700 21px var(--f-body)">Service · ticket-pdf-worker</text><text x="754" y="176" class="tmut" style="font-size:17px">“keep 2 running, pull work from SQS”</text>
+        <g class="ft"><rect x="760" y="210" width="160" height="110" rx="14"/><rect x="940" y="210" width="160" height="110" rx="14"/></g>
+        <rect x="1120" y="210" width="160" height="110" rx="14" class="bx-r" style="stroke-dasharray:8 6"/><text x="1200" y="260" text-anchor="middle" class="tr tm" style="font-size:15px">crashed</text><text x="1200" y="284" text-anchor="middle" class="tg tm" style="font-size:15px">→ replaced</text>
+        <g class="tink" style="font:700 17px var(--f-mono)" text-anchor="middle"><text x="840" y="272">task</text><text x="1020" y="272">task</text></g></g>
+      <g class="f" data-f="3"><text x="704" y="500" text-anchor="middle" style="font-size:20px">ECS automatically handles <tspan class="ta">creation</tspan>, <tspan class="tt">management</tspan> and <tspan class="tv">updating</tspan> of containers.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Terms from the ECS PDF: cluster (group of tasks and services, hosts the infrastructure), service (handles scaling and load balancing), task (your running containers).</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: ECS on EC2 vs Fargate" data-phase="compare" data-ch="ECS">
+  <h2>Run ECS on your servers, or on none</h2>
+  <div class="cmp g2 grow">
+    <div class="card f" data-f="1" style="--c:var(--amber)"><h3>ECS on EC2</h3><p class="what">You run a fleet of EC2 instances; ECS places tasks on them. You patch and scale the fleet.</p><p class="use"><b>Pick when</b>Steady heavy load, GPUs, special instance types, lowest cost at scale.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--violet)"><h3>ECS on Fargate</h3><p class="what">No instances at all. Say “0.5 vCPU, 1 GB” per task; AWS finds the capacity. Each task runs in its own isolated microVM.</p><p class="use"><b>Pick when</b>Small team, spiky load, you never want to patch a node.</p></div>
+  </div>
+  <aside class="notes"><p>Fargate runs on Firecracker microVMs, the same technology behind Lambda (see the Firecracker slide).</p></aside>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: who restarts containers" data-ch="ECS">
+  <div class="t-recap">Who restarts containers at 3 am?</div>
+  <div class="t-ans">An <em>orchestrator</em>. You declare “keep 3 running”, and ECS keeps that promise forever, replacing anything that dies.</div>
+  <div class="t-x">That idea, called desired state, is the heart of Kubernetes too. Which is where we're going next.</div>
+</section>
+
+<!-- ================= CH19 KUBERNETES + EKS ================= -->
+<section class="slide chapter" data-title="Chapter 19 · Kubernetes and EKS">
+  <div class="num">19</div><div class="eyebrow">Act 3 · Chapter 19</div>
+  <h2>The operating system of the cloud</h2>
+  <p class="q">TicketWave's platform team runs 60 services on Kubernetes. Rahul's service is next. Every senior keeps saying “just put it in the cluster”.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--blue)">K8S</span><span class="tile sm" style="--c:var(--blue)">EKS</span><span class="tile sm" style="--c:var(--teal)">POD</span><span class="tile sm" style="--c:var(--green)">INGRESS</span><span class="tile sm" style="--c:var(--violet)">HELM</span></div>
+  <aside class="notes"><p>Based on the AWS EKS PDF.</p></aside>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: why Kubernetes?" data-ch="Kubernetes">
+  <div class="t-q">Why does every senior engineer talk about Kubernetes as if it's magic?</div>
+  <div class="t-who">Rahul, nodding along in a design review</div>
+  <div class="t-hint">What does it actually do that Docker alone doesn't?</div>
+</section>
+
+<section class="slide" data-title="Kubernetes cluster (3D)" data-phase="pic" data-ch="Kubernetes" data-hook="k8s" data-steps="3" style="padding:24px">
+  <div class="three-wrap grow"><canvas class="three" id="k8s3d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
+    <div class="overlay">
+      <div class="step-cap cur" data-s="0"><b class="k2">The cluster</b><p>A <b class="hl-v">control plane</b> (the brain) and <b class="hl-b">worker nodes</b> (the muscle). Each cube is a pod.</p></div>
+      <div class="step-cap" data-s="1"><b class="k2">kubectl apply</b><p>“I want 9 pods of ticketwave-api.” The scheduler places them across nodes.</p></div>
+      <div class="step-cap" data-s="2"><b class="k2">A node dies</b><p>Its pods are recreated on healthy nodes automatically. Nobody gets paged.</p></div>
+      <div class="step-cap" data-s="3"><b class="k2">Ticket drop</b><p>The autoscaler adds pods, then adds a new node when the others are full.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>Step through: cluster, deploy, self-heal, autoscale. From the EKS PDF: Kubernetes automates deployment, scaling and management of containerized apps; a cluster has a master (control plane) and worker nodes.</p></aside>
+</section>
+
+<section class="slide" data-title="Kubernetes architecture" data-phase="concept" data-ch="Kubernetes">
+  <h2>Inside the brain and the muscle</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <rect x="40" y="20" width="1328" height="190" rx="22" class="bx-v" style="fill:rgba(161,147,255,.05)"/><text x="64" y="56" class="tv" style="font:700 22px var(--f-body)">Control plane · EKS runs this for you</text>
+      <g style="font:600 18px var(--f-body)">
+        <g class="f" data-f="1"><rect x="70" y="80" width="290" height="100" rx="14" class="bx"/><text x="90" y="116" class="tv">API server</text><text x="90" y="148" class="tmut" style="font-size:15px">front door: kubectl talks here</text></g>
+        <g class="f" data-f="1"><rect x="380" y="80" width="290" height="100" rx="14" class="bx"/><text x="400" y="116" class="tv">etcd</text><text x="400" y="148" class="tmut" style="font-size:15px">database of desired state</text></g>
+        <g class="f" data-f="2"><rect x="690" y="80" width="300" height="100" rx="14" class="bx"/><text x="710" y="116" class="tv">Scheduler</text><text x="710" y="148" class="tmut" style="font-size:15px">picks a node for each pod</text></g>
+        <g class="f" data-f="2"><rect x="1010" y="80" width="330" height="100" rx="14" class="bx"/><text x="1030" y="116" class="tv">Controller manager</text><text x="1030" y="148" class="tmut" style="font-size:15px">keeps actual = desired</text></g>
+      </g>
+      <g class="f" data-f="3">
+        <path d="M300 210 V260 M704 210 V260 M1108 210 V260" class="w dash"/>
+        <g style="font:600 17px var(--f-body)">
+          <g transform="translate(70,260)"><rect width="400" height="270" rx="20" class="bx-b" style="fill:rgba(100,160,255,.05)"/><text x="20" y="34" class="tb">Worker node 1 · EC2</text><rect x="20" y="54" width="170" height="44" rx="10" class="bx"/><text x="34" y="82" style="font-size:15px">kubelet</text><rect x="210" y="54" width="170" height="44" rx="10" class="bx"/><text x="224" y="82" style="font-size:15px">kube-proxy</text>
+            <g class="fa"><rect x="20" y="120" width="110" height="120" rx="12"/><rect x="145" y="120" width="110" height="120" rx="12"/></g><rect x="270" y="120" width="110" height="120" rx="12" class="ft"/><g class="tink" text-anchor="middle" style="font:700 15px var(--f-mono)"><text x="75" y="186">pod</text><text x="200" y="186">pod</text><text x="325" y="186">pod</text></g></g>
+          <g transform="translate(504,260)"><rect width="400" height="270" rx="20" class="bx-b" style="fill:rgba(100,160,255,.05)"/><text x="20" y="34" class="tb">Worker node 2 · EC2</text><rect x="20" y="54" width="170" height="44" rx="10" class="bx"/><text x="34" y="82" style="font-size:15px">kubelet</text><rect x="210" y="54" width="170" height="44" rx="10" class="bx"/><text x="224" y="82" style="font-size:15px">kube-proxy</text>
+            <rect x="20" y="120" width="110" height="120" rx="12" class="fa"/><g class="ft"><rect x="145" y="120" width="110" height="120" rx="12"/><rect x="270" y="120" width="110" height="120" rx="12"/></g><g class="tink" text-anchor="middle" style="font:700 15px var(--f-mono)"><text x="75" y="186">pod</text><text x="200" y="186">pod</text><text x="325" y="186">pod</text></g></g>
+          <g transform="translate(938,260)"><rect width="400" height="270" rx="20" class="bx-b" style="fill:rgba(100,160,255,.05)"/><text x="20" y="34" class="tb">Worker node 3 · EC2</text><rect x="20" y="54" width="170" height="44" rx="10" class="bx"/><text x="34" y="82" style="font-size:15px">kubelet</text><rect x="210" y="54" width="170" height="44" rx="10" class="bx"/><text x="224" y="82" style="font-size:15px">kube-proxy</text>
+            <g class="fa"><rect x="20" y="120" width="110" height="120" rx="12"/></g><rect x="145" y="120" width="110" height="120" rx="12" class="fv"/><g class="tink" text-anchor="middle" style="font:700 15px var(--f-mono)"><text x="75" y="186">pod</text><text x="200" y="186">pod</text></g></g>
+        </g></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Control plane: API server (everything goes through it), etcd (stores desired state), scheduler (places pods), controller manager (runs loops that fix differences). Worker nodes: kubelet (starts pods and reports health) and kube-proxy (networking for services). In EKS, AWS runs and scales the control plane across multiple AZs; you manage (or let Auto Mode manage) the nodes.</p></aside>
+</section>
+
+<section class="slide" data-title="Kubernetes objects" data-phase="concept" data-ch="Kubernetes">
+  <h2>Six words that unlock Kubernetes</h2>
+  <div class="row grow" style="gap:24px">
+    <div class="grid g2 grow" style="gap:12px;align-content:start">
+      <div class="card f" data-f="1" style="--c:var(--amber)"><h3>Pod</h3><p class="what">Smallest unit: one or more containers sharing a network.</p></div>
+      <div class="card f" data-f="1" style="--c:var(--teal)"><h3>Deployment</h3><p class="what">“Keep 3 copies of v3 running.” Handles rollouts.</p></div>
+      <div class="card f" data-f="2" style="--c:var(--blue)"><h3>Service</h3><p class="what">A stable name and IP in front of changing pods.</p></div>
+      <div class="card f" data-f="2" style="--c:var(--green)"><h3>Ingress</h3><p class="what">HTTP routing from outside: /api, /seats → services. One ALB for many apps.</p></div>
+      <div class="card f" data-f="3" style="--c:var(--violet)"><h3>Namespace</h3><p class="what">Folders for teams: payments, search, dev.</p></div>
+      <div class="card f" data-f="3" style="--c:var(--rose)"><h3>ConfigMap · Secret</h3><p class="what">Settings and passwords injected at runtime.</p></div>
+    </div>
+<pre class="code f" data-f="4" style="width:520px;flex:none;font-size:15px">apiVersion: apps/v1
+kind: <span class="s">Deployment</span>
+metadata:
+  name: ticketwave-api
+spec:
+  replicas: <span class="s">3</span>
+  selector:
+    matchLabels: { app: ticketwave-api }
+  template:
+    metadata:
+      labels: { app: ticketwave-api }
+    spec:
+      containers:
+      - name: api
+        image: <span class="s">4821….ecr…/ticketwave-api:v3</span>
+        ports: [{ containerPort: 8080 }]
+        resources:
+          requests: { cpu: 250m, memory: 256Mi }</pre>
+  </div>
+  <aside class="notes"><p>The YAML says "keep three copies of this image running". kubectl apply -f deploy.yaml sends it to the API server, and the controllers make it true.</p></aside>
+</section>
+
+<section class="slide" data-title="Helm" data-phase="concept" data-ch="Kubernetes">
+  <h2>Helm: one chart, many environments</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <g transform="translate(40,160)"><rect width="300" height="220" rx="20" class="bx-v"/><text x="150" y="50" text-anchor="middle" class="tv" style="font:700 22px var(--f-body)">Chart</text><text x="150" y="86" text-anchor="middle" class="tmut" style="font-size:16px">templates with blanks</text>
+        <text x="30" y="130" class="tm" style="font-size:15px">replicas: {{ .Values.replicas }}</text><text x="30" y="160" class="tm" style="font-size:15px">image: {{ .Values.tag }}</text></g>
+      <g class="f" data-f="1"><g transform="translate(470,40)"><rect width="300" height="110" rx="16" class="bx-t"/><text x="20" y="40" class="tt tm">values-dev.yaml</text><text x="20" y="76" class="tm" style="font-size:15px">replicas: 1 · tag: v3-rc</text></g>
+        <g transform="translate(470,215)"><rect width="300" height="110" rx="16" class="bx-a"/><text x="20" y="40" class="ta tm">values-uat.yaml</text><text x="20" y="76" class="tm" style="font-size:15px">replicas: 2 · tag: v3</text></g>
+        <g transform="translate(470,390)"><rect width="300" height="110" rx="16" class="bx-r"/><text x="20" y="40" class="tr tm">values-prod.yaml</text><text x="20" y="76" class="tm" style="font-size:15px">replicas: 12 · tag: v3</text></g>
+        <path d="M340 270 L470 95 M340 270 H470 M340 270 L470 445" class="w"/></g>
+      <g class="f" data-f="2"><g transform="translate(940,40)"><rect width="420" height="110" rx="16" class="bx"/><text x="20" y="44" style="font:600 18px var(--f-body)">release in dev</text><g class="ft"><rect x="20" y="62" width="34" height="30" rx="6"/></g></g>
+        <g transform="translate(940,215)"><rect width="420" height="110" rx="16" class="bx"/><text x="20" y="44" style="font:600 18px var(--f-body)">release in UAT</text><g class="fa"><rect x="20" y="62" width="34" height="30" rx="6"/><rect x="62" y="62" width="34" height="30" rx="6"/></g></g>
+        <g transform="translate(940,390)"><rect width="420" height="110" rx="16" class="bx"/><text x="20" y="44" style="font:600 18px var(--f-body)">release in prod</text><g class="fr"><rect x="20" y="62" width="24" height="30" rx="5"/><rect x="50" y="62" width="24" height="30" rx="5"/><rect x="80" y="62" width="24" height="30" rx="5"/><rect x="110" y="62" width="24" height="30" rx="5"/><rect x="140" y="62" width="24" height="30" rx="5"/><rect x="170" y="62" width="24" height="30" rx="5"/><rect x="200" y="62" width="24" height="30" rx="5"/><rect x="230" y="62" width="24" height="30" rx="5"/><rect x="260" y="62" width="24" height="30" rx="5"/><rect x="290" y="62" width="24" height="30" rx="5"/><rect x="320" y="62" width="24" height="30" rx="5"/><rect x="350" y="62" width="24" height="30" rx="5"/></g></g>
+        <path d="M770 95 H940 M770 270 H940 M770 445 H940" class="w-t dash"/></g>
+      <text x="704" y="530" text-anchor="middle" class="tm f" data-f="3" style="font-size:18px">$ helm upgrade --install api ./chart -f values-prod.yaml   ·   helm rollback api 41</text>
+    </svg>
+  </div>
+  <aside class="notes"><p>Helm is the package manager for Kubernetes. A chart is a bundle of templated YAML; values files fill in the blanks per environment. helm rollback returns to any previous release number in seconds.</p></aside>
+</section>
+
+<section class="slide" data-title="EKS" data-phase="prod" data-ch="Kubernetes">
+  <h2>EKS: Kubernetes without running the brain</h2>
+  <div class="row grow" style="gap:24px">
+    <div class="grow" style="display:flex;flex-direction:column;gap:14px">
+      <div class="tl">
+        <div class="f" data-f="1" style="--c:var(--amber)"><b>1 · AWS CLI</b><p>aws configure · aws sts get-caller-identity</p></div>
+        <div class="f" data-f="2" style="--c:var(--teal)"><b>2 · eksctl</b><p>choco / brew install eksctl</p></div>
+        <div class="f" data-f="3" style="--c:var(--blue)"><b>3 · kubectl</b><p>talk to the cluster</p></div>
+      </div>
+<pre class="code f" data-f="4" style="font-size:17px">$ eksctl create cluster --name tw-prod \
+    --region ap-south-1 --enable-auto-mode
+$ kubectl get nodes
+$ kubectl apply -f deploy.yaml
+$ kubectl get pods -w</pre>
+    </div>
+    <div style="width:470px;flex:none;display:flex;flex-direction:column;gap:12px">
+      <div class="card f" data-f="5" style="--c:var(--violet)"><h3>AWS runs</h3><p class="what">Control plane across 3 AZs, upgrades, etcd backups. With Auto Mode, nodes too.</p></div>
+      <div class="card f" data-f="5" style="--c:var(--amber)"><h3>You run</h3><p class="what">Your workloads, Helm charts, and how many nodes or Fargate profiles.</p></div>
+      <div class="card f" data-f="6" style="--c:var(--blue)"><h3>ECS or EKS?</h3><p class="what">ECS: simpler, AWS-only. EKS: standard Kubernetes, huge ecosystem, portable.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>Tool install steps and eksctl flags (--enable-auto-mode, --nodes, --nodes-min/max, --node-type, --managed/fargate) are from the EKS PDF.</p></aside>
+</section>
+
+<section class="slide" data-tpl="perf" data-title="Perf: Kubernetes + ingress" data-ch="Kubernetes">
+  <div class="t-h2">Before vs after: services on hand-managed VMs vs EKS</div>
+  <div class="t-how">What changed: <b>EKS + one ingress (ALB) + horizontal pod autoscaling</b></div>
+  <script type="application/json">{"rows":[
+    ["Load balancers for 10 services","cost and config",100,"10 separate LBs",10,"1 ALB via ingress","10→1","LBs"],
+    ["Pod crash at 3 am","recovery",80,"human gets paged",5,"replaced in seconds","auto","healing"],
+    ["Scale for a ticket drop","pods",20,"edit by hand",100,"HPA adds pods on CPU","auto","scaling"],
+    ["Node utilization","packing",30,"~25%",80,"~65%+","~2.5×","denser"]],
+    "note":"Illustrative figures. The AWS Load Balancer Controller can group multiple ingresses onto one ALB."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: why Kubernetes" data-ch="Kubernetes">
+  <div class="t-recap">What does Kubernetes do that Docker alone doesn't?</div>
+  <div class="t-ans">Docker runs <em>a container</em>. Kubernetes runs <em>a promise</em>: “always 12 healthy copies, spread out, reachable, scaled to load.”</div>
+  <div class="t-x">You stop managing servers and start declaring outcomes. That's the magic the seniors are talking about.</div>
+</section>

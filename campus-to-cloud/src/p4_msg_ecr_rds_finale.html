@@ -1,0 +1,369 @@
+
+<!-- ============ CH9 SNS SQS ============ -->
+<section class="slide chapter" data-title="Chapter 9 · SNS and SQS">
+  <div class="num">09</div>
+  <div class="eyebrow">Chapter 9</div>
+  <h2>Passing messages without shouting</h2>
+  <p class="q">9,000 Diwali orders an hour. The kitchen can make 3,000. Something has to hold the line.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--violet)">SNS</span><span class="tile sm" style="--c:var(--violet)">SQS</span><span class="tile sm" style="--c:var(--rose)">EB</span></div>
+  <aside class="notes"><p>The big idea: decoupling. Parts talk through messages so a slow part can't take down the rest.</p></aside>
+</section>
+
+<section class="slide" data-title="The queue absorbs the spike" data-phase="pic" data-ch="SQS">
+  <h2>A queue turns a spike into a steady flow</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <text x="40" y="40" class="lbl">orders arriving</text><text x="1000" y="40" class="lbl">orders processed</text>
+      <path d="M40 420 L100 410 L160 400 L200 300 L240 120 L280 90 L320 140 L360 110 L400 300 L440 380 L480 410 L520 420" class="w-r" style="stroke-width:4;stroke-dasharray:900;animation:drawq 6s linear infinite"/>
+      <path d="M1000 330 H1360" class="w-g" style="stroke-width:4;stroke-dasharray:400;animation:drawq 6s linear infinite"/>
+      <rect x="560" y="200" width="380" height="200" rx="22" class="bx-v"/><text x="750" y="240" text-anchor="middle" class="tv tm">SQS queue</text>
+      <rect x="580" y="260" height="120" rx="10" class="fv" style="animation:fillq 6s ease-in-out infinite"/>
+      <path d="M520 300 H560 M940 330 H1000" class="w"/>
+      <text x="280" y="70" class="tr" style="font:700 22px var(--f-body)">9,000/hr</text><text x="1180" y="300" class="tg" style="font:700 22px var(--f-body)">3,000/hr</text>
+      <style>@keyframes drawq{from{stroke-dashoffset:900}to{stroke-dashoffset:0}}@keyframes fillq{0%{width:10px}50%{width:340px}100%{width:10px}}</style>
+      <g class="f" data-f="1"><text x="704" y="480" text-anchor="middle" style="font:600 28px var(--f-body)">No order is lost. The kitchen works at its own pace.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Red: spiky arrivals. The queue fills up during the spike and drains afterwards. Green: the kitchen processes at a steady rate. Without the queue, the spike would hit the kitchen directly and orders would fail.</p></aside>
+</section>
+
+<section class="slide" data-title="SNS fan-out and SQS mechanics" data-phase="concept" data-ch="SNS · SQS">
+  <h2>Push to many. Pull at your pace.</h2>
+  <div class="row grow">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 700 560">
+        <text x="0" y="30" class="tv" style="font:700 22px var(--f-body)">SNS · broadcast</text>
+        <g transform="translate(0,200)"><rect width="140" height="80" rx="14" class="bx-a"/><text x="70" y="48" text-anchor="middle" class="ta tm" style="font-size:16px">order app</text></g>
+        <g transform="translate(220,200)"><path d="M0 40 L60 0 V80Z" class="fv"/><text x="30" y="110" text-anchor="middle" class="tv tm" style="font-size:14px">topic</text></g>
+        <g style="font:600 15px var(--f-mono)"><g transform="translate(420,60)"><rect width="230" height="56" rx="12" class="bx-v"/><text x="20" y="35">SQS · kitchen</text></g><g transform="translate(420,160)"><rect width="230" height="56" rx="12" class="bx-a"/><text x="20" y="35">λ · billing</text></g><g transform="translate(420,260)"><rect width="230" height="56" rx="12" class="bx-t"/><text x="20" y="35">SMS · customer</text></g><g transform="translate(420,360)"><rect width="230" height="56" rx="12" class="bx-r"/><text x="20" y="35">email · Meera</text></g></g>
+        <g class="w-v"><path id="f1" d="M280 240 L420 88"/><path id="f2" d="M280 240 L420 188"/><path id="f3" d="M280 240 L420 288"/><path id="f4" d="M280 240 L420 388"/></g>
+        <g class="fv"><circle r="8"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#f1"/></animateMotion></circle><circle r="8"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#f2"/></animateMotion></circle><circle r="8"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#f3"/></animateMotion></circle><circle r="8"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#f4"/></animateMotion></circle></g>
+      </svg>
+    </div>
+    <div class="vis">
+      <svg class="d" viewBox="0 0 700 560">
+        <text x="0" y="30" class="tv" style="font:700 22px var(--f-body)">SQS · visibility timeout</text>
+        <rect x="0" y="70" width="460" height="90" rx="16" class="bx-v"/>
+        <g class="fv"><rect x="20" y="88" width="60" height="54" rx="8"/><rect x="90" y="88" width="60" height="54" rx="8"/><rect x="160" y="88" width="60" height="54" rx="8"/></g>
+        <rect x="230" y="88" width="60" height="54" rx="8" class="fa" style="animation:vis 6s infinite"/>
+        <g transform="translate(540,70)"><rect width="150" height="90" rx="14" class="bx-t"/><text x="75" y="52" text-anchor="middle" class="tt tm" style="font-size:16px">worker</text></g>
+        <style>@keyframes vis{0%,10%{opacity:1}15%,70%{opacity:.15}75%,100%{opacity:1}}</style>
+        <g class="f" data-f="1" style="font-size:19px"><text x="0" y="220">1 · worker picks #4 → it's <tspan class="ta">hidden</tspan> (default 30 s)</text></g>
+        <g class="f" data-f="2" style="font-size:19px"><text x="0" y="270">2 · done → worker <tspan class="tg">deletes</tspan> it</text></g>
+        <g class="f" data-f="3" style="font-size:19px"><text x="0" y="320">3 · worker crashed → #4 <tspan class="ta">reappears</tspan> for another try</text></g>
+        <g class="f" data-f="4" style="font-size:19px"><text x="0" y="370">4 · fails 5 times → moved to a <tspan class="tr">dead-letter queue</tspan></text></g>
+        <g class="f" data-f="5"><rect x="0" y="420" width="690" height="110" rx="14" class="bx"/><text x="20" y="460" class="tm" style="font-size:17px">Standard: at-least-once, best-effort order</text><text x="20" y="500" class="tm" style="font-size:17px">FIFO: strict order, exactly-once processing</text></g>
+      </svg>
+    </div>
+  </div>
+  <aside class="notes"><p>SNS pushes a copy to every subscriber immediately. SQS stores messages until a consumer pulls and deletes them, up to 14 days (default 4).</p><p>Visibility timeout is the clever bit: a message isn't deleted when read, only hidden. If the worker dies, it comes back. That's how SQS guarantees nothing is lost.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: messaging" data-phase="compare" data-ch="SNS · SQS">
+  <h2>Four messaging services, four shapes</h2>
+  <div class="cmp g4 grow">
+    <div class="card f" data-f="1" style="--c:var(--violet)"><div class="ico"><svg width="110" height="70" viewBox="0 0 110 70"><path d="M10 35 L40 15 V55Z" class="fv"/><path d="M45 35 L100 10 M45 35 H100 M45 35 L100 60" class="w-v"/></svg></div><h3>SNS</h3><p class="what">Push one message to many subscribers.</p><p class="use"><b>Use for</b>Alerts, fan-out, SMS and email.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--blue)"><div class="ico"><svg width="110" height="70" viewBox="0 0 110 70"><g class="fb"><rect x="10" y="20" width="18" height="30" rx="4"/><rect x="32" y="20" width="18" height="30" rx="4"/><rect x="54" y="20" width="18" height="30" rx="4"/></g><path d="M78 35 H104" class="w-b"/></svg></div><h3>SQS</h3><p class="what">A buffer. One consumer handles each message.</p><p class="use"><b>Use for</b>Background jobs, absorbing spikes.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--rose)"><div class="ico"><svg width="110" height="70" viewBox="0 0 110 70"><circle cx="55" cy="35" r="18" class="bx-r"/><path d="M10 20 L37 30 M10 50 L37 40 M73 30 L100 15 M73 40 L100 55" class="w-r"/></svg></div><h3>EventBridge</h3><p class="what">An event bus with routing rules and schedules.</p><p class="use"><b>Use for</b>“When X happens anywhere, do Y.” SaaS events.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--teal)"><div class="ico"><svg width="110" height="70" viewBox="0 0 110 70"><path d="M10 20 H100 M10 35 H100 M10 50 H100" class="w-t dash"/></svg></div><h3>Kinesis</h3><p class="what">An ordered stream many readers can replay.</p><p class="use"><b>Use for</b>Clickstreams, real-time analytics.</p></div>
+  </div>
+  <aside class="notes"><p>Quick rule: notify many → SNS; do work later, safely → SQS; route events by content → EventBridge; high-volume ordered stream with replay → Kinesis.</p></aside>
+</section>
+
+<section class="slide" data-title="At-least-once, idempotency" data-phase="behind" data-ch="SNS · SQS">
+  <div><span class="wowtag">Behind the scenes</span></div>
+  <h2 style="margin-top:6px">Why a message can arrive twice</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <g transform="translate(40,120)"><rect width="220" height="100" rx="16" class="bx-a"/><text x="110" y="58" text-anchor="middle" class="ta tm">producer</text></g>
+      <g transform="translate(420,40)"><rect width="560" height="260" rx="22" class="bx-v" style="fill:rgba(161,147,255,.04)"/><text x="24" y="38" class="tv tm">SQS · stored on servers in several AZs</text>
+        <g class="bx"><rect x="30" y="70" width="150" height="160" rx="14"/><rect x="205" y="70" width="150" height="160" rx="14"/><rect x="380" y="70" width="150" height="160" rx="14"/></g>
+        <g class="fv"><rect x="80" y="130" width="50" height="40" rx="6"/><rect x="255" y="130" width="50" height="40" rx="6"/><rect x="430" y="130" width="50" height="40" rx="6"/></g></g>
+      <path d="M260 170 H420" class="w-a"/>
+      <g class="f" data-f="1"><path id="d1" d="M980 140 H1150" class="w-v"/><path id="d2" d="M980 220 H1150" class="w-v dash"/>
+        <g transform="translate(1150,110)"><rect width="220" height="140" rx="16" class="bx-t"/><text x="110" y="62" text-anchor="middle" class="tt tm">worker</text><text x="110" y="96" text-anchor="middle" class="tmut tm" style="font-size:15px">order #481</text></g>
+        <circle r="9" class="fv"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#d1"/></animateMotion></circle><circle r="9" class="fr"><animateMotion dur="1.6s" begin=".8s" repeatCount="indefinite"><mpath href="#d2"/></animateMotion></circle>
+        <text x="990" y="270" class="tr" style="font-size:18px">rare duplicate</text></g>
+      <g class="f" data-f="2"><rect x="40" y="350" width="1328" height="170" rx="20" class="bx-g"/>
+        <text x="70" y="400" class="tg" style="font:700 26px var(--f-body)">Make consumers idempotent</text>
+        <text x="70" y="444" class="tm" style="font-size:19px">if orders_table.exists(order_id=481): skip    <tspan class="c">  # already charged</tspan></text>
+        <text x="70" y="484" class="tmut" style="font-size:19px">Processing the same message twice must give the same result as once.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>SQS stores each message redundantly on multiple servers across AZs so it survives failures. A side effect of that design: standard queues guarantee at-least-once delivery, so very occasionally a message is delivered twice.</p><p>Production rule: use an idempotency key (like order_id). Charging a customer twice is the classic bug.</p></aside>
+</section>
+
+<!-- ============ CH10 ECR ============ -->
+<section class="slide chapter" data-title="Chapter 10 · ECR">
+  <div class="num">10</div>
+  <div class="eyebrow">Chapter 10</div>
+  <h2>Packed tiffins on a private shelf</h2>
+  <p class="q">Kabir moves the app into Docker containers. Where do the images live, and how do they reach servers?</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--teal)">ECR</span><span class="tile sm" style="--c:var(--violet)">ECS</span><span class="tile sm" style="--c:var(--blue)">EKS</span></div>
+  <aside class="notes"><p>Container image = the app plus everything it needs, packed like a tiffin box.</p></aside>
+</section>
+
+<section class="slide" data-title="Layers" data-phase="pic" data-ch="ECR" data-steps="2">
+  <h2>An image is a stack of layers</h2>
+  <div class="row grow" style="align-items:center">
+    <div class="layers" style="width:620px;height:440px;flex:none">
+      <div class="layer-stack" id="lstack">
+        <div class="layer" style="--c:var(--steel);transform:translateZ(0)">ubuntu base · 29 MB</div>
+        <div class="layer" style="--c:var(--blue);transform:translateZ(45px)">python 3.12 · 48 MB</div>
+        <div class="layer" style="--c:var(--violet);transform:translateZ(90px)">pip packages · 61 MB</div>
+        <div class="layer" style="--c:var(--amber);transform:translateZ(135px)">your code · 2 MB</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:22px" class="grow">
+      <p class="say f" data-f="1">Change one line of code → only the <em>top layer</em> changes.</p>
+      <p class="say f" data-f="2">Push uploads 2 MB, not 140 MB. Servers pull only what they lack.</p>
+    </div>
+  </div>
+  <style>.st1 #lstack .layer:nth-child(4){transform:translateZ(210px)!important;box-shadow:0 0 40px var(--amber)}.st2 #lstack .layer:nth-child(-n+3){opacity:.35}.st2 #lstack .layer:nth-child(4){transform:translateZ(210px)!important;border-color:var(--teal);background:rgba(63,213,194,.3)}</style>
+  <aside class="notes"><p>Each Dockerfile instruction makes a layer. Layers are identified by a hash of their content, so identical layers are stored and transferred once.</p></aside>
+</section>
+
+<section class="slide" data-title="Inside ECR" data-phase="behind" data-ch="ECR">
+  <div><span class="wowtag">Behind the scenes</span></div>
+  <h2 style="margin-top:6px">Tags move. Digests never do.</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <g transform="translate(40,60)"><rect width="500" height="420" rx="22" class="bx-t" style="fill:rgba(63,213,194,.04)"/><text x="24" y="40" class="tt tm">registry · 4821…dkr.ecr.ap-south-1</text>
+        <g transform="translate(24,70)"><rect width="452" height="320" rx="16" class="bx"/><text x="20" y="36" class="lbl">repository · chaicart-api</text>
+          <g style="font:600 17px var(--f-mono)"><rect x="20" y="60" width="130" height="44" rx="10" class="fa"/><text x="85" y="88" text-anchor="middle" class="tink">:latest</text><rect x="20" y="130" width="130" height="44" rx="10" class="bx-a"/><text x="85" y="158" text-anchor="middle" class="ta">:v3</text><rect x="20" y="200" width="130" height="44" rx="10" class="bx-a"/><text x="85" y="228" text-anchor="middle" class="ta">:v2</text></g>
+          <g style="font:600 15px var(--f-mono)"><rect x="230" y="96" width="200" height="50" rx="10" class="bx-v"/><text x="330" y="127" text-anchor="middle" class="tv">sha256:9f2c…</text><rect x="230" y="196" width="200" height="50" rx="10" class="bx-v"/><text x="330" y="227" text-anchor="middle" class="tv">sha256:41ab…</text></g>
+          <path d="M150 82 C 190 82, 200 121, 230 121 M150 152 C 190 152, 200 121, 230 121 M150 222 H230" class="w-a"/>
+        </g></g>
+      <g class="f" data-f="1"><path d="M540 270 H700" class="w dash"/><g transform="translate(700,130)"><path d="M0 0 h240 l-24 280 h-192z" class="bx-g"/><text x="120" y="130" text-anchor="middle" class="tg" style="font:700 30px var(--f-mono)">S3</text><text x="120" y="170" text-anchor="middle" class="tmut tm" style="font-size:15px">layer blobs</text></g>
+        <text x="980" y="200" style="font:600 24px var(--f-body)">Layers are stored in S3,</text><text x="980" y="236" style="font:600 24px var(--f-body)">named by their hash.</text></g>
+      <g class="f" data-f="2"><text x="980" y="320" class="ta" style="font-size:21px">:latest can point anywhere tomorrow.</text><text x="980" y="356" class="tv" style="font-size:21px">sha256:9f2c… is always this exact image.</text><text x="980" y="410" class="tmut" style="font-size:19px">Production deploys pin the digest,</text><text x="980" y="438" class="tmut" style="font-size:19px">or turn on tag immutability.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>ECR stores image layers in S3 behind the scenes, which is where its durability comes from. A tag is a movable label; the digest is a content hash.</p><p>Extra features worth naming: image scanning for known vulnerabilities, lifecycle policies to delete old images, cross-Region replication.</p></aside>
+</section>
+
+<section class="slide" data-title="Production: CI/CD pipeline" data-phase="prod" data-ch="ECR" data-hook="cicd">
+  <h2>Production: from git push to live in minutes</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 520">
+      <path id="ci" d="M90 180 H1320" class="w-l" style="stroke-width:6"/>
+      <g style="font:600 17px var(--f-body)" text-anchor="middle" id="ciNodes">
+        <g transform="translate(90,180)"><circle r="54" class="bx"/><text y="6">git push</text></g>
+        <g transform="translate(295,180)"><circle r="54" class="bx"/><text y="6">build</text></g>
+        <g transform="translate(500,180)"><circle r="54" class="bx"/><text y="6">test</text></g>
+        <g transform="translate(705,180)"><circle r="54" class="bx"/><text y="6">scan</text></g>
+        <g transform="translate(910,180)"><circle r="54" class="bx"/><text y="-2">push</text><text y="20">ECR</text></g>
+        <g transform="translate(1115,180)"><circle r="54" class="bx"/><text y="-2">deploy</text><text y="20">ECS</text></g>
+        <g transform="translate(1320,180)"><circle r="54" class="bx"/><text y="6">live</text></g>
+      </g>
+      <circle r="14" class="fa glow-a"><animateMotion dur="7s" repeatCount="indefinite"><mpath href="#ci"/></animateMotion></circle>
+      <g class="f" data-f="1" style="font-size:19px"><text x="295" y="290" text-anchor="middle" class="tmut">GitHub Actions</text><text x="295" y="316" text-anchor="middle" class="tmut">or CodeBuild</text><text x="705" y="290" text-anchor="middle" class="tmut">ECR image scan</text><text x="1115" y="290" text-anchor="middle" class="tmut">rolling or blue/green</text><text x="1320" y="290" text-anchor="middle" class="tmut">health checks pass</text></g>
+      <g class="f" data-f="2"><rect x="200" y="370" width="1008" height="110" rx="18" class="bx"/>
+        <text x="230" y="414" style="font-size:20px"><tspan class="tv" font-weight="700">ECS</tspan>: AWS's own orchestrator, simpler.  <tspan class="tb" font-weight="700">EKS</tspan>: managed Kubernetes, portable.</text>
+        <text x="230" y="452" style="font-size:20px">Run either on <tspan class="ta" font-weight="700">EC2</tspan> (you manage nodes) or <tspan class="tv" font-weight="700">Fargate</tspan> (no nodes at all).</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>The amber dot travels the pipeline. Each stage lights up as it passes. If a health check fails after deploy, ECS can roll back automatically.</p><p>ECR vs Docker Hub: same concept, but ECR is private by default, controlled by IAM and sits in your Region.</p></aside>
+</section>
+
+<!-- ============ CH11 RDS ============ -->
+<section class="slide chapter" data-title="Chapter 11 · RDS">
+  <div class="num">11</div>
+  <div class="eyebrow">Chapter 11</div>
+  <h2>A database with a manager on staff</h2>
+  <p class="q">The MySQL Kabir installed by hand needs backups, patches and a plan for 3 am failures.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--blue)">RDS</span><span class="tile sm" style="--c:var(--amber)">AUR</span><span class="tile sm" style="--c:var(--violet)">DDB</span></div>
+  <aside class="notes"><p>RDS = Relational Database Service. You run SQL; AWS runs the database server.</p></aside>
+</section>
+
+<section class="slide" data-title="Who does the chores" data-phase="pic" data-ch="RDS" data-steps="1">
+  <h2>Hand the chores to AWS</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <text x="300" y="40" text-anchor="middle" class="ta" style="font:700 26px var(--f-body)">You</text><text x="1100" y="40" text-anchor="middle" class="tt" style="font:700 26px var(--f-body)">AWS</text>
+      <line x1="704" y1="20" x2="704" y2="520" class="w-l"/>
+      <g style="font:600 19px var(--f-body)" id="chores">
+        <g class="ch" style="--x:0"><rect x="80" y="70" width="440" height="52" rx="12" class="bx-a"/><text x="104" y="104">Schema, queries, indexes</text></g>
+        <g class="ch" style="--x:0"><rect x="80" y="132" width="440" height="52" rx="12" class="bx-a"/><text x="104" y="166">Who can connect (SG, users)</text></g>
+        <g class="ch mv"><rect x="80" y="194" width="440" height="52" rx="12" class="bx-a"/><text x="104" y="228">Install and configure engine</text></g>
+        <g class="ch mv"><rect x="80" y="256" width="440" height="52" rx="12" class="bx-a"/><text x="104" y="290">OS and engine patches</text></g>
+        <g class="ch mv"><rect x="80" y="318" width="440" height="52" rx="12" class="bx-a"/><text x="104" y="352">Nightly backups, point-in-time restore</text></g>
+        <g class="ch mv"><rect x="80" y="380" width="440" height="52" rx="12" class="bx-a"/><text x="104" y="414">Failover to another AZ</text></g>
+        <g class="ch mv"><rect x="80" y="442" width="440" height="52" rx="12" class="bx-a"/><text x="104" y="476">Hardware, disks, monitoring</text></g>
+      </g>
+      <style>#chores .mv{transition:transform 1s cubic-bezier(.2,.7,.2,1)}#chores .mv:nth-child(4){transition-delay:.12s}#chores .mv:nth-child(5){transition-delay:.24s}#chores .mv:nth-child(6){transition-delay:.36s}#chores .mv:nth-child(7){transition-delay:.48s}.st1 #chores .mv{transform:translateX(800px)}.st1 #chores .mv rect{stroke:var(--teal);fill:rgba(63,213,194,.1)}</style>
+    </svg>
+  </div>
+  <aside class="notes"><p>Click: five chores slide to AWS. You keep the data model, queries, and access control. The trade-off: no SSH into the database server.</p><p>Engines: MySQL, PostgreSQL, MariaDB, Oracle, SQL Server, plus Aurora.</p></aside>
+</section>
+
+<section class="slide" data-title="Multi-AZ vs read replicas" data-phase="concept" data-ch="RDS" data-steps="3">
+  <h2>Insurance vs extra hands</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <g transform="translate(560,20)"><rect width="290" height="70" rx="16" class="bx"/><text x="145" y="32" text-anchor="middle" class="lbl">endpoint</text><text x="145" y="56" text-anchor="middle" class="tm" style="font-size:15px">chaicart-db.xxxx.rds…</text></g>
+      <g transform="translate(140,230)" class="dim-on-2"><ellipse cx="130" cy="20" rx="130" ry="26" class="fb"/><rect y="20" width="260" height="140" class="fb" opacity=".7"/><ellipse cx="130" cy="160" rx="130" ry="26" class="fb"/><text x="130" y="100" text-anchor="middle" class="tink" style="font:700 22px var(--f-body)">Primary · AZ a</text></g>
+      <g transform="translate(580,230)"><ellipse cx="130" cy="20" rx="130" ry="26" class="fb" opacity=".45"/><rect y="20" width="260" height="140" class="fb" opacity=".3"/><ellipse cx="130" cy="160" rx="130" ry="26" class="fb" opacity=".45"/><text x="130" y="100" text-anchor="middle" style="font:700 22px var(--f-body)">Standby · AZ b</text></g>
+      <path id="sy" d="M400 300 H580" class="w-t" style="stroke-width:4"/><text x="490" y="285" text-anchor="middle" class="tt tm" style="font-size:15px">sync</text>
+      <circle r="8" class="ft"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#sy"/></animateMotion></circle>
+      <path d="M705 90 C 705 150, 270 150, 270 204" class="w-a hide-on-2" style="stroke-width:4"/>
+      <path d="M705 90 V204" class="w-a show-on-2" style="stroke-width:4"/>
+      <g class="show-on-2"><text x="270" y="460" text-anchor="middle" class="tr" style="font:800 30px var(--f-display)">FAILED</text><text x="705" y="460" text-anchor="middle" class="tg" style="font:700 22px var(--f-body)">promoted · same endpoint</text></g>
+      <g class="f" data-f="1"><g transform="translate(1040,230)"><ellipse cx="130" cy="20" rx="130" ry="26" class="fa"/><rect y="20" width="260" height="140" class="fa" opacity=".7"/><ellipse cx="130" cy="160" rx="130" ry="26" class="fa"/><text x="130" y="100" text-anchor="middle" class="tink" style="font:700 22px var(--f-body)">Read replica</text></g>
+        <path d="M400 320 C 600 400, 900 400, 1040 320" class="w-a dash"/><text x="720" y="410" class="ta tm" style="font-size:15px">async</text>
+        <text x="1170" y="460" text-anchor="middle" class="tmut" style="font-size:18px">own endpoint · dashboards</text></g>
+      <g class="f" data-f="3"><text x="704" y="530" text-anchor="middle" style="font-size:22px"><tspan class="tt" font-weight="700">Multi-AZ</tspan> survives failure. <tspan class="ta" font-weight="700">Read replicas</tspan> spread reads. Use both.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Click 1: a read replica with asynchronous copy for dashboards. Click 2: the primary fails, and the endpoint DNS flips to the standby (typically within a minute or two). The app reconnects to the same name. Click 3: summary.</p><p>In classic Multi-AZ, the standby can't serve reads. Newer Multi-AZ DB clusters have readable standbys.</p></aside>
+</section>
+
+<section class="slide" data-title="Aurora: 6 copies" data-phase="behind" data-ch="RDS" data-steps="3">
+  <div><span class="wowtag">Behind the scenes</span></div>
+  <h2 style="margin-top:6px">Aurora writes every change six times</h2>
+  <div class="row grow">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 900 560">
+        <g transform="translate(330,10)"><rect width="240" height="80" rx="16" class="bx-a"/><text x="120" y="50" text-anchor="middle" class="ta" style="font:700 22px var(--f-body)">Aurora writer</text></g>
+        <g transform="translate(20,170)" class="dim-on-2"><rect width="260" height="360" rx="20" class="w-l" style="stroke-dasharray:8 8"/><text x="130" y="30" text-anchor="middle" class="lbl">AZ a</text><rect x="40" y="70" width="180" height="100" rx="14" class="bx-b"/><text x="130" y="128" text-anchor="middle" class="tb tm">copy 1</text><rect x="40" y="200" width="180" height="100" rx="14" class="bx-b"/><text x="130" y="258" text-anchor="middle" class="tb tm">copy 2</text></g>
+        <g transform="translate(320,170)"><rect width="260" height="360" rx="20" class="w-l" style="stroke-dasharray:8 8"/><text x="130" y="30" text-anchor="middle" class="lbl">AZ b</text><rect x="40" y="70" width="180" height="100" rx="14" class="bx-b"/><text x="130" y="128" text-anchor="middle" class="tb tm">copy 3</text><rect x="40" y="200" width="180" height="100" rx="14" class="bx-b"/><text x="130" y="258" text-anchor="middle" class="tb tm">copy 4</text></g>
+        <g transform="translate(620,170)"><rect width="260" height="360" rx="20" class="w-l" style="stroke-dasharray:8 8"/><text x="130" y="30" text-anchor="middle" class="lbl">AZ c</text><rect x="40" y="70" width="180" height="100" rx="14" class="bx-b"/><text x="130" y="128" text-anchor="middle" class="tb tm">copy 5</text><rect x="40" y="200" width="180" height="100" rx="14" class="bx-b"/><text x="130" y="258" text-anchor="middle" class="tb tm">copy 6</text></g>
+        <g class="f" data-f="1"><g class="w-a" style="stroke-width:2"><path d="M450 90 L150 240 M450 90 L150 370 M450 90 L450 240 M450 90 L450 370 M450 90 L750 240 M450 90 L750 370"/></g></g>
+        <g class="show-on-2"><text x="150" y="560" text-anchor="middle" class="tr" style="font:800 22px var(--f-display)">AZ LOST</text></g>
+      </svg>
+    </div>
+    <div style="width:440px;flex:none;display:flex;flex-direction:column;gap:20px;justify-content:center">
+      <div class="stat f" data-f="1" style="--c:var(--blue)"><b>6</b><span>copies across 3 AZs</span></div>
+      <div class="stat f" data-f="1" style="--c:var(--amber)"><b>4 of 6</b><span>must confirm a write</span></div>
+      <div class="stat f" data-f="1" style="--c:var(--green)"><b>3 of 6</b><span>enough to read</span></div>
+      <p class="say f" data-f="3">Lose a whole AZ: 4 copies left. <em>Writes keep going.</em></p>
+    </div>
+  </div>
+  <aside class="notes"><p>Aurora separates compute from storage. The storage layer keeps six copies of your data across three AZs. A write is acknowledged when four of the six confirm; a read needs three. Losing an entire AZ (two copies) still leaves four, so writes continue; losing an AZ plus one more copy still allows reads.</p><p>Source: AWS's Aurora design paper (SIGMOD 2017) and Aurora documentation.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: databases" data-phase="compare" data-ch="RDS">
+  <h2>Which database?</h2>
+  <div class="cmp g4 grow">
+    <div class="card f" data-f="1" style="--c:var(--blue)"><h3>RDS</h3><p class="what">Managed MySQL, PostgreSQL, MariaDB, Oracle, SQL Server.</p><p class="use"><b>Use for</b>Standard relational apps. Most teams start here.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--amber)"><h3>Aurora</h3><p class="what">MySQL/PostgreSQL-compatible, 6-copy storage, fast failover, up to 15 replicas.</p><p class="use"><b>Use for</b>High availability and scale. Serverless option.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--violet)"><h3>DynamoDB</h3><p class="what">NoSQL key-value. Single-digit-ms at any scale. No servers.</p><p class="use"><b>Use for</b>Carts, sessions, huge simple lookups.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--steel)"><h3>DB on EC2</h3><p class="what">You install and run everything yourself.</p><p class="use"><b>Use for</b>Unsupported engines or settings. Rarely.</p></div>
+  </div>
+  <aside class="notes"><p>Rule of thumb: relational data with joins → RDS or Aurora. Massive key-based access with simple queries → DynamoDB.</p></aside>
+</section>
+
+<!-- ============ FINALE ============ -->
+<section class="slide chapter" data-title="Finale">
+  <div class="num">∞</div>
+  <div class="eyebrow">Finale</div>
+  <h2>The whole city, working together</h2>
+  <p class="q">Next Diwali, ChaiCart stays up. Here's every piece you learned, in one picture.</p>
+  <aside class="notes"><p>Recap time. Ask the room to name each service before you click.</p></aside>
+</section>
+
+<section class="slide" data-title="Architecture (3D)" data-phase="prod" data-ch="Full architecture" style="padding:24px">
+  <div class="row grow" style="gap:18px;min-height:0">
+    <div class="three-wrap grow"><canvas class="three" id="arch3d"></canvas><div class="drag-hint">click a step · drag to rotate</div></div>
+    <div style="width:380px;flex:none;display:flex;flex-direction:column;gap:10px;padding-top:48px">
+      <h3 style="font:700 30px var(--f-display)">ChaiCart, fully built</h3>
+      <div class="steps" id="archSteps">
+        <button class="step" data-step="1" style="--c:var(--teal)"><span>1</span><span>Customer → gate → <b>EC2</b></span></button>
+        <button class="step" data-step="2" style="--c:var(--blue)"><span>2</span><span>App reads <b>RDS</b></span></button>
+        <button class="step" data-step="3" style="--c:var(--green)"><span>3</span><span>Photo to <b>S3</b> via the role</span></button>
+        <button class="step" data-step="4" style="--c:var(--amber)"><span>4</span><span>S3 triggers <b>Lambda</b></span></button>
+        <button class="step" data-step="5" style="--c:var(--violet)"><span>5</span><span>Order → <b>SNS</b> → <b>SQS</b></span></button>
+        <button class="step" data-step="6" style="--c:var(--teal)"><span>6</span><span>Deploy from <b>ECR</b></span></button>
+        <button class="step" data-step="7" style="--c:var(--rose)"><span>7</span><span>AZ fails → <b>standby</b> takes over</span></button>
+        <button class="step" data-step="8" style="--c:var(--steel)"><span>8</span><span>Kabir via <b>SSM</b>, no port 22</span></button>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><p>Click through each step. Point out what guards each hop: security groups, IAM roles, private subnets.</p></aside>
+</section>
+
+<section class="slide" data-title="Shared responsibility" data-phase="concept" data-ch="Security">
+  <h2>AWS secures the city. You lock your doors.</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <g style="font:600 20px var(--f-body)">
+        <g class="f" data-f="2"><rect x="40" y="20" width="1328" height="64" rx="12" class="bx-a"/><text x="70" y="60">Your data · who can access it · encryption choices</text><text x="1340" y="60" text-anchor="end" class="ta tm" style="font-size:15px">YOU</text></g>
+        <g class="f" data-f="2"><rect x="40" y="94" width="1328" height="64" rx="12" class="bx-a"/><text x="70" y="134">IAM · security groups · S3 bucket settings</text><text x="1340" y="134" text-anchor="end" class="ta tm" style="font-size:15px">YOU</text></g>
+        <g class="f" data-f="2"><rect x="40" y="168" width="1328" height="64" rx="12" class="bx-a"/><text x="70" y="208">Your app code · OS patches on EC2</text><text x="1340" y="208" text-anchor="end" class="ta tm" style="font-size:15px">YOU</text></g>
+        <g class="f" data-f="1"><rect x="40" y="270" width="1328" height="64" rx="12" class="bx-t"/><text x="70" y="310">Hypervisor · Nitro · managed service internals</text><text x="1340" y="310" text-anchor="end" class="tt tm" style="font-size:15px">AWS</text></g>
+        <g class="f" data-f="1"><rect x="40" y="344" width="1328" height="64" rx="12" class="bx-t"/><text x="70" y="384">Servers · storage · network · global backbone</text><text x="1340" y="384" text-anchor="end" class="tt tm" style="font-size:15px">AWS</text></g>
+        <g class="f" data-f="1"><rect x="40" y="418" width="1328" height="64" rx="12" class="bx-t"/><text x="70" y="458">Buildings · guards · power · cooling</text><text x="1340" y="458" text-anchor="end" class="tt tm" style="font-size:15px">AWS</text></g>
+      </g>
+      <g class="f" data-f="3"><text x="704" y="525" text-anchor="middle" class="tmut" style="font-size:20px">The more managed the service (RDS, Lambda), the more of the amber rows AWS takes over.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Built bottom-up: AWS's layers first, then yours. Almost every cloud breach in the news happened in the amber rows: leaked keys, open buckets, open ports.</p></aside>
+</section>
+
+<section class="slide" data-title="Myths" data-phase="concept" data-ch="Common mistakes">
+  <h2>Eight things everyone gets wrong once</h2>
+  <div class="grid g2" style="gap:12px">
+    <div class="myth f" data-f="1"><div class="m">An SG protects the whole subnet.</div><div class="f2">It's per instance. The NACL covers the subnet.</div></div>
+    <div class="myth f" data-f="1"><div class="m">Replies need an outbound rule.</div><div class="f2">SGs are stateful. Replies go out automatically.</div></div>
+    <div class="myth f" data-f="2"><div class="m">Private subnet = no internet at all.</div><div class="f2">Nothing comes in. Out is possible through NAT.</div></div>
+    <div class="myth f" data-f="2"><div class="m">Stopped instances cost nothing.</div><div class="f2">EBS, snapshots and public IPs still bill.</div></div>
+    <div class="myth f" data-f="3"><div class="m">S3 has real folders.</div><div class="f2">Flat store. “img/” is part of the key.</div></div>
+    <div class="myth f" data-f="3"><div class="m">Multi-AZ doubles read capacity.</div><div class="f2">Classic standby isn't readable. Use replicas.</div></div>
+    <div class="myth f" data-f="4"><div class="m">My AMI works in every Region.</div><div class="f2">AMIs are regional. Copy first.</div></div>
+    <div class="myth f" data-f="4"><div class="m">Session Manager needs port 22.</div><div class="f2">Zero inbound ports. Agent dials out.</div></div>
+  </div>
+  <aside class="notes"><p>Show of hands after each pair: "who believed this before today?"</p></aside>
+</section>
+
+<section class="slide" data-title="Quick quiz" data-ch="Quiz">
+  <div class="row" style="align-items:flex-end;justify-content:space-between">
+    <div><div class="eyebrow">Quick questions</div><h2>Hands up before the reveal</h2></div>
+    <div class="qdots" id="qDots"></div>
+  </div>
+  <div class="quiz">
+    <p class="small mono" id="qNum"></p>
+    <p class="q" id="qText"></p>
+    <div class="opts" id="qOpts"></div>
+    <p class="explain" id="qExplain" data-empty></p>
+    <div class="row" style="gap:12px"><button class="btn" id="qPrev">← Previous</button><button class="btn primary" id="qReveal">Reveal answer</button><button class="btn" id="qNext">Next question →</button></div>
+  </div>
+  <aside class="notes"><p>Live poll: read, count hands for A–D, reveal. Quiz buttons don't change slides; use → to leave.</p></aside>
+</section>
+
+<section class="slide" data-title="Cheat sheet" data-ch="Cheat sheet">
+  <h2>The whole city, one line each</h2>
+  <div class="cheat">
+    <div><span class="tile sm" style="--c:var(--teal)">AZ</span><div><b>Region / AZ</b><span>City / separate buildings ≤100 km apart</span></div></div>
+    <div><span class="tile sm">ACC</span><div><b>Account</b><span>Hardest boundary. Lock root with MFA</span></div></div>
+    <div><span class="tile sm" style="--c:var(--rose)">IAM</span><div><b>IAM</b><span>Signed request + policy check. Deny wins</span></div></div>
+    <div><span class="tile sm" style="--c:var(--rose)">ROLE</span><div><b>Role</b><span>Temporary keys from STS via 169.254.169.254</span></div></div>
+    <div><span class="tile sm" style="--c:var(--teal)">VPC</span><div><b>VPC</b><span>Software network, wrapped by Nitro</span></div></div>
+    <div><span class="tile sm" style="--c:var(--teal)">RT</span><div><b>Route table</b><span>Public = 0.0.0.0/0 → IGW</span></div></div>
+    <div><span class="tile sm" style="--c:var(--rose)">SG</span><div><b>Security group</b><span>Stateful, per instance, allow only</span></div></div>
+    <div><span class="tile sm" style="--c:var(--teal)">NACL</span><div><b>NACL</b><span>Stateless, per subnet, allow + deny</span></div></div>
+    <div><span class="tile sm">EC2</span><div><b>EC2</b><span>A slice of a Nitro server, per second</span></div></div>
+    <div><span class="tile sm" style="--c:var(--blue)">EBS</span><div><b>EBS</b><span>Network disk, one AZ</span></div></div>
+    <div><span class="tile sm" style="--c:var(--teal)">SSM</span><div><b>Session Manager</b><span>No ports, no keys, logged</span></div></div>
+    <div><span class="tile sm">AMI</span><div><b>AMI</b><span>Snapshots + boot settings. Regional</span></div></div>
+    <div><span class="tile sm" style="--c:var(--green)">S3</span><div><b>S3</b><span>Objects across ≥3 AZs, 11 nines</span></div></div>
+    <div><span class="tile sm">λ</span><div><b>Lambda</b><span>Firecracker microVMs, ≤15 min</span></div></div>
+    <div><span class="tile sm" style="--c:var(--violet)">SNS</span><div><b>SNS</b><span>Push one message to many</span></div></div>
+    <div><span class="tile sm" style="--c:var(--violet)">SQS</span><div><b>SQS</b><span>Buffer. At-least-once → idempotent</span></div></div>
+    <div><span class="tile sm" style="--c:var(--teal)">ECR</span><div><b>ECR</b><span>Images by digest, layers in S3</span></div></div>
+    <div><span class="tile sm" style="--c:var(--blue)">RDS</span><div><b>RDS / Aurora</b><span>Multi-AZ = uptime, replicas = reads</span></div></div>
+  </div>
+  <aside class="notes"><p>Tell everyone to take a photo of this slide.</p></aside>
+</section>
+
+<section class="slide" data-title="Thank you">
+  <div class="eyebrow">Epilogue</div>
+  <h2 style="font-size:76px">Next Diwali, ChaiCart stays up.</h2>
+  <div class="grid g2" style="gap:22px;margin-top:20px">
+    <div class="panel"><div class="small mono hl-a">Lab 1 · 45 min</div><h3>Your own campus</h3><p class="txt hl-m">VPC with public + private subnets. EC2 in each. SSH to one, Session Manager to the other.</p></div>
+    <div class="panel"><div class="small mono hl-a">Lab 2 · 45 min</div><h3>Photo pipeline</h3><p class="txt hl-m">S3 upload → Lambda → SNS email. Then delete everything.</p></div>
+  </div>
+  <div class="row" style="align-items:center;gap:22px;margin-top:auto"><span style="font:800 54px/1 var(--f-display)" class="hl-a">Questions?</span><span class="small">Start every lab with a budget alert. End every lab by deleting what you made.</span></div>
+  <aside class="notes"><p>Close the loop to Diwali night and take questions. Press O to jump to any slide when answering.</p></aside>
+</section>
+
+</div></div>

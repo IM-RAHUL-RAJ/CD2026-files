@@ -1,0 +1,125 @@
+
+<!-- ================= CH5 VPC + SG ================= -->
+<section class="slide chapter" data-title="Chapter 5 · VPC and security groups">
+  <div class="num">05</div><div class="eyebrow">Act 2 · Chapter 5</div>
+  <h2>Networking without the fear</h2>
+  <p class="q">Rahul launches his first EC2 instance at TicketWave. It works for him. Nobody else can open it.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--teal)">VPC</span><span class="tile sm" style="--c:var(--teal)">SUBNET</span><span class="tile sm" style="--c:var(--teal)">IGW</span><span class="tile sm" style="--c:var(--steel)">NAT</span><span class="tile sm" style="--c:var(--rose)">SG</span><span class="tile sm" style="--c:var(--teal)">NACL</span></div>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: friend can't open my app" data-ch="VPC">
+  <div class="t-q">My app runs fine on EC2. Why can't my friend open it in her browser?</div>
+  <div class="t-who">Rahul, refreshing a spinning tab</div>
+  <div class="t-hint">The instance is “running”. The status checks are green. And still: connection timed out.</div>
+</section>
+
+<!--OLD:Build a VPC (3D)-->
+<!--OLD:Route tables-->
+<!--OLD:Compare: ways out of a VPC-->
+<!--OLD:Compare: connecting VPCs-->
+<!--OLD:There are no VPC cables-->
+<!--OLD:Production VPC layout-->
+<!--OLD:Stateful guard-->
+<!--OLD:Inbound and outbound-->
+
+<section class="slide" data-title="Ports to know" data-phase="concept" data-ch="Security groups">
+  <h2>The port numbers every engineer should know</h2>
+  <div class="grid g5 grow" style="gap:14px;align-content:center">
+    <div class="card f" data-f="1" style="--c:var(--teal)"><h3 class="mono">80</h3><p class="what">HTTP · plain web</p></div>
+    <div class="card f" data-f="1" style="--c:var(--green)"><h3 class="mono">443</h3><p class="what">HTTPS · encrypted web</p></div>
+    <div class="card f" data-f="1" style="--c:var(--amber)"><h3 class="mono">22</h3><p class="what">SSH / SFTP · Linux login</p></div>
+    <div class="card f" data-f="1" style="--c:var(--amber)"><h3 class="mono">3389</h3><p class="what">RDP · Windows desktop</p></div>
+    <div class="card f" data-f="1" style="--c:var(--violet)"><h3 class="mono">53</h3><p class="what">DNS · names to IPs</p></div>
+    <div class="card f" data-f="2" style="--c:var(--blue)"><h3 class="mono">3306</h3><p class="what">MySQL</p></div>
+    <div class="card f" data-f="2" style="--c:var(--blue)"><h3 class="mono">5432</h3><p class="what">PostgreSQL</p></div>
+    <div class="card f" data-f="2" style="--c:var(--rose)"><h3 class="mono">21</h3><p class="what">FTP · unencrypted, avoid</p></div>
+    <div class="card f" data-f="2" style="--c:var(--steel)"><h3 class="mono">25</h3><p class="what">SMTP · sending email</p></div>
+    <div class="card f" data-f="2" style="--c:var(--coral)"><h3 class="mono">3000/8080</h3><p class="what">Common app ports</p></div>
+  </div>
+  <p class="say f" data-f="3">Rule of thumb: only <em>80/443</em> should ever be open to the whole internet.</p>
+  <aside class="notes"><p>Port list from PDF 04 (EC2). Security groups are Region-specific, allow-only, and stateful: allow 80 in and the response goes out automatically.</p></aside>
+</section>
+
+<!--OLD:Compare: SG vs NACL-->
+<!--OLD:Where the firewall really lives-->
+<!--OLD:Production: SG chaining-->
+
+<section class="slide" data-title="Activity: why can't Ananya open it?" data-phase="prod" data-ch="Activity 2" data-hook="path">
+  <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 2</span><h2 style="margin:0;font-size:40px">Why can't Ananya open Rahul's app?</h2></div>
+  <div class="row grow" style="gap:20px">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 960 520" id="pathSvg">
+        <g text-anchor="middle" style="font:600 16px var(--f-body)">
+          <g transform="translate(60,200)"><circle r="46" class="bx-t"/><text y="6" class="tt">Ananya</text></g>
+          <g class="gate" id="g0" transform="translate(200,170)"><rect width="110" height="60" rx="12" class="bx"/><text x="55" y="27">Public IP</text><text x="55" y="47" class="tmut tm" style="font-size:13px">13.233.41.7</text></g>
+          <g class="gate" id="g1" transform="translate(340,170)"><rect width="110" height="60" rx="12" class="bx"/><text x="55" y="27">Route</text><text x="55" y="47" class="tmut tm" style="font-size:13px">0.0.0.0/0→igw</text></g>
+          <g class="gate" id="g2" transform="translate(480,170)"><rect width="110" height="60" rx="12" class="bx"/><text x="55" y="27">NACL</text><text x="55" y="47" class="tmut tm" style="font-size:13px">subnet</text></g>
+          <g class="gate" id="g3" transform="translate(620,170)"><rect width="110" height="60" rx="12" class="bx"/><text x="55" y="27">Security group</text><text x="55" y="47" class="tmut tm" style="font-size:13px">port 80</text></g>
+          <g class="gate" id="g4" transform="translate(760,150)"><rect width="160" height="100" rx="14" class="bx-a"/><text x="80" y="36" class="ta">EC2 · Apache</text><text x="80" y="62" class="tmut tm" style="font-size:13px">listening on</text><text x="80" y="82" class="tm" style="font-size:14px" id="listenTxt">127.0.0.1:80</text></g>
+        </g>
+        <path d="M106 200 H760" class="w-l"/>
+        <circle id="pathPkt" r="12" cx="106" cy="200" class="ft glow-t"/>
+        <g id="pathX" opacity="0"><circle r="22" class="fr"/><path d="M-9 -9 L9 9 M9 -9 L-9 9" style="stroke:var(--ink);stroke-width:4"/></g>
+        <g id="pathOk" opacity="0" transform="translate(480,360)"><rect x="-330" y="-40" width="660" height="110" rx="16" class="bx-g"/><text y="0" text-anchor="middle" class="tg" style="font:700 24px var(--f-body)">Page loads ✓</text><text y="40" text-anchor="middle" class="tm" style="font-size:16px">&lt;h1&gt;Welcome to Apache Web Server on Amazon Linux!&lt;/h1&gt;</text></g>
+        <text id="pathMsg" x="480" y="330" text-anchor="middle" class="tr" style="font:600 22px var(--f-body)"></text>
+        <text id="pathMsg2" x="480" y="362" text-anchor="middle" class="tmut" style="font-size:18px"></text>
+      </svg>
+    </div>
+    <div style="width:400px;flex:none;display:flex;flex-direction:column;gap:10px" id="pathTogs">
+      <button class="tog on" data-g="0"><span class="sw"></span><span>Instance has a public IP<small>or an Elastic IP</small></span></button>
+      <button class="tog" data-g="1"><span class="sw"></span><span>Subnet routes 0.0.0.0/0 to the IGW<small>makes the subnet public</small></span></button>
+      <button class="tog on" data-g="2"><span class="sw"></span><span>NACL allows 80 in, 1024–65535 out<small>the default NACL allows all</small></span></button>
+      <button class="tog" data-g="3"><span class="sw"></span><span>Security group allows 80 from anywhere<small>inbound rule</small></span></button>
+      <button class="tog" data-g="4"><span class="sw"></span><span>App listens on 0.0.0.0, not 127.0.0.1<small>inside the OS</small></span></button>
+      <p class="small" style="margin-top:6px">Ask the room which switch to flip next. The packet stops at the first broken gate.</p>
+    </div>
+  </div>
+  <aside class="notes"><p>This is the number one "my EC2 doesn't work" debugging path. Start with the default state: the packet dies at the route table. Let the audience fix one gate at a time. The last gate catches developers who bind their app to localhost.</p><p>The success message is the user-data Apache page from PDF 04.</p></aside>
+</section>
+
+<section class="slide" data-title="Activity: peering to another team" data-phase="prod" data-ch="Activity 3" data-hook="peer">
+  <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 3</span><h2 style="margin:0;font-size:40px">Ananya's team needs Rahul's database</h2></div>
+  <p class="small">Rahul's database lives in <b class="hl-t">VPC A</b>. Ananya's analytics app lives in <b class="hl-v">VPC B</b>, owned by another team. Make the connection work.</p>
+  <div class="row grow" style="gap:20px">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 900 460">
+        <g transform="translate(20,40)"><rect width="340" height="360" rx="22" class="bx-t" style="fill:rgba(63,213,194,.05)"/><text x="20" y="36" class="tt tm">VPC A · Rahul</text><text x="20" y="62" class="tmut tm" style="font-size:15px">10.0.0.0/16</text>
+          <g transform="translate(110,140)"><ellipse cx="60" cy="10" rx="60" ry="16" class="fb"/><rect y="10" width="120" height="80" class="fb" opacity=".7"/><ellipse cx="60" cy="90" rx="60" ry="16" class="fb"/><text x="60" y="62" text-anchor="middle" class="tink" style="font:700 16px var(--f-body)">Postgres</text></g>
+          <text x="20" y="320" class="tmut tm" style="font-size:14px" id="rtA">RT-A: no route to VPC B</text></g>
+        <g transform="translate(540,40)"><rect width="340" height="360" rx="22" class="bx-v" style="fill:rgba(161,147,255,.05)"/><text x="20" y="36" class="tv tm">VPC B · Ananya</text><text x="20" y="62" class="tmut tm" style="font-size:15px" id="cidrB">10.0.0.0/16</text>
+          <g transform="translate(110,140)"><rect width="120" height="100" rx="14" class="fa"/><text x="60" y="56" text-anchor="middle" class="tink" style="font:700 16px var(--f-body)">analytics</text></g>
+          <text x="20" y="320" class="tmut tm" style="font-size:14px" id="rtB">RT-B: no route to VPC A</text></g>
+        <g id="pcx" opacity=".2"><rect x="380" y="190" width="140" height="60" rx="14" class="bx-a"/><text x="450" y="226" text-anchor="middle" class="ta tm" style="font-size:16px">pcx-peering</text></g>
+        <path id="peerPath" d="M650 230 H570 M520 220 H380 M330 220 H250" class="w-l"/>
+        <circle id="peerPkt" r="11" class="fv glow-v" cx="650" cy="220"/>
+        <text id="peerMsg" x="450" y="440" text-anchor="middle" style="font:600 20px var(--f-body)" class="tr"></text>
+      </svg>
+    </div>
+    <div style="width:420px;flex:none;display:flex;flex-direction:column;gap:10px" id="peerTogs">
+      <button class="tog" data-k="cidr"><span class="sw"></span><span>Re-number VPC B to 10.1.0.0/16<small>CIDRs must not overlap</small></span></button>
+      <button class="tog" data-k="pcx"><span class="sw"></span><span>Create + accept a peering connection<small>both owners must agree</small></span></button>
+      <button class="tog" data-k="rtb"><span class="sw"></span><span>RT-B: 10.0.0.0/16 → pcx<small>so requests can leave B</small></span></button>
+      <button class="tog" data-k="rta"><span class="sw"></span><span>RT-A: 10.1.0.0/16 → pcx<small>so replies can come back</small></span></button>
+      <button class="tog" data-k="sg"><span class="sw"></span><span>sg-db allows 5432 from 10.1.0.0/16<small>the guard at the DB's door</small></span></button>
+      <p class="small" style="margin-top:4px">Bonus question: does IAM need to change? (No. IAM controls API calls, not packets.)</p>
+    </div>
+  </div>
+  <aside class="notes"><p>The classic peering checklist: non-overlapping CIDRs, a peering connection requested and accepted, routes on both sides, and security group rules. Most people forget the return route.</p><p>For many VPCs, use Transit Gateway instead (see the earlier compare slide).</p></aside>
+</section>
+
+<section class="slide" data-tpl="perf" data-title="Perf: VPC done right" data-ch="VPC">
+  <div class="t-h2">Before vs after: everything public vs a proper VPC</div>
+  <div class="t-how">What changed: <b>private subnets, SG chaining, S3 gateway endpoint</b></div>
+  <script type="application/json">{"rows":[
+    ["Ports open to the internet","across the app",100,"22, 80, 3306, 6379",15,"443 on the ALB only","4→1","exposed"],
+    ["Database reachable from","who can try to connect",100,"the whole internet",5,"app servers only","0","public DB"],
+    ["S3 traffic from private servers","path and cost",80,"via NAT · per-GB charge",10,"gateway endpoint · free","$0","NAT data fee"],
+    ["Finding a network bug","debug time",70,"guessing",15,"5-gate checklist","fast","fix"]],
+    "note":"Gateway endpoints for S3 and DynamoDB have no charge; NAT gateways bill per hour and per GB processed."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: the five gates" data-ch="VPC">
+  <div class="t-recap">Why can't my friend open my app?</div>
+  <div class="t-ans">Every packet passes <em>five gates</em>: public IP → route to IGW → NACL → security group → app listening on 0.0.0.0.</div>
+  <div class="t-x">“Timed out” means a gate blocked it. “Connection refused” means it reached the OS but nothing was listening. Now you can debug any EC2 in two minutes.</div>
+</section>

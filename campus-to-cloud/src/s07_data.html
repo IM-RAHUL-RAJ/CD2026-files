@@ -1,0 +1,249 @@
+
+<!-- ================= CH11 RDS ================= -->
+<section class="slide chapter" data-title="Chapter 11 · RDS">
+  <div class="num">11</div><div class="eyebrow">Act 2 · Chapter 11</div>
+  <h2>A database with a manager on staff</h2>
+  <p class="q">In college, Rahul ran MySQL on the same machine as the app. At TicketWave, losing one order means losing a customer's money.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--blue)">RDS</span><span class="tile sm" style="--c:var(--amber)">AURORA</span></div>
+  <aside class="notes"><p>Based on PDF 09 (AWS RDS).</p></aside>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: MySQL on EC2?" data-ch="RDS">
+  <div class="t-q">Why not just install MySQL on an EC2 instance like I did in college?</div>
+  <div class="t-who">Rahul, pricing RDS vs EC2</div>
+  <div class="t-hint">It's cheaper and I get full control. What am I missing?</div>
+</section>
+
+<!--OLD:Who does the chores-->
+
+<section class="slide" data-title="Lab way vs enterprise way: RDS" data-phase="prod" data-ch="RDS">
+  <h2>The lab way vs the enterprise way</h2>
+  <div class="lve grow">
+    <div class="lab f" data-f="1"><h3 class="hl-r">Lab: easy to reach, easy to attack</h3>
+      <ul class="clean" style="margin-top:6px">
+        <li style="--c:var(--rose);font-size:19px">Public access: <b>Yes</b></li>
+        <li style="--c:var(--rose);font-size:19px">Security group: 3306 from <b>0.0.0.0/0</b></li>
+        <li style="--c:var(--rose);font-size:19px">Password typed into the docker command</li>
+      </ul>
+<pre class="code" style="margin-top:12px">docker run -p 80:3000 \
+  -e DB_HOST=db.xxxx.rds.amazonaws.com \
+  -e DB_PASSWORD=MySecret123 node-mysql-app</pre></div>
+    <div class="ent f" data-f="2"><h3 class="hl-g">Enterprise: invisible from outside</h3>
+      <ul class="clean" style="margin-top:6px">
+        <li style="--c:var(--green);font-size:19px">Public access: <b>No</b> · private DB subnets in 2+ AZs</li>
+        <li style="--c:var(--green);font-size:19px">sg-db: 3306 only from <b>sg-app</b></li>
+        <li style="--c:var(--green);font-size:19px">Password in <b>Secrets Manager</b>, rotated automatically</li>
+        <li style="--c:var(--green);font-size:19px">Multi-AZ on · automated backups · encryption at rest</li>
+      </ul></div>
+  </div>
+  <aside class="notes"><p>The left column is exactly the PDF 09 lab: public access true, 3306 open to everywhere. It's the quickest way to learn, and the quickest way to get breached in production. Bots scan the internet for open 3306 constantly.</p></aside>
+</section>
+
+<!--OLD:Multi-AZ vs read replicas-->
+<!--OLD:Aurora: 6 copies-->
+
+<section class="slide" data-title="Aurora by the numbers" data-phase="behind" data-ch="RDS">
+  <h2>Aurora: MySQL and PostgreSQL, rebuilt for the cloud</h2>
+  <div class="grid g3 grow" style="gap:22px;align-content:center">
+    <div class="stat panel f" data-f="1" style="--c:var(--amber)"><b>5×</b><span>throughput of standard MySQL (AWS claim)</span></div>
+    <div class="stat panel f" data-f="1" style="--c:var(--blue)"><b>3×</b><span>throughput of standard PostgreSQL (AWS claim)</span></div>
+    <div class="stat panel f" data-f="2" style="--c:var(--green)"><b>6</b><span>copies of your data across 3 AZs</span></div>
+    <div class="stat panel f" data-f="2" style="--c:var(--violet)"><b>15</b><span>read replicas, typically under 10 ms behind</span></div>
+    <div class="stat panel f" data-f="3" style="--c:var(--teal)"><b>Auto</b><span>storage grows by itself as data grows</span></div>
+    <div class="stat panel f" data-f="3" style="--c:var(--rose)"><b>Auto</b><span>monitoring and failover</span></div>
+  </div>
+  <aside class="notes"><p>Figures from PDF 09, which match AWS's published Aurora claims. Throughput multiples are AWS benchmarks; real results depend on the workload.</p></aside>
+</section>
+
+<!--OLD:Compare: databases-->
+
+<section class="slide" data-tpl="perf" data-title="Perf: read replicas" data-ch="RDS">
+  <div class="t-h2">Before vs after: one database vs primary + read replicas</div>
+  <div class="t-how">What changed: <b>3 read replicas for search and dashboards, Multi-AZ for safety</b></div>
+  <script type="application/json">{"rows":[
+    ["Primary CPU at peak","writes + all reads",92,"92%",40,"40%","less","pressure"],
+    ["Seat search latency","p95",85,"~900 ms",20,"~150 ms","~6×","faster"],
+    ["Read capacity","relative",25,"1×",100,"4×","4×","reads"],
+    ["Primary AZ fails","recovery",100,"restore from backup · hours",8,"automatic failover · 1–2 min","hours→","minutes"]],
+    "note":"Latency and CPU figures are illustrative. AWS documents Multi-AZ failover as typically taking 60–120 seconds; RDS supports up to 15 read replicas for MySQL and PostgreSQL."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: why RDS" data-ch="RDS">
+  <div class="t-recap">Why not just run MySQL on EC2?</div>
+  <div class="t-ans">You can. But with RDS, <em>backups, patching, failover and replicas</em> become checkboxes instead of your weekends.</div>
+  <div class="t-x">You trade SSH access to the database server for sleep. Most teams take that deal.</div>
+</section>
+
+<!-- ================= CH12 DYNAMODB ================= -->
+<section class="slide chapter" data-title="Chapter 12 · DynamoDB">
+  <div class="num">12</div><div class="eyebrow">Act 2 · Chapter 12</div>
+  <h2>A database that never says “too busy”</h2>
+  <p class="q">TicketWave's “seats held in cart” data is huge, simple, and gets hammered during a drop. Tables with joins are overkill.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--violet)">DDB</span><span class="tile sm" style="--c:var(--violet)">DAX</span></div>
+  <aside class="notes"><p>Based on PDF 10 (AWS DynamoDB).</p></aside>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: 151M requests/sec" data-ch="DynamoDB">
+  <div class="t-q">What kind of database can answer 151 million requests per second?</div>
+  <div class="t-who">Rahul, reading the Prime Day numbers again</div>
+  <div class="t-hint">His college MySQL struggled at 500.</div>
+</section>
+
+<section class="slide" data-title="Items, not rows" data-phase="pic" data-ch="DynamoDB">
+  <h2>NoSQL: items that don't need the same shape</h2>
+  <div class="row grow" style="gap:24px">
+    <div class="panel grow f" data-f="1">
+      <h3 class="hl-b">SQL table · fixed columns</h3>
+      <table class="t" style="font-size:20px;margin-top:8px"><tr><th>id</th><th>name</th><th>age</th><th>city</th></tr>
+        <tr><td class="mono">1</td><td>Raju</td><td>25</td><td class="hl-m">NULL</td></tr><tr><td class="mono">2</td><td>Sham</td><td>28</td><td class="hl-m">NULL</td></tr><tr><td class="mono">3</td><td>Baburao</td><td>45</td><td>Mumbai</td></tr></table>
+      <p class="small" style="margin-top:12px">Add a column? Change every row. Joins across tables.</p>
+    </div>
+    <div class="panel grow f" data-f="2" style="border-color:var(--violet)">
+      <h3 class="hl-v">DynamoDB table · flexible items</h3>
+<pre class="code" style="font-size:17px;margin-top:8px">{ <span class="k">"id"</span>: <span class="s">"1"</span>, <span class="k">"name"</span>: <span class="s">"Raju"</span>, <span class="k">"age"</span>: 25 }
+{ <span class="k">"id"</span>: <span class="s">"2"</span>, <span class="k">"name"</span>: <span class="s">"Sham"</span>, <span class="k">"age"</span>: 28 }
+{ <span class="k">"id"</span>: <span class="s">"3"</span>, <span class="k">"name"</span>: <span class="s">"Baburao"</span>, <span class="k">"age"</span>: 45,
+  <span class="k">"garage"</span>: <span class="s">"Star Garage"</span> }</pre>
+      <p class="small" style="margin-top:12px">Each item is a JSON-like document of key-value pairs. Only the key is required.</p>
+    </div>
+  </div>
+  <p class="say f" data-f="3">Ask by key, get an answer in <em>single-digit milliseconds</em>, at any scale.</p>
+  <aside class="notes"><p>The users table (Raju, Sham, Baburao) is straight from PDF 10. Yes, it's a Hera Pheri reference. Use it.</p></aside>
+</section>
+
+<section class="slide" data-title="Partitions" data-phase="behind" data-ch="DynamoDB">
+  <div><span class="wowtag">Behind the scenes</span></div>
+  <h2 style="margin-top:6px">The secret: split the table into many small pieces</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 520">
+      <g transform="translate(40,190)"><rect width="230" height="110" rx="16" class="bx-a"/><text x="115" y="48" text-anchor="middle" class="ta tm" style="font-size:16px">GetItem</text><text x="115" y="80" text-anchor="middle" class="tm" style="font-size:16px">id = "user#4821"</text></g>
+      <g transform="translate(360,190)" class="f" data-f="1"><rect width="230" height="110" rx="16" class="bx-v"/><text x="115" y="48" text-anchor="middle" class="tv" style="font:700 18px var(--f-body)">hash(key)</text><text x="115" y="80" text-anchor="middle" class="tm" style="font-size:16px">→ partition 3</text></g>
+      <path d="M270 245 H360" class="w"/>
+      <g class="f" data-f="2"><g transform="translate(760,30)"><g class="bx"><rect width="560" height="76" rx="12"/><rect y="96" width="560" height="76" rx="12"/><rect y="192" width="560" height="76" rx="12" class="bx-v"/><rect y="288" width="560" height="76" rx="12"/><rect y="384" width="560" height="76" rx="12"/></g>
+        <g class="tm" style="font-size:16px"><text x="20" y="44">partition 1 · its own servers</text><text x="20" y="140">partition 2</text><text x="20" y="236" class="tv">partition 3 · answers this request</text><text x="20" y="332">partition 4</text><text x="20" y="428">partition 5 …</text></g></g>
+        <path id="ddbp" d="M590 245 C 680 245, 680 260, 760 260" class="w-v" style="stroke-width:3"/><circle r="9" class="fv glow-v"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#ddbp"/></animateMotion></circle></g>
+      <g class="f" data-f="3"><text x="40" y="400" style="font:600 24px var(--f-body)">More traffic? DynamoDB adds partitions.</text><text x="40" y="438" class="tmut" style="font-size:20px">Each request only touches one small piece, so speed stays the same at any size.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>DynamoDB hashes the partition key to decide which partition holds an item. Partitions are spread across many storage nodes and replicated across AZs. That's why choosing a key with many distinct values matters: a "hot" key that every request uses would overload one partition.</p></aside>
+</section>
+
+<section class="slide" data-title="DynamoDB superpowers" data-phase="concept" data-ch="DynamoDB">
+  <h2>Serverless, auto-scaling, global</h2>
+  <div class="cmp g3 grow">
+    <div class="card f" data-f="1" style="--c:var(--violet)"><h3>Serverless</h3><p class="what">No servers, installs or patches. Zero downtime for maintenance.</p><p class="use"><b>Pricing</b>On-demand: pay per read and write. Idle table costs nothing for requests.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--amber)"><h3>DAX cache</h3><p class="what">In-memory cache built for DynamoDB. Microsecond reads, up to 10× faster.</p><p class="use"><b>Use for</b>Hot items read over and over.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--teal)"><h3>Global tables</h3><p class="what">The same table replicated across Regions, writable everywhere.</p><p class="use"><b>Use for</b>Users in India and Europe both getting local speed.</p></div>
+  </div>
+  <div class="panel f" data-f="4" style="padding:14px 20px"><p class="txt"><b class="hl-g">Free tier</b>: 25 GB of storage plus 25 read and 25 write capacity units, enough for roughly 200 million requests a month. <span class="hl-m">Great for: mobile, web, gaming, ad tech, IoT.</span></p></div>
+  <aside class="notes"><p>From PDF 10. DAX works only with DynamoDB; ElastiCache works with other databases too. Free tier details can change, so check aws.amazon.com/free.</p></aside>
+</section>
+
+<section class="slide" data-tpl="perf" data-title="Perf: DynamoDB + DAX" data-ch="DynamoDB">
+  <div class="t-h2">Before vs after: cart data in MySQL vs DynamoDB + DAX</div>
+  <div class="t-how">What changed: <b>moved seat-hold carts to DynamoDB, hot items cached in DAX</b></div>
+  <script type="application/json">{"rows":[
+    ["Read latency","get one cart",70,"~20–50 ms under load",8,"microseconds with DAX","up to 10×","faster"],
+    ["Ticket-drop spike","requests per second",15,"MySQL tops out",100,"scales automatically","no","ceiling"],
+    ["Maintenance windows","per year",60,"patching nights",2,"none","0","downtime"],
+    ["Cost when idle","2 am, no traffic",80,"server running",5,"near zero (on-demand)","pay","per request"]],
+    "note":"DAX “up to 10×” and microsecond latency are AWS's published figures (also in PDF 10). MySQL figures are illustrative."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: 151M requests/sec" data-ch="DynamoDB">
+  <div class="t-recap">What database answers 151 million requests a second?</div>
+  <div class="t-ans">One that <em>splits every table into partitions</em> and only touches the one piece each request needs.</div>
+  <div class="t-x">Use DynamoDB for huge, simple, key-based data. Use RDS when you need joins and complex queries. Many apps use both.</div>
+</section>
+
+<!-- ================= CH13 CLOUDFRONT ================= -->
+<section class="slide chapter" data-title="Chapter 13 · CloudFront">
+  <div class="num">13</div><div class="eyebrow">Act 2 · Chapter 13</div>
+  <h2>Bring the website closer to the user</h2>
+  <p class="q">TicketWave starts selling tickets for a world tour. The servers are in Mumbai. Fans in Stockholm say the site is slow.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--blue)">CDN</span><span class="tile sm" style="--c:var(--blue)">EDGE</span></div>
+  <aside class="notes"><p>Based on PDF 14 (AWS CloudFront).</p></aside>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: slow in Stockholm" data-ch="CloudFront">
+  <div class="t-q">Why does the same website load instantly in Mumbai but slowly in Stockholm?</div>
+  <div class="t-who">Rahul, on a call with the Europe team</div>
+  <div class="t-hint">Same code, same server, same images. Only the distance changed.</div>
+</section>
+
+<section class="slide" data-title="Edge caching" data-phase="pic" data-ch="CloudFront" data-steps="3">
+  <h2>Copy the heavy files to the corner shop</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <g transform="translate(1080,200)"><rect width="260" height="160" rx="20" class="bx-a"/><text x="130" y="64" text-anchor="middle" class="ta" style="font:700 22px var(--f-body)">Origin · Mumbai</text><text x="130" y="100" text-anchor="middle" class="tmut tm" style="font-size:15px">EC2 / S3</text></g>
+      <g transform="translate(40,80)"><circle cx="50" cy="50" r="46" class="bx-t"/><text x="50" y="57" text-anchor="middle" class="tt tm" style="font-size:15px">Stockholm</text></g>
+      <g transform="translate(40,380)"><circle cx="50" cy="50" r="46" class="bx-t"/><text x="50" y="57" text-anchor="middle" class="tt tm" style="font-size:15px">Stockholm</text></g>
+      <g class="hide-on-1"><path id="far" d="M140 130 C 500 40, 800 120, 1080 260" class="w-r dash"/><circle r="10" class="fr glow-r"><animateMotion dur="3.4s" repeatCount="indefinite"><mpath href="#far"/></animateMotion></circle><text x="560" y="70" class="tr" style="font-size:19px">every request travels ~6,000 km</text></g>
+      <g class="show-on-1"><g transform="translate(380,230)"><rect width="230" height="110" rx="16" class="bx-b"/><text x="115" y="48" text-anchor="middle" class="tb" style="font:700 19px var(--f-body)">Edge · Stockholm</text><text x="115" y="80" text-anchor="middle" class="tmut tm" style="font-size:14px">cache</text></g>
+        <path id="miss" d="M610 285 H1080" class="w-b dash"/><text x="760" y="270" class="tb" style="font-size:17px">first request: cache miss → fetch once</text></g>
+      <g class="show-on-2"><path id="hit1" d="M140 130 C 260 150, 330 230, 380 260" class="w-g"/><path id="hit2" d="M140 430 C 260 410, 330 340, 380 310" class="w-g"/>
+        <circle r="10" class="fg glow-g"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#hit1"/></animateMotion></circle><circle r="10" class="fg glow-g"><animateMotion dur="1s" begin=".5s" repeatCount="indefinite"><mpath href="#hit2"/></animateMotion></circle>
+        <text x="160" y="250" class="tg" style="font-size:18px">cache hit · nearby</text></g>
+      <g class="show-on-3"><rect x="380" y="430" width="660" height="90" rx="16" class="bx"/><text x="404" y="470" style="font-size:20px">Cached: images, CSS, JS, video. Not cached by default:</text><text x="404" y="500" class="tmut" style="font-size:18px">logged-in pages, payments, anything user-specific.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Step 1: CloudFront puts an edge location near Stockholm. The first request misses and fetches from Mumbai once. Step 2: every later request is served from the edge. Step 3: what gets cached (controlled by TTLs, cache behaviours and origin headers, per PDF 14).</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: caching layers" data-phase="compare" data-ch="CloudFront">
+  <h2>Three places a file can be cached</h2>
+  <div class="cmp g3 grow">
+    <div class="card f" data-f="1" style="--c:var(--steel)"><h3>No cache</h3><p class="what">Every user, every file, every time: all the way to the origin.</p><p class="use"><b>Result</b>Slow far away, origin overloaded on big days.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--amber)"><h3>Browser cache</h3><p class="what">A mini-CDN on each device. Repeat visits are fast.</p><p class="use"><b>Limit</b>Only helps that one user, and only the second time.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--blue)"><h3>CloudFront</h3><p class="what">Edge locations worldwide share one cached copy for everyone nearby.</p><p class="use"><b>Result</b>Fast for first-time visitors too, origin barely touched.</p></div>
+  </div>
+  <aside class="notes"><p>PDF 14: browsers act like a mini-CDN by caching website files locally, but this only helps individual users.</p></aside>
+</section>
+
+<section class="slide" data-tpl="perf" data-title="Perf: CloudFront" data-ch="CloudFront">
+  <div class="t-h2">Before vs after: origin only vs CloudFront in front</div>
+  <div class="t-how">What changed: <b>CloudFront distribution in front of S3 + ALB</b></div>
+  <script type="application/json">{"rows":[
+    ["Poster image, Stockholm","time to first byte",100,"~250 ms",12,"~30 ms","~8×","faster"],
+    ["Requests reaching origin","ticket-drop day",100,"100%",15,"~15% (85% cache hits)","~7×","less load"],
+    ["Data transfer from origin","per month",90,"all of it",20,"only cache misses","~75%","less"],
+    ["DDoS absorbed by","who takes the hit",80,"your servers",10,"AWS edge (Shield Standard)","edge","protected"]],
+    "note":"Latency and hit-ratio figures are illustrative. AWS Shield Standard is included with CloudFront at no extra cost."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: slow in Stockholm" data-ch="CloudFront">
+  <div class="t-recap">Why is the site fast in Mumbai but slow in Stockholm?</div>
+  <div class="t-ans">Because <em>light takes time</em>. CloudFront moves the files to the user instead of moving the user to the files.</div>
+  <div class="t-x">Same app, one config change: the site now loads like it's hosted in every city.</div>
+</section>
+
+<!-- ================= ACTIVITY 4 ================= -->
+<section class="slide" data-title="Activity: ticket-drop simulator" data-phase="prod" data-ch="Activity 4" data-hook="sim4">
+  <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 4</span><h2 style="margin:0;font-size:40px">12:00 noon: the ticket drop</h2></div>
+  <div class="row grow" style="gap:22px">
+    <div style="width:430px;flex:none;display:flex;flex-direction:column;gap:9px" id="simTogs">
+      <div class="panel" style="padding:12px 16px"><div class="slider-lab"><span>Fans online</span><span id="simUsersTxt">50,000</span></div><input id="simUsers" type="range" min="0" max="100" value="50"></div>
+      <button class="tog" data-k="asg"><span class="sw"></span><span>ALB + Auto Scaling<small>scale out, not up</small></span></button>
+      <button class="tog" data-k="maz"><span class="sw"></span><span>Spread across 3 AZs</span></button>
+      <button class="tog" data-k="cdn"><span class="sw"></span><span>CloudFront for posters + JS</span></button>
+      <button class="tog" data-k="rr"><span class="sw"></span><span>RDS read replicas ×3</span></button>
+      <button class="tog" data-k="cache"><span class="sw"></span><span>DAX / ElastiCache for hot data</span></button>
+      <button class="tog" data-k="sqs"><span class="sw"></span><span>SQS queue in front of payments</span></button>
+      <button class="btn" id="simFail" style="margin-top:4px">Fail AZ a</button>
+    </div>
+    <div class="grow" style="display:flex;flex-direction:column;gap:16px">
+      <div class="grid g4" style="gap:12px">
+        <div class="mtile"><span>p95 latency</span><b id="mLat">–</b></div>
+        <div class="mtile"><span>errors</span><b id="mErr">–</b></div>
+        <div class="mtile"><span>servers</span><b id="mSrv">–</b></div>
+        <div class="mtile"><span>cost / hour</span><b id="mCost">–</b></div>
+      </div>
+      <div class="panel grow" style="display:flex;flex-direction:column;gap:12px">
+        <div class="lbl mono small">where it hurts</div>
+        <div id="simBars" style="display:flex;flex-direction:column;gap:10px"></div>
+        <p class="feed" id="simFeed"></p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><p>Start with everything off and 50,000 fans: watch it collapse. Ask the room what to turn on first. Then push the slider to 2 million. Then click "Fail AZ a". The numbers come from a simplified teaching model, not a benchmark.</p></aside>
+</section>

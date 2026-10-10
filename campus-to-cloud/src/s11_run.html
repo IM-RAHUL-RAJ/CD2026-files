@@ -1,0 +1,311 @@
+
+<!-- ================= ACT 4 ================= -->
+<section class="slide chapter" data-title="Act 4 · Run it">
+  <div class="num">IV</div><div class="eyebrow">Act 4</div>
+  <h2>Run it: life after the deploy</h2>
+  <p class="q">Shipping is half the job. The other half is knowing it's healthy, and fixing it fast when it isn't.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--rose)">SEV1</span><span class="tile sm" style="--c:var(--gold)">CW</span><span class="tile sm" style="--c:var(--coral)">PROM</span><span class="tile sm" style="--c:var(--amber)">GRAFANA</span><span class="tile sm" style="--c:var(--green)">SPLUNK</span><span class="tile sm" style="--c:var(--violet)">DD</span></div>
+</section>
+
+<!-- ================= CH23 INCIDENTS ================= -->
+<section class="slide chapter" data-title="Chapter 23 · Incidents">
+  <div class="num">23</div><div class="eyebrow">Act 4 · Chapter 23</div>
+  <h2>2:03 am. Rahul's phone rings.</h2>
+  <p class="q">He's on call for the first time. The alert says: “checkout error rate 12%”. His heart rate says more.</p>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: prod breaks at 2 am" data-ch="Incidents">
+  <div class="t-q">What actually happens inside a company when production breaks at 2 am?</div>
+  <div class="t-who">Rahul, first on-call week</div>
+  <div class="t-hint">Who decides what to do? Who talks to customers? Does someone get blamed?</div>
+</section>
+
+<section class="slide" data-title="Incident timeline" data-phase="pic" data-ch="Incidents">
+  <h2>Anatomy of a 22-minute incident</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <path d="M60 200 H1350" class="w-l" style="stroke-width:6"/>
+      <path d="M60 200 H1350" class="w-r" style="stroke-width:6;stroke-dasharray:1300;stroke-dashoffset:1300;animation:drawline 7s linear infinite"/>
+      <g text-anchor="middle" style="font-size:17px">
+        <g class="f" data-f="1" transform="translate(110,200)"><circle r="18" class="fr"/><text y="-40" class="tr tm" style="font-weight:700">01:50</text><text y="50">deploy v3.5</text><text y="74" class="tmut">canary skipped</text></g>
+        <g class="f" data-f="2" transform="translate(330,200)"><circle r="18" class="fr"/><text y="-40" class="tr tm" style="font-weight:700">02:03</text><text y="50">alarm fires</text><text y="74" class="tmut">errors &gt; 5% for 3 min</text></g>
+        <g class="f" data-f="3" transform="translate(540,200)"><circle r="18" class="fa"/><text y="-40" class="ta tm" style="font-weight:700">02:05</text><text y="50">Rahul paged</text><text y="74" class="tmut">acknowledges</text></g>
+        <g class="f" data-f="4" transform="translate(750,200)"><circle r="18" class="fa"/><text y="-40" class="ta tm" style="font-weight:700">02:09</text><text y="50">SEV2 declared</text><text y="74" class="tmut">war room opens</text></g>
+        <g class="f" data-f="5" transform="translate(960,200)"><circle r="18" class="fv"/><text y="-40" class="tv tm" style="font-weight:700">02:15</text><text y="50">dashboard: errors</text><text y="74" class="tmut">began after 01:50</text></g>
+        <g class="f" data-f="6" transform="translate(1150,200)"><circle r="18" class="fg"/><text y="-40" class="tg tm" style="font-weight:700">02:18</text><text y="50">rollback</text><text y="74" class="tmut">helm rollback</text></g>
+        <g class="f" data-f="7" transform="translate(1310,200)"><circle r="22" class="fg glow-g"/><text y="-40" class="tg tm" style="font-weight:700">02:25</text><text y="50">resolved</text><text y="74" class="tmut">errors 0.1%</text></g>
+      </g>
+      <g class="f" data-f="8"><rect x="60" y="340" width="1290" height="160" rx="18" class="bx-g"/>
+        <text x="90" y="384" class="tg" style="font:700 24px var(--f-body)">Next morning: a blameless postmortem</text>
+        <text x="90" y="424" style="font-size:20px">What happened · why our safety nets missed it · what we'll change (make canary mandatory for checkout)</text>
+        <text x="90" y="460" class="tmut" style="font-size:19px">The question is “how did the system let this happen?”, never “who did it?”.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Walk the timeline click by click. The key move at 02:18 is mitigation first (rollback), root cause later. Restore service, then investigate.</p></aside>
+</section>
+
+<section class="slide" data-title="Severity and roles" data-phase="concept" data-ch="Incidents">
+  <h2>Severity levels, roles and the clock</h2>
+  <div class="row grow" style="gap:24px">
+    <table class="t grow" style="font-size:20px">
+      <tr><th>Level</th><th>Example</th><th>Response</th></tr>
+      <tr class="f" data-f="1"><td><span class="pill hl-r">SEV1</span></td><td>Checkout down for everyone</td><td>All hands, now, exec updates</td></tr>
+      <tr class="f" data-f="1"><td><span class="pill hl-a">SEV2</span></td><td>12% of payments failing</td><td>On-call + team, war room</td></tr>
+      <tr class="f" data-f="2"><td><span class="pill hl-b">SEV3</span></td><td>Seat map slow in one city</td><td>On-call, business hours fix</td></tr>
+      <tr class="f" data-f="2"><td><span class="pill hl-m">SEV4</span></td><td>Typo on the FAQ page</td><td>A normal ticket</td></tr>
+    </table>
+    <div style="width:470px;flex:none;display:flex;flex-direction:column;gap:12px">
+      <div class="card f" data-f="3" style="--c:var(--violet)"><h3>Incident commander</h3><p class="what">Runs the response, decides, keeps everyone focused.</p></div>
+      <div class="card f" data-f="3" style="--c:var(--teal)"><h3>Comms lead</h3><p class="what">Status page, support team, leadership updates.</p></div>
+      <div class="card f" data-f="4" style="--c:var(--gold)"><h3>The clock</h3><p class="what"><b>MTTD</b> time to detect · <b>MTTA</b> to acknowledge · <b>MTTR</b> to restore.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>Severity definitions differ by company, but the idea is universal: the bigger the impact, the bigger the response. Common paging tools: PagerDuty, Opsgenie, AWS Incident Manager.</p></aside>
+</section>
+
+<section class="slide" data-title="Activity: incident drill" data-phase="prod" data-ch="Activity 6" data-hook="drill">
+  <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 6</span><h2 style="margin:0;font-size:40px">You're on call. What do you do?</h2></div>
+  <div class="row grow" style="gap:24px">
+    <div class="grow" style="display:flex;flex-direction:column;gap:12px">
+      <p class="small mono" id="drillStep">Step 1 of 4</p>
+      <p class="say" id="drillQ" style="font-size:28px"></p>
+      <div id="drillOpts"></div>
+      <p class="feed" id="drillFeed">Let the room vote, then click.</p>
+      <button class="btn" id="drillNext" style="align-self:flex-start">Next step →</button>
+    </div>
+    <div class="panel" style="width:420px;flex:none">
+      <div class="lbl mono small">live dashboard · checkout</div>
+      <svg class="d" viewBox="0 0 380 260" style="height:260px"><rect x="0" y="0" width="380" height="260" rx="12" class="bx"/><path id="drillLine" d="M10 220 L60 218 L110 222 L160 216 L200 120 L240 100 L280 104 L320 98 L370 102" class="w-r" style="stroke-width:3"/><text x="200" y="30" class="tr tm" style="font-size:14px" id="drillLab">error rate 12%</text><line x1="190" y1="20" x2="190" y2="240" class="w-a dash"/><text x="196" y="250" class="ta tm" style="font-size:12px">deploy v3.5</text></svg>
+    </div>
+  </div>
+  <aside class="notes"><p>Four decisions: acknowledge and declare, look at what changed, mitigate with a rollback, then communicate and write the postmortem. Wrong answers explain why, without judgement.</p></aside>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: 2 am incidents" data-ch="Incidents">
+  <div class="t-recap">What happens when production breaks at 2 am?</div>
+  <div class="t-ans">A practised routine: <em>detect → page → declare → mitigate → resolve → learn</em>. Roll back first, find the root cause after.</div>
+  <div class="t-x">Nobody gets blamed. The system gets better. And the first question is always: “what changed?”</div>
+</section>
+
+<!-- ================= CH24 OBSERVABILITY ================= -->
+<section class="slide chapter" data-title="Chapter 24 · Observability">
+  <div class="num">24</div><div class="eyebrow">Act 4 · Chapter 24</div>
+  <h2>Seeing inside a running system</h2>
+  <p class="q">The alert reached Rahul because someone built dashboards, metrics and alarms. Let's learn how.</p>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: know before users do" data-ch="Observability">
+  <div class="t-q">How do companies know something's wrong before users start tweeting about it?</div>
+  <div class="t-who">Rahul, after reading angry tweets about FestPass in college</div>
+</section>
+
+<section class="slide" data-title="Metrics, logs, traces" data-phase="pic" data-ch="Observability">
+  <h2>One request, three kinds of evidence</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <g transform="translate(40,210)"><circle cx="50" cy="50" r="50" class="bx-t"/><text x="50" y="57" text-anchor="middle" class="tt tm" style="font-size:15px">fan</text></g>
+      <path id="ob" d="M140 260 H420" class="w"/><circle r="10" class="ft glow-t"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#ob"/></animateMotion></circle>
+      <g transform="translate(420,200)"><rect width="200" height="120" rx="16" class="fa"/><text x="100" y="56" text-anchor="middle" class="tink" style="font:700 18px var(--f-body)">checkout</text><text x="100" y="82" text-anchor="middle" class="tink tm" style="font-size:13px">POST /pay</text></g>
+      <g class="f" data-f="1"><path d="M620 230 C 700 230, 720 90, 800 90" class="w-a"/><rect x="800" y="30" width="560" height="120" rx="16" class="bx-a"/><text x="824" y="68" class="ta" style="font:700 20px var(--f-body)">Metric · numbers over time</text>
+        <path d="M824 130 L870 120 L916 126 L962 110 L1008 116 L1054 96 L1100 104 L1146 90 L1192 98 L1238 82 L1330 88" class="w-a"/><text x="1340" y="68" text-anchor="end" class="tm" style="font-size:15px">p95 latency 182 ms</text></g>
+      <g class="f" data-f="2"><path d="M620 260 H800" class="w-b"/><rect x="800" y="200" width="560" height="120" rx="16" class="bx-b"/><text x="824" y="238" class="tb" style="font:700 20px var(--f-body)">Log · what happened, in words</text>
+        <text x="824" y="272" class="tm" style="font-size:14px">02:03:11 ERROR pay order=88412 err="gateway timeout"</text><text x="824" y="296" class="tm tmut" style="font-size:14px">02:03:11 INFO  retry=1 order=88412</text></g>
+      <g class="f" data-f="3"><path d="M620 290 C 700 290, 720 430, 800 430" class="w-v"/><rect x="800" y="370" width="560" height="140" rx="16" class="bx-v"/><text x="824" y="406" class="tv" style="font:700 20px var(--f-body)">Trace · where the time went</text>
+        <g style="font:600 13px var(--f-mono)"><rect x="824" y="420" width="500" height="18" rx="4" class="fv" opacity=".5"/><text x="830" y="434">checkout 820 ms</text><rect x="844" y="444" width="120" height="18" rx="4" class="ft"/><text x="850" y="458" class="tink">auth 40</text><rect x="970" y="444" width="340" height="18" rx="4" class="fr"/><text x="976" y="458" class="tink">payment-gateway 690 ms ← here</text><rect x="844" y="468" width="80" height="18" rx="4" class="fb"/><text x="850" y="482" class="tink">db 30</text></g></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Metrics tell you something is wrong (latency went up). Logs tell you what happened (gateway timeouts). Traces tell you where (the payment gateway call took 690 of 820 ms). Together they're observability.</p></aside>
+</section>
+
+<section class="slide" data-title="Four golden signals" data-phase="concept" data-ch="Observability" data-hook="golden">
+  <h2>Watch four numbers, catch most problems</h2>
+  <div class="grid g4 grow" style="gap:18px;align-content:center">
+    <div class="panel f" data-f="1"><div class="lbl mono small">latency</div><b style="font:800 40px var(--f-display)" class="hl-a">182 ms</b><svg class="d gs" viewBox="0 0 300 80" style="height:80px" data-c="var(--amber)"></svg><p class="small">How slow? Watch p95/p99, not just the average.</p></div>
+    <div class="panel f" data-f="2"><div class="lbl mono small">traffic</div><b style="font:800 40px var(--f-display)" class="hl-t">8.2k rps</b><svg class="d gs" viewBox="0 0 300 80" style="height:80px" data-c="var(--teal)"></svg><p class="small">How much demand? Requests per second.</p></div>
+    <div class="panel f" data-f="3"><div class="lbl mono small">errors</div><b style="font:800 40px var(--f-display)" class="hl-r">0.4%</b><svg class="d gs" viewBox="0 0 300 80" style="height:80px" data-c="var(--rose)"></svg><p class="small">How often does it fail? 5xx, timeouts.</p></div>
+    <div class="panel f" data-f="4"><div class="lbl mono small">saturation</div><b style="font:800 40px var(--f-display)" class="hl-v">71% CPU</b><svg class="d gs" viewBox="0 0 300 80" style="height:80px" data-c="var(--violet)"></svg><p class="small">How full? CPU, memory, queue depth.</p></div>
+  </div>
+  <aside class="notes"><p>The four golden signals come from Google's SRE book. Alert on symptoms users feel (latency, errors), and use saturation to see trouble coming.</p></aside>
+</section>
+
+<section class="slide" data-title="Prometheus + Grafana" data-phase="behind" data-ch="Observability">
+  <h2>Prometheus collects. Grafana shows. Alertmanager shouts.</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <g style="font:600 16px var(--f-body)" text-anchor="middle">
+        <g transform="translate(30,60)"><rect width="200" height="80" rx="14" class="bx-a"/><text x="100" y="36" class="ta">pod · /metrics</text><text x="100" y="60" class="tmut tm" style="font-size:12px">http_requests_total</text></g>
+        <g transform="translate(30,170)"><rect width="200" height="80" rx="14" class="bx-a"/><text x="100" y="46" class="ta">node exporter</text></g>
+        <g transform="translate(30,280)"><rect width="200" height="80" rx="14" class="bx-a"/><text x="100" y="46" class="ta">kube-state-metrics</text></g>
+        <g transform="translate(400,140)"><rect width="260" height="160" rx="18" style="fill:rgba(255,148,102,.12);stroke:var(--coral);stroke-width:2"/><text x="130" y="58" style="fill:var(--coral);font:700 22px var(--f-body)">Prometheus</text><text x="130" y="90" class="tmut" style="font-size:15px">pulls every 15 s</text><text x="130" y="116" class="tmut" style="font-size:15px">time-series database</text></g>
+        <g transform="translate(830,60)" class="f" data-f="1"><rect width="530" height="250" rx="18" class="bx"/><text x="24" y="38" text-anchor="start" class="ta" style="font:700 20px var(--f-body)">Grafana · checkout dashboard</text>
+          <path id="graf" d="M30 210 L80 200 L130 205 L180 190 L230 196 L280 170 L330 176 L380 150 L430 160 L480 140 L510 146" class="w-a" style="stroke-width:3"/>
+          <path d="M30 120 H510" class="w-r dash" style="stroke-width:2"/><text x="40" y="112" text-anchor="start" class="tr tm" style="font-size:13px">alert threshold</text></g>
+        <g transform="translate(830,350)" class="f" data-f="2"><rect width="260" height="110" rx="16" class="bx-r"/><text x="130" y="48" class="tr" style="font:700 19px var(--f-body)">Alertmanager</text><text x="130" y="78" class="tmut" style="font-size:14px">→ PagerDuty, Slack</text></g>
+      </g>
+      <path id="scr1" d="M400 200 C 330 200, 300 100, 230 100" class="w-l"/><path id="scr2" d="M400 220 H230" class="w-l"/><path id="scr3" d="M400 240 C 330 240, 300 320, 230 320" class="w-l"/>
+      <g class="fv"><circle r="7"><animateMotion dur="1.6s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1"><mpath href="#scr1"/></animateMotion></circle><circle r="7"><animateMotion dur="1.6s" begin=".5s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1"><mpath href="#scr2"/></animateMotion></circle><circle r="7"><animateMotion dur="1.6s" begin="1s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1"><mpath href="#scr3"/></animateMotion></circle></g>
+      <path d="M660 200 H830" class="w-a f" data-f="1"/><path d="M660 260 C 740 260, 760 400, 830 400" class="w-r f" data-f="2"/>
+      <g class="f" data-f="3"><rect x="30" y="420" width="760" height="100" rx="14" class="bx"/><text x="50" y="456" class="tm" style="font-size:17px">PromQL · error rate over 5 minutes:</text><text x="50" y="490" class="tm ta" style="font-size:16px">sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Prometheus pulls (scrapes) metrics from /metrics endpoints on a schedule and stores them as time series. Grafana queries Prometheus with PromQL and draws dashboards. Alertmanager routes alerts to pagers and chat. On AWS, Amazon Managed Service for Prometheus and Amazon Managed Grafana run these for you.</p></aside>
+</section>
+
+<section class="slide" data-title="CloudWatch" data-phase="concept" data-ch="Observability">
+  <h2>CloudWatch: AWS's built-in eyes and ears</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 520">
+      <g style="font:600 16px var(--f-body)" text-anchor="middle">
+        <g transform="translate(30,40)"><g class="bx"><rect width="180" height="60" rx="12"/><rect y="80" width="180" height="60" rx="12"/><rect y="160" width="180" height="60" rx="12"/><rect y="240" width="180" height="60" rx="12"/><rect y="320" width="180" height="60" rx="12"/></g>
+          <text x="90" y="36">EC2 · ALB</text><text x="90" y="116">RDS · DynamoDB</text><text x="90" y="196">Lambda · SQS</text><text x="90" y="276">EKS · ECS</text><text x="90" y="356">your app logs</text></g>
+        <g transform="translate(380,90)"><rect width="300" height="280" rx="20" style="fill:rgba(255,209,102,.1);stroke:var(--gold);stroke-width:2"/><text x="150" y="44" style="fill:var(--gold);font:700 22px var(--f-body)">CloudWatch</text>
+          <g style="font-size:16px"><rect x="24" y="70" width="252" height="40" rx="10" class="bx"/><text x="150" y="96">Metrics</text><rect x="24" y="120" width="252" height="40" rx="10" class="bx"/><text x="150" y="146">Logs · Logs Insights</text><rect x="24" y="170" width="252" height="40" rx="10" class="bx"/><text x="150" y="196">Alarms</text><rect x="24" y="220" width="252" height="40" rx="10" class="bx"/><text x="150" y="246">Dashboards</text></g></g>
+        <g class="f" data-f="1" transform="translate(830,60)"><rect width="230" height="80" rx="14" class="bx-v"/><text x="115" y="48" class="tv">SNS topic</text></g>
+        <g class="f" data-f="1" transform="translate(1120,20)"><rect width="250" height="70" rx="14" class="bx-r"/><text x="125" y="42" class="tr">PagerDuty → Rahul</text></g>
+        <g class="f" data-f="1" transform="translate(1120,110)"><rect width="250" height="70" rx="14" class="bx-t"/><text x="125" y="42" class="tt">Slack #incidents</text></g>
+        <g class="f" data-f="2" transform="translate(830,230)"><rect width="230" height="80" rx="14" class="bx-g"/><text x="115" y="48" class="tg">Auto Scaling</text></g>
+        <g class="f" data-f="3" transform="translate(830,370)"><rect width="540" height="110" rx="14" class="bx"/><text x="270" y="44">Container Insights · X-Ray traces · Synthetics canaries</text><text x="270" y="76" class="tmut" style="font-size:14px">pods, distributed traces, robot users clicking your site every minute</text></g>
+      </g>
+      <path d="M210 70 H380 M210 150 H380 M210 230 H380 M210 310 H380 M210 390 H380" class="w-l"/>
+      <path d="M680 270 C 750 270, 760 100, 830 100 M1060 100 H1120 M1060 100 C 1090 100, 1090 145, 1120 145" class="w-v f" data-f="1"/>
+      <path d="M680 290 H830" class="w-g f" data-f="2"/>
+    </svg>
+  </div>
+  <div class="row f" data-f="4" style="gap:12px"><pre class="code grow" style="font-size:15px">aws cloudwatch put-metric-alarm --alarm-name checkout-5xx \
+  --metric-name HTTPCode_Target_5XX_Count --namespace AWS/ApplicationELB \
+  --statistic Sum --period 60 --threshold 50 --comparison-operator GreaterThanThreshold \
+  --evaluation-periods 3 --alarm-actions arn:aws:sns:ap-south-1:4821…:oncall</pre></div>
+  <aside class="notes"><p>Every AWS service sends metrics to CloudWatch automatically. Alarms can notify through SNS or trigger actions like Auto Scaling. The CLI alarm fires when the ALB sees more than 50 target 5xx errors per minute for 3 minutes in a row.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: observability tools" data-phase="compare" data-ch="Observability">
+  <h2>CloudWatch, Prometheus + Grafana, Splunk, Datadog</h2>
+  <div class="cmp g4 grow">
+    <div class="card f" data-f="1" style="--c:var(--gold)"><h3>CloudWatch</h3><p class="what">Built into AWS. Every service already reports here. Alarms drive Auto Scaling.</p><p class="use"><b>Pick when</b>AWS-first teams, quick start, AWS service metrics.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--coral)"><h3>Prometheus + Grafana</h3><p class="what">Open source, Kubernetes standard. Pull-based metrics, PromQL, beautiful dashboards.</p><p class="use"><b>Pick when</b>Kubernetes-heavy, multi-cloud, want control.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--green)"><h3>Splunk</h3><p class="what">Search and analyse huge volumes of logs. Strong in security (SIEM) and compliance.</p><p class="use"><b>Pick when</b>Banks, large enterprises, security teams.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--violet)"><h3>Datadog</h3><p class="what">SaaS: metrics, logs, traces, APM, dashboards in one place. Install an agent, done.</p><p class="use"><b>Pick when</b>You want everything unified and are fine paying for it.</p></div>
+  </div>
+  <p class="say f" data-f="5">Most enterprises mix them: CloudWatch for AWS, Prometheus/Grafana for Kubernetes, Splunk for logs and security.</p>
+  <aside class="notes"><p>No single right answer. Mention cost: log volume is often the biggest observability bill, so teams set retention and sampling carefully.</p></aside>
+</section>
+
+<section class="slide" data-tpl="perf" data-title="Perf: observability" data-ch="Observability">
+  <div class="t-h2">Before vs after: users tell you vs dashboards tell you</div>
+  <div class="t-how">What changed: <b>golden-signal dashboards, CloudWatch alarms, tracing, on-call rota</b></div>
+  <script type="application/json">{"rows":[
+    ["Time to detect","MTTD",100,"~40 min (via Twitter)",6,"~2 min (alarm)","~20×","faster"],
+    ["Time to find the cause","diagnosis",80,"grep logs on 30 servers",10,"one trace, one query","minutes",""],
+    ["Time to restore","MTTR",100,"~3 hours",12,"~20 minutes","~9×","faster"],
+    ["Incidents found by customers","share",80,"most",10,"few","proactive",""]],
+    "note":"Illustrative figures."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: before users tweet" data-ch="Observability">
+  <div class="t-recap">How do companies know before users tweet?</div>
+  <div class="t-ans">They watch <em>four golden signals</em>, alarm on the ones users feel, and keep <em>metrics, logs and traces</em> for the why.</div>
+  <div class="t-x">The best incidents are the ones fixed before anyone outside the company noticed.</div>
+</section>
+
+<!-- ================= FINALE ================= -->
+<section class="slide chapter" data-title="Finale · The whole journey">
+  <div class="num">∞</div><div class="eyebrow">Finale</div>
+  <h2>From fest-day crash to 2 million fans</h2>
+  <p class="q">Six months ago, Rahul's laptop melted at 5,000 users. Here's everything that now stands between his code and 2 million fans.</p>
+</section>
+
+<section class="slide" data-title="The whole journey" data-phase="prod" data-ch="Full picture">
+  <h2>Code to customer, and back again</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <path id="jr" d="M70 140 H1340 V420 H70" class="w-l" style="stroke-width:5"/>
+      <g text-anchor="middle" style="font:600 16px var(--f-body)">
+        <g transform="translate(110,140)"><circle r="52" class="bx-t"/><text y="-4" class="tt">Rahul</text><text y="18" class="tmut" style="font-size:13px">git push</text></g>
+        <g transform="translate(300,140)"><circle r="52" class="bx-s"/><text y="-4">GitHub</text><text y="18" class="tmut" style="font-size:13px">PR + checks</text></g>
+        <g transform="translate(490,140)"><circle r="52" class="bx-r"/><text y="-4" class="tr">Jenkins</text><text y="18" class="tmut" style="font-size:13px">build + test</text></g>
+        <g transform="translate(680,140)"><circle r="52" class="bx-b"/><text y="-4" class="tb">Sonar</text><text y="18" class="tmut" style="font-size:13px">+ Trivy scans</text></g>
+        <g transform="translate(870,140)"><circle r="52" class="bx-t"/><text y="-4" class="tt">ECR</text><text y="18" class="tmut" style="font-size:13px">image</text></g>
+        <g transform="translate(1060,140)"><circle r="52" class="bx-v"/><text y="-4" class="tv">Helm</text><text y="18" class="tmut" style="font-size:13px">canary</text></g>
+        <g transform="translate(1250,140)"><circle r="52" class="bx-b"/><text y="-4" class="tb">EKS</text><text y="18" class="tmut" style="font-size:13px">pods</text></g>
+        <g transform="translate(1250,420)"><circle r="52" class="bx-g"/><text y="-4" class="tg">ALB</text><text y="18" class="tmut" style="font-size:13px">+ CloudFront</text></g>
+        <g transform="translate(1000,420)"><circle r="52" class="bx-a"/><text y="-4" class="ta">2M fans</text><text y="18" class="tmut" style="font-size:13px">book tickets</text></g>
+        <g transform="translate(740,420)"><circle r="52" class="bx-b"/><text y="-4" class="tb">RDS · DDB</text><text y="18" class="tmut" style="font-size:13px">S3 · SQS</text></g>
+        <g transform="translate(480,420)"><circle r="52" style="fill:rgba(255,209,102,.12);stroke:var(--gold);stroke-width:2"/><text y="-4" style="fill:var(--gold)">CloudWatch</text><text y="18" class="tmut" style="font-size:13px">Grafana</text></g>
+        <g transform="translate(220,420)"><circle r="52" class="bx-r"/><text y="-4" class="tr">On-call</text><text y="18" class="tmut" style="font-size:13px">learn + improve</text></g>
+      </g>
+      <circle r="12" class="fa glow-a"><animateMotion dur="14s" repeatCount="indefinite"><mpath href="#jr"/></animateMotion></circle>
+      <text x="704" y="290" text-anchor="middle" style="font:600 22px var(--f-body)">IAM roles, VPC, security groups and Secrets Manager guard every step.</text>
+      <text x="704" y="326" text-anchor="middle" class="tmut" style="font-size:19px">CloudFormation or Terraform builds all of it from code.</text>
+    </svg>
+  </div>
+  <aside class="notes"><p>One loop: code goes right along the top, into production, out to users, and observability brings lessons back to the team. Ask the room to name each step's chapter.</p></aside>
+</section>
+
+<!--OLD:Architecture (3D)-->
+<!--OLD:Shared responsibility-->
+
+<section class="slide" data-title="Myths" data-phase="concept" data-ch="Common mistakes">
+  <h2>Twelve things everyone gets wrong once</h2>
+  <div class="grid g3" style="gap:10px">
+    <div class="myth f" data-f="1"><div class="m">An SG protects the subnet.</div><div class="f2">Per instance. NACLs cover subnets.</div></div>
+    <div class="myth f" data-f="1"><div class="m">Private subnet = no internet.</div><div class="f2">Nothing in. Out via NAT.</div></div>
+    <div class="myth f" data-f="1"><div class="m">Stopped EC2 costs nothing.</div><div class="f2">EBS, snapshots, public IPs still bill.</div></div>
+    <div class="myth f" data-f="2"><div class="m">Terminate keeps my disk.</div><div class="f2">Root volume deletes by default.</div></div>
+    <div class="myth f" data-f="2"><div class="m">Multi-AZ doubles reads.</div><div class="f2">Classic standby isn't readable.</div></div>
+    <div class="myth f" data-f="2"><div class="m">IAM controls network access.</div><div class="f2">IAM = API calls. SGs = packets.</div></div>
+    <div class="myth f" data-f="3"><div class="m">Containers are tiny VMs.</div><div class="f2">They share the host kernel.</div></div>
+    <div class="myth f" data-f="3"><div class="m">:latest is a version.</div><div class="f2">Tags move. Deploy by digest.</div></div>
+    <div class="myth f" data-f="3"><div class="m">Kubernetes needs no ops.</div><div class="f2">EKS runs the brain; you own the workloads.</div></div>
+    <div class="myth f" data-f="4"><div class="m">Delete the commit, secret's gone.</div><div class="f2">Rotate it. History remembers.</div></div>
+    <div class="myth f" data-f="4"><div class="m">Rebuild the image for prod.</div><div class="f2">Promote the same artifact.</div></div>
+    <div class="myth f" data-f="4"><div class="m">Find the root cause first.</div><div class="f2">Mitigate first. Root cause after.</div></div>
+  </div>
+  <aside class="notes"><p>Show of hands after each row: "who believed this before today?"</p></aside>
+</section>
+
+<!--OLD:Quick quiz-->
+
+<section class="slide" data-title="Cheat sheet" data-ch="Cheat sheet">
+  <h2>The whole journey, one line each</h2>
+  <div class="cheat" style="grid-template-columns:repeat(4,1fr)">
+    <div><span class="tile xs">☁</span><div><b>Cloud</b><span>Rent, don't buy. Pay as you go</span></div></div>
+    <div><span class="tile xs" style="--c:var(--violet)">VM</span><div><b>Virtualization</b><span>Hypervisor slices one server</span></div></div>
+    <div><span class="tile xs" style="--c:var(--teal)">AZ</span><div><b>Region / AZ</b><span>City / separate buildings</span></div></div>
+    <div><span class="tile xs" style="--c:var(--rose)">IAM</span><div><b>IAM</b><span>SSO for people, roles for apps</span></div></div>
+    <div><span class="tile xs" style="--c:var(--teal)">VPC</span><div><b>VPC</b><span>5 gates: IP, route, NACL, SG, app</span></div></div>
+    <div><span class="tile xs">EC2</span><div><b>EC2</b><span>Pick family by bottleneck</span></div></div>
+    <div><span class="tile xs" style="--c:var(--blue)">EBS</span><div><b>EBS</b><span>Network disk, one AZ, use gp3</span></div></div>
+    <div><span class="tile xs">AMI</span><div><b>AMI</b><span>Golden image, clean first</span></div></div>
+    <div><span class="tile xs" style="--c:var(--green)">ELB</span><div><b>ELB + ASG</b><span>Scale out, self-heal</span></div></div>
+    <div><span class="tile xs" style="--c:var(--green)">S3</span><div><b>S3</b><span>3+ AZs, 11 nines</span></div></div>
+    <div><span class="tile xs" style="--c:var(--blue)">RDS</span><div><b>RDS</b><span>Multi-AZ uptime, replicas reads</span></div></div>
+    <div><span class="tile xs" style="--c:var(--violet)">DDB</span><div><b>DynamoDB</b><span>Partitions, any scale, DAX</span></div></div>
+    <div><span class="tile xs" style="--c:var(--blue)">CDN</span><div><b>CloudFront</b><span>Files near users</span></div></div>
+    <div><span class="tile xs" style="--c:var(--coral)">IaC</span><div><b>CloudFormation</b><span>Infra from a template</span></div></div>
+    <div><span class="tile xs">λ</span><div><b>Lambda + SQS</b><span>Pay per ms, queue spikes</span></div></div>
+    <div><span class="tile xs" style="--c:var(--teal)">DKR</span><div><b>Docker</b><span>Code + its world in a box</span></div></div>
+    <div><span class="tile xs" style="--c:var(--teal)">ECR</span><div><b>ECR</b><span>Private, scanned, by digest</span></div></div>
+    <div><span class="tile xs" style="--c:var(--blue)">K8S</span><div><b>Kubernetes</b><span>Desired state, self-healing</span></div></div>
+    <div><span class="tile xs" style="--c:var(--violet)">HELM</span><div><b>Helm</b><span>One chart, many envs</span></div></div>
+    <div><span class="tile xs" style="--c:var(--rose)">SEC</span><div><b>DevSecOps</b><span>Scan in the PR, secrets in a vault</span></div></div>
+    <div><span class="tile xs" style="--c:var(--rose)">CI</span><div><b>CI/CD</b><span>Build, test, scan, deploy</span></div></div>
+    <div><span class="tile xs" style="--c:var(--amber)">CAN</span><div><b>Canary</b><span>Small slice, auto rollback</span></div></div>
+    <div><span class="tile xs" style="--c:var(--rose)">SEV</span><div><b>Incidents</b><span>Mitigate first, blameless review</span></div></div>
+    <div><span class="tile xs" style="--c:var(--gold)">OBS</span><div><b>Observability</b><span>Metrics, logs, traces</span></div></div>
+  </div>
+  <aside class="notes"><p>Tell everyone to take a photo of this slide.</p></aside>
+</section>
+
+<section class="slide" data-title="Thank you">
+  <div class="eyebrow">Epilogue</div>
+  <h2 style="font-size:72px">Next fest day, nothing melts.</h2>
+  <div class="grid g3" style="gap:18px;margin-top:16px">
+    <div class="panel"><div class="small mono hl-a">Lab 1 · 45 min</div><h3>Five gates</h3><p class="txt hl-m">VPC, public + private subnets, EC2 with Apache. Break each gate on purpose, then fix it.</p></div>
+    <div class="panel"><div class="small mono hl-a">Lab 2 · 60 min</div><h3>Scale it</h3><p class="txt hl-m">Launch template, ALB, ASG across 3 AZs. Load-test and watch it scale out.</p></div>
+    <div class="panel"><div class="small mono hl-a">Lab 3 · 90 min</div><h3>Ship it</h3><p class="txt hl-m">Dockerfile → ECR → EKS with Helm, via a Jenkins or GitHub Actions pipeline.</p></div>
+  </div>
+  <div class="row" style="align-items:center;gap:22px;margin-top:auto"><span style="font:800 54px/1 var(--f-display)" class="hl-a">Questions?</span><span class="small">Budget alert first. Delete everything after. Ask the questions you were afraid to ask.</span></div>
+  <aside class="notes"><p>Close the loop to fest day and take questions. Press O to jump to any slide when answering.</p></aside>
+</section>
+
+</div></div>

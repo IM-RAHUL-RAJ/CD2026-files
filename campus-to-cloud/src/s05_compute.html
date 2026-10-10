@@ -1,0 +1,230 @@
+
+<!-- ================= CH6 EC2 ================= -->
+<section class="slide chapter" data-title="Chapter 6 · EC2">
+  <div class="num">06</div><div class="eyebrow">Act 2 · Chapter 6</div>
+  <h2>Renting a slice of a real server</h2>
+  <p class="q">Rahul's first ticket: “Launch a server for the new seat-map service.” The launch page has 400 instance types.</p>
+  <div class="tiles"><span class="tile sm">EC2</span><span class="tile sm" style="--c:var(--steel)">SSH</span><span class="tile sm" style="--c:var(--teal)">SSM</span><span class="tile sm" style="--c:var(--violet)">NITRO</span></div>
+  <aside class="notes"><p>Based on PDF 04 (AWS EC2).</p></aside>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: which instance type?" data-ch="EC2">
+  <div class="t-q">t3.micro, m5.large, g5.12xlarge… how do engineers actually pick one?</div>
+  <div class="t-who">Rahul, staring at the launch wizard</div>
+  <div class="t-hint">Is bigger always better? Who decides, and based on what?</div>
+</section>
+
+<!--OLD:An instance is a slice-->
+
+<section class="slide" data-title="Launching an instance" data-phase="concept" data-ch="EC2">
+  <h2>Eight choices, then a script that runs on first boot</h2>
+  <div class="row grow" style="gap:24px">
+    <div class="grid g2 grow" style="gap:12px;align-content:start">
+      <div class="chip f" data-f="1"><span class="tile xs">AMI</span><span><b>Image</b> · OS + software</span></div>
+      <div class="chip f" data-f="1"><span class="tile xs">TYPE</span><span><b>Instance type</b> · CPU + RAM</span></div>
+      <div class="chip f" data-f="1"><span class="tile xs" style="--c:var(--steel)">KEY</span><span><b>Key pair</b> · SSH login</span></div>
+      <div class="chip f" data-f="1"><span class="tile xs" style="--c:var(--teal)">NET</span><span><b>VPC, subnet, IP</b></span></div>
+      <div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--rose)">SG</span><span><b>Security group</b> · firewall</span></div>
+      <div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--blue)">EBS</span><span><b>Storage</b> · disk size, type</span></div>
+      <div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--rose)">ROLE</span><span><b>IAM role</b> · AWS permissions</span></div>
+      <div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--violet)">EIP</span><span><b>Elastic IP</b> · fixed public IP</span></div>
+    </div>
+    <div style="width:640px;flex:none" class="f" data-f="3">
+      <p class="small mono" style="margin-bottom:8px">User data · runs once at first boot</p>
+<pre class="code" style="font-size:16px"><span class="c">#!/bin/bash</span>
+sudo yum update -y
+<span class="c"># install and start Apache</span>
+sudo yum install -y httpd
+sudo systemctl start httpd
+sudo systemctl enable httpd
+echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
+  &gt; /var/www/html/index.html</pre>
+      <p class="small" style="margin-top:8px">Launch → wait a minute → open the public IP → your page is live.</p>
+    </div>
+  </div>
+  <aside class="notes"><p>The eight options and the user-data script come straight from PDF 04. The $(hostname) variant is from PDF 07: it prints which server answered, which is perfect for seeing a load balancer in action later.</p></aside>
+</section>
+
+<!--OLD:Instance types-->
+
+<section class="slide" data-title="Pick by workload" data-phase="compare" data-ch="EC2">
+  <h2>Match the instance to the job</h2>
+  <div class="cmp g4 grow">
+    <div class="card f" data-f="1" style="--c:var(--amber)"><h3>College blog</h3><div class="ico"><span class="tile">t3</span></div><p class="what">t3.micro or t3.small · burstable, cheap</p><p class="use"><b>Why</b>Idle most of the time, short bursts of traffic.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--teal)"><h3>E-commerce app</h3><div class="ico"><span class="tile" style="--c:var(--teal)">m5</span></div><p class="what">m5.large or m5.xlarge · balanced</p><p class="use"><b>Why</b>Steady mix of CPU and memory.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--violet)"><h3>Video rendering</h3><div class="ico"><span class="tile" style="--c:var(--violet)">g5</span></div><p class="what">g5.12xlarge · GPUs</p><p class="use"><b>Why</b>Parallel math on graphics cards.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--blue)"><h3>Real-time analytics</h3><div class="ico"><span class="tile" style="--c:var(--blue)">r6g</span></div><p class="what">r6g.16xlarge · lots of RAM</p><p class="use"><b>Why</b>Keeps the whole dataset in memory.</p></div>
+  </div>
+  <p class="say f" data-f="5">Start small, <em>measure CPU and memory</em>, then resize. Changing type takes a stop and a start.</p>
+  <aside class="notes"><p>The four cases are from PDF 04. Resizing an EBS-backed instance: stop it, change the instance type, start it again.</p></aside>
+</section>
+
+<!--OLD:Compare: how to pay-->
+<!--OLD:Compare: compute choices-->
+<!--OLD:Open door vs no door-->
+<!--OLD:SSH in practice-->
+<!--OLD:Compare: ways in-->
+<!--OLD:How SSM works-->
+
+<section class="slide" data-tpl="perf" data-title="Perf: right-sizing EC2" data-ch="EC2">
+  <div class="t-h2">Before vs after: guessed size vs measured size</div>
+  <div class="t-how">What changed: <b>right-sized, moved to Graviton, Savings Plan for the base</b></div>
+  <script type="application/json">{"rows":[
+    ["Average CPU used","seat-map service",12,"8% on m5.4xlarge",65,"60% on m7g.large","right","sized"],
+    ["Monthly compute bill","same traffic",100,"₹1,00,000",35,"~₹35,000","~65%","saved"],
+    ["Price-performance","Graviton vs x86",60,"baseline",100,"up to 40% better","+40%","per rupee"],
+    ["Time to resize","when traffic grows",40,"new purchase",5,"stop → change → start","minutes",""]],
+    "note":"Bill figures are illustrative. “Up to 40% better price-performance” is AWS's published claim for Graviton2 vs comparable x86 instances; results vary by workload."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: picking instances" data-ch="EC2">
+  <div class="t-recap">How do engineers actually pick an instance type?</div>
+  <div class="t-ans">They don't guess. They pick the <em>family</em> by bottleneck (CPU, memory, GPU), start small, and <em>resize from real metrics</em>.</div>
+  <div class="t-x">t = bursty, m = balanced, c = compute, r = memory, g/p = GPU. Changing size is a two-minute stop-start, not a purchase.</div>
+</section>
+
+<!-- ================= CH7 EBS ================= -->
+<section class="slide chapter" data-title="Chapter 7 · EBS">
+  <div class="num">07</div><div class="eyebrow">Act 2 · Chapter 7</div>
+  <h2>Where does the data live?</h2>
+  <p class="q">Rahul terminates a test instance to save money. A teammate asks: “Wait, where was the database?”</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--blue)">EBS</span><span class="tile sm" style="--c:var(--blue)">SNAP</span><span class="tile sm" style="--c:var(--blue)">GP3</span></div>
+  <aside class="notes"><p>Based on PDF 05 (AWS EBS).</p></aside>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: data after terminate" data-ch="EBS">
+  <div class="t-q">If I terminate my EC2 instance, what happens to my data?</div>
+  <div class="t-who">Rahul, finger hovering over “Terminate”</div>
+  <div class="t-hint">Is the disk inside the server? Can I move it? Can I make it bigger without downtime?</div>
+</section>
+
+<!--OLD:Your disk is across the network-->
+
+<section class="slide" data-title="EBS lifecycle" data-phase="pic" data-ch="EBS" data-steps="4">
+  <h2>A disk that outlives its server</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <rect x="20" y="20" width="1368" height="520" rx="24" class="w-a" style="stroke-dasharray:12 10;stroke-width:2"/><text x="44" y="56" class="ta tm">ap-south-1a</text>
+      <g transform="translate(120,120)"><rect width="220" height="160" rx="18" class="fa hide-on-2"/><text x="110" y="90" text-anchor="middle" class="tink hide-on-2" style="font:800 26px var(--f-display)">EC2 #1</text>
+        <g class="show-on-2"><rect width="220" height="160" rx="18" class="bx-r" style="stroke-dasharray:8 8"/><text x="110" y="90" text-anchor="middle" class="tr" style="font:700 22px var(--f-body)">terminated</text></g></g>
+      <g transform="translate(600,120)" class="show-on-3"><rect width="220" height="160" rx="18" class="fa"/><text x="110" y="90" text-anchor="middle" class="tink" style="font:800 26px var(--f-display)">EC2 #2</text></g>
+      <g id="ebsVol" style="transition:transform 1s cubic-bezier(.2,.7,.2,1)"><rect x="150" y="340" width="160" height="110" rx="16" class="fb"/><text x="230" y="402" text-anchor="middle" class="tink" style="font:700 22px var(--f-body)">EBS · 50 GB</text></g>
+      <path d="M230 280 V340" class="w-b hide-on-1" style="stroke-width:4"/>
+      <g class="show-on-1"><text x="400" y="400" class="tb" style="font-size:20px">detach</text></g>
+      <g class="show-on-4"><path d="M840 395 H1000" class="w-b dash"/><rect x="1010" y="340" width="160" height="110" rx="16" class="bx-b"/><text x="1090" y="390" text-anchor="middle" class="tb" style="font:700 18px var(--f-body)">snapshot</text><text x="1090" y="416" text-anchor="middle" class="tmut tm" style="font-size:14px">stored in S3</text>
+        <path d="M1170 395 H1240" class="w-b dash"/><text x="1250" y="380" class="tb" style="font-size:16px">→ 1b, 1c</text><text x="1250" y="406" class="tb" style="font-size:16px">→ other Region</text></g>
+      <style>.st3 #ebsVol{transform:translateX(480px)}</style>
+      <text x="704" y="520" text-anchor="middle" class="tmut" style="font-size:19px">Delete-on-termination is ON by default for the root disk. Turn it off for disks you want to keep.</text>
+    </svg>
+  </div>
+  <aside class="notes"><p>Step 1: detach the volume. Step 2: the instance is terminated, the volume survives. Step 3: attach it to a new instance in the same AZ. Step 4: to move to another AZ or Region, take a snapshot and create a new volume from it. All straight from the PDF 05 diagrams.</p><p>Volumes can be resized live: no data loss, no restart needed.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: EBS volume types" data-phase="compare" data-ch="EBS">
+  <h2>Four flavours of disk</h2>
+  <div class="cmp g4 grow">
+    <div class="card f" data-f="1" style="--c:var(--teal)"><h3>gp3 · gp2</h3><p class="what">General purpose SSD. Balances price and performance.</p><p class="use"><b>Use for</b>Boot disks, most apps, dev databases.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--rose)"><h3>io2 · io1</h3><p class="what">Provisioned IOPS SSD. You set the IOPS you need.</p><p class="use"><b>Use for</b>Busy production databases.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--amber)"><h3>st1</h3><p class="what">Throughput-optimized HDD. Big sequential reads.</p><p class="use"><b>Use for</b>Big data, log processing.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--steel)"><h3>sc1</h3><p class="what">Cold HDD. Cheapest per GB.</p><p class="use"><b>Use for</b>Data you rarely touch.</p></div>
+  </div>
+  <aside class="notes"><p>From PDF 05. EBS is AZ-specific, replicated within its AZ, supports encryption and snapshots, and can grow without downtime.</p></aside>
+</section>
+
+<!--OLD:Snapshots are incremental-->
+
+<section class="slide" data-tpl="perf" data-title="Perf: gp2 to gp3" data-ch="EBS">
+  <div class="t-h2">Before vs after: gp2 vs gp3 for a 100 GB database disk</div>
+  <div class="t-how">What changed: <b>switched the volume type, live, no downtime</b></div>
+  <script type="application/json">{"rows":[
+    ["Baseline IOPS","100 GB volume",10,"300 IOPS",100,"3,000 IOPS","10×","more IOPS"],
+    ["Baseline throughput","MiB per second",50,"up to 128 MiB/s, tied to size",50,"125 MiB/s guaranteed","steady","no burst credits"],
+    ["Price per GB","list price",100,"gp2",80,"gp3","~20%","cheaper"],
+    ["Need more speed?","extra IOPS",60,"buy a bigger disk",20,"dial IOPS up separately","independent","scaling"]],
+    "note":"gp2 gives 3 IOPS per GB (100 GB → 300 baseline). gp3 includes 3,000 IOPS and 125 MiB/s at any size; AWS lists gp3 at up to 20% lower price per GB than gp2."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: data after terminate" data-ch="EBS">
+  <div class="t-recap">If I terminate my instance, what happens to my data?</div>
+  <div class="t-ans">Your data lives on an <em>EBS volume across the network</em>, not inside the server. Detach it, keep it, or snapshot it anywhere.</div>
+  <div class="t-x">Just remember the one default that bites: the root volume is deleted on termination unless you turn that off.</div>
+</section>
+
+<!-- ================= CH8 AMI ================= -->
+<section class="slide chapter" data-title="Chapter 8 · AMI">
+  <div class="num">08</div><div class="eyebrow">Act 2 · Chapter 8</div>
+  <h2>Stamp out identical servers</h2>
+  <p class="q">A big cricket ticket sale is next week. TicketWave needs 50 identical servers, set up exactly like the one Rahul tuned.</p>
+  <div class="tiles"><span class="tile sm">AMI</span><span class="tile sm" style="--c:var(--green)">LT</span><span class="tile sm" style="--c:var(--violet)">IMG</span></div>
+  <aside class="notes"><p>Based on PDF 06 (AWS AMI).</p></aside>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: 100 identical servers" data-ch="AMI">
+  <div class="t-q">How do companies launch 100 identical servers in minutes without SSH-ing into each one?</div>
+  <div class="t-who">Rahul, imagining 50 terminal tabs</div>
+</section>
+
+<!--OLD:The cookie cutter-->
+
+<section class="slide" data-title="AMI types" data-phase="compare" data-ch="AMI">
+  <h2>Three kinds of AMI</h2>
+  <div class="cmp g3 grow">
+    <div class="card f" data-f="1" style="--c:var(--teal)"><h3>Public</h3><p class="what">Published for everyone: Amazon Linux, Ubuntu, Windows.</p><p class="use"><b>Use for</b>Testing, development, a clean starting point.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--amber)"><h3>Private</h3><p class="what">Built by you, visible only to your account or accounts you share with.</p><p class="use"><b>Use for</b>Your hardened, customized production setup.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--violet)"><h3>Marketplace</h3><p class="what">Paid images from vendors, billed by usage.</p><p class="use"><b>Use for</b>A ready LAMP stack, firewalls, enterprise software.</p></div>
+  </div>
+  <aside class="notes"><p>From PDF 06. Marketplace example in the PDF: a pre-configured LAMP stack, so you skip installing Apache, MySQL and PHP by hand.</p></aside>
+</section>
+
+<section class="slide" data-title="Clean before you bake" data-phase="prod" data-ch="AMI">
+  <h2>Clean the server before you photograph it</h2>
+  <div class="row grow" style="gap:24px">
+<pre class="code f" data-f="1" style="width:720px;flex:none;font-size:17px"><span class="c">#!/bin/bash</span>
+<span class="c"># remove SSH keys</span>
+rm -rf ~/.ssh/authorized_keys
+<span class="c"># clear credentials and history</span>
+rm -rf ~/.aws/credentials ~/.git-credentials ~/.bash_history
+<span class="c"># clean logs and temp files</span>
+rm -rf /var/log/* /tmp/* /var/tmp/*
+<span class="c"># remove temporary users, lock root</span>
+deluser tempuser --remove-home
+passwd -l root</pre>
+    <div class="grow" style="display:flex;flex-direction:column;gap:18px;justify-content:center">
+      <p class="say f" data-f="2">An AMI copies <em>everything</em>: apps, configs, users, and any secret you forgot.</p>
+      <p class="small f" data-f="3">Bake a key into an image and every one of its 50 copies has it too. Clean first, then create the image.</p>
+    </div>
+  </div>
+  <aside class="notes"><p>Cleanup script from PDF 06 (lightly tidied). Real teams automate this inside EC2 Image Builder or Packer so nobody forgets a step.</p></aside>
+</section>
+
+<section class="slide" data-title="Launch template vs image" data-phase="compare" data-ch="AMI">
+  <h2>Launch template vs create image</h2>
+  <table class="t" style="font-size:22px">
+    <tr><th></th><th class="hl-g">Launch template</th><th class="hl-a">Create image (AMI)</th></tr>
+    <tr class="f" data-f="1"><td class="mono">What</td><td>A reusable launch recipe</td><td>A point-in-time copy of a server</td></tr>
+    <tr class="f" data-f="2"><td class="mono">Holds</td><td>AMI ID, type, SG, key, role, user data</td><td>OS, apps, configs, data on disk</td></tr>
+    <tr class="f" data-f="3"><td class="mono">Versions</td><td>Many versions (v1, v2, v3…)</td><td>One snapshot per image</td></tr>
+    <tr class="f" data-f="4"><td class="mono">Use for</td><td>Auto Scaling, Spot, standard settings</td><td>Backup, cloning, moving to another Region</td></tr>
+  </table>
+  <p class="say f" data-f="5">They work together: <em>the template points at the image</em>.</p>
+  <aside class="notes"><p>Comparison table from PDF 06.</p></aside>
+</section>
+
+<!--OLD:Production: golden AMI pipeline-->
+
+<section class="slide" data-tpl="perf" data-title="Perf: golden AMIs" data-ch="AMI">
+  <div class="t-h2">Before vs after: hand-built servers vs golden AMI</div>
+  <div class="t-how">What changed: <b>EC2 Image Builder makes a tested image every week</b></div>
+  <script type="application/json">{"rows":[
+    ["Boot to ready","one new server",100,"~45 min of setup",5,"~2 min","~20×","faster"],
+    ["50 servers for the sale","engineer time",100,"a full day",4,"one Auto Scaling change","1 click",""],
+    ["Servers that differ","config drift",70,"“it works on #17 only”",3,"all identical","0","drift"],
+    ["Security patches","how they arrive",80,"SSH and pray",10,"new image, roll out","weekly","automatic"]],
+    "note":"Setup times are illustrative. EC2 Image Builder itself has no charge; you pay for the resources it uses."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: identical servers" data-ch="AMI">
+  <div class="t-recap">How do companies launch 100 identical servers in minutes?</div>
+  <div class="t-ans">They build <em>one golden image</em>, point a launch template at it, and let Auto Scaling stamp out copies.</div>
+  <div class="t-x">Nobody SSHs into production servers to set them up. If a server is broken, it's replaced, not repaired.</div>
+</section>

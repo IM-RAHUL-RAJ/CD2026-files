@@ -1,0 +1,382 @@
+
+<!-- ================= CH20 CODE QUALITY + SECURITY ================= -->
+<section class="slide chapter" data-title="Chapter 20 · Code quality and security">
+  <div class="num">20</div><div class="eyebrow">Act 3 · Chapter 20</div>
+  <h2>Code that's safe to ship</h2>
+  <p class="q">Rahul opens his first pull request. Within a minute, three bots comment: a leaked secret, a vulnerable library, and 41% test coverage.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--steel)">GIT</span><span class="tile sm" style="--c:var(--rose)">GHAS</span><span class="tile sm" style="--c:var(--blue)">SONAR</span><span class="tile sm" style="--c:var(--violet)">VAULT</span><span class="tile sm" style="--c:var(--amber)">SM</span></div>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: secrets on GitHub" data-ch="Code security">
+  <div class="t-q">How do passwords end up on public GitHub, and how do companies stop it from happening?</div>
+  <div class="t-who">Rahul, remembering his college repo with a DB password in config.py</div>
+  <div class="t-hint">Bots scan public repos for leaked keys constantly. Deleting the commit later isn't enough: it's still in the history.</div>
+</section>
+
+<section class="slide" data-title="Branch, PR, review, merge" data-phase="pic" data-ch="Code security">
+  <h2>No one pushes straight to main</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 520">
+      <path d="M60 140 H1350" class="w-g" style="stroke-width:6"/><text x="60" y="110" class="tg tm">main · protected</text>
+      <path d="M200 140 C 260 140, 260 330, 340 330 H880 C 960 330, 960 140, 1040 140" class="w-a" style="stroke-width:5"/>
+      <text x="360" y="380" class="ta tm">feature/seat-hold-timeout</text>
+      <g class="fa"><circle cx="420" cy="330" r="14"/><circle cx="560" cy="330" r="14"/><circle cx="700" cy="330" r="14"/></g>
+      <g class="f" data-f="1"><rect x="740" y="230" width="210" height="64" rx="14" class="bx-v"/><text x="845" y="270" text-anchor="middle" class="tv" style="font:700 18px var(--f-body)">Pull request</text></g>
+      <g class="f" data-f="2" style="font:600 16px var(--f-body)"><rect x="560" y="400" width="210" height="44" rx="10" class="bx-g"/><text x="580" y="428" class="tg">✓ build + unit tests</text>
+        <rect x="790" y="400" width="200" height="44" rx="10" class="bx-g"/><text x="810" y="428" class="tg">✓ SonarQube gate</text>
+        <rect x="1010" y="400" width="200" height="44" rx="10" class="bx-g"/><text x="1030" y="428" class="tg">✓ secret scan</text>
+        <rect x="560" y="456" width="210" height="44" rx="10" class="bx-g"/><text x="580" y="484" class="tg">✓ dependency scan</text>
+        <rect x="790" y="456" width="200" height="44" rx="10" class="bx-t"/><text x="810" y="484" class="tt">✓ 2 approvals</text></g>
+      <g class="f" data-f="3"><circle cx="1040" cy="140" r="20" class="fg glow-g"/><text x="1040" y="90" text-anchor="middle" class="tg" style="font:700 20px var(--f-body)">merge</text></g>
+      <circle r="10" class="fa glow-a"><animateMotion dur="6s" repeatCount="indefinite" path="M200 140 C 260 140, 260 330, 340 330 H880 C 960 330, 960 140, 1040 140 H1350"/></circle>
+    </svg>
+  </div>
+  <aside class="notes"><p>Branch protection on main means nothing merges without a pull request, passing checks, and approvals. Every check you see here runs automatically on every PR.</p></aside>
+</section>
+
+<section class="slide" data-title="Coding practices" data-phase="concept" data-ch="Code security">
+  <h2>Habits that make code reviewable</h2>
+  <div class="row grow" style="gap:24px">
+    <div class="grid g2 grow" style="gap:12px;align-content:start">
+      <div class="card f" data-f="1" style="--c:var(--teal)"><h3>Small PRs</h3><p class="what">Under ~400 lines. Reviewers actually read them.</p></div>
+      <div class="card f" data-f="1" style="--c:var(--amber)"><h3>Clear commits</h3><p class="what"><span class="mono">fix(seats): release hold after 10 min</span></p></div>
+      <div class="card f" data-f="2" style="--c:var(--violet)"><h3>Config outside code</h3><p class="what">Environment variables and secret stores, never hard-coded values.</p></div>
+      <div class="card f" data-f="2" style="--c:var(--green)"><h3>Tests first-class</h3><p class="what">A bug fix comes with a test that would have caught it.</p></div>
+      <div class="card f" data-f="3" style="--c:var(--blue)"><h3>Lint + format</h3><p class="what">Machines argue about spaces so humans don't.</p></div>
+      <div class="card f" data-f="3" style="--c:var(--rose)"><h3>Review kindly</h3><p class="what">Comment on code, not people. Explain the why.</p></div>
+    </div>
+    <div class="vis f" data-f="4" style="width:460px;flex:none">
+      <svg class="d" viewBox="0 0 460 440"><text x="230" y="30" text-anchor="middle" class="lbl">the test pyramid</text>
+        <path d="M230 50 L300 150 H160Z" class="bx-r"/><text x="230" y="130" text-anchor="middle" class="tr" style="font-size:16px">E2E</text>
+        <path d="M160 160 H300 L360 260 H100Z" class="bx-a"/><text x="230" y="220" text-anchor="middle" class="ta" style="font-size:17px">integration</text>
+        <path d="M100 270 H360 L430 400 H30Z" class="bx-g"/><text x="230" y="345" text-anchor="middle" class="tg" style="font-size:18px">unit tests · many, fast</text></svg>
+    </div>
+  </div>
+  <aside class="notes"><p>The pyramid: lots of fast unit tests at the bottom, fewer integration tests, a handful of slow end-to-end tests at the top.</p></aside>
+</section>
+
+<section class="slide" data-title="GitHub security" data-phase="compare" data-ch="Code security">
+  <h2>GitHub's built-in guards</h2>
+  <div class="cmp g3 grow">
+    <div class="card f" data-f="1" style="--c:var(--green)"><h3>Branch protection</h3><p class="what">main needs a PR, passing checks and approvals. No force-push.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--rose)"><h3>Secret scanning</h3><p class="what">Detects keys and tokens. Push protection blocks the push before the secret lands.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--amber)"><h3>Dependabot</h3><p class="what">Alerts on vulnerable libraries and opens PRs to upgrade them.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--violet)"><h3>Code scanning</h3><p class="what">CodeQL finds bugs like SQL injection in your own code.</p></div>
+    <div class="card f" data-f="5" style="--c:var(--blue)"><h3>CODEOWNERS</h3><p class="what">The payments team must approve changes to payments code.</p></div>
+    <div class="card f" data-f="6" style="--c:var(--teal)"><h3>SSO + 2FA</h3><p class="what">Org members sign in through the company identity provider.</p></div>
+  </div>
+  <aside class="notes"><p>Secret scanning with push protection would have stopped Rahul's college config.py from ever being pushed. If a secret does leak: rotate it first, then clean history. Deleting the commit alone doesn't help.</p></aside>
+</section>
+
+<section class="slide" data-title="SonarQube quality gate" data-phase="concept" data-ch="Code security">
+  <h2>SonarQube: a report card for every pull request</h2>
+  <div class="row grow" style="gap:24px">
+    <div class="panel grow f" data-f="1" style="display:flex;flex-direction:column;gap:16px">
+      <div class="row" style="justify-content:space-between;align-items:center"><h3>ticketwave-api · PR #482</h3><span class="pill hl-r" style="font-size:18px">Quality gate: FAILED</span></div>
+      <div class="grid g3" style="gap:12px">
+        <div class="mtile"><span>bugs</span><b class="warn">2</b></div><div class="mtile"><span>vulnerabilities</span><b class="bad">1</b></div><div class="mtile"><span>code smells</span><b>14</b></div>
+        <div class="mtile"><span>coverage on new code</span><b class="bad">41%</b></div><div class="mtile"><span>duplication</span><b class="good">1.2%</b></div><div class="mtile"><span>security hotspots</span><b class="warn">3</b></div>
+      </div>
+      <p class="small">Gate rule: new code must have ≥ 80% coverage and zero new vulnerabilities.</p>
+    </div>
+    <div style="width:470px;flex:none;display:flex;flex-direction:column;gap:14px;justify-content:center">
+      <p class="say f" data-f="2">The gate <em>blocks the merge</em>, not the human.</p>
+      <p class="small f" data-f="3">It only judges <b>new code</b>, so old legacy mess doesn't stop progress, but nothing gets worse.</p>
+<pre class="code f" data-f="4" style="font-size:15px">stage('SonarQube') {
+  withSonarQubeEnv('sonar') {
+    sh 'mvn sonar:sonar'
+  }
+}
+stage('Quality gate') {
+  waitForQualityGate abortPipeline: true
+}</pre>
+    </div>
+  </div>
+  <aside class="notes"><p>SonarQube (or SonarCloud) analyses code for bugs, vulnerabilities, code smells, coverage and duplication. The quality gate turns that into pass or fail, and Jenkins aborts the pipeline on failure.</p></aside>
+</section>
+
+<section class="slide" data-title="Security checks in the pipeline" data-phase="prod" data-ch="Code security">
+  <h2>Six security checks, placed along the pipeline</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 520">
+      <path d="M60 160 H1350" class="w-l" style="stroke-width:6"/>
+      <g text-anchor="middle" style="font:600 17px var(--f-body)">
+        <g transform="translate(110,160)"><circle r="40" class="bx"/><text y="6">commit</text></g>
+        <g transform="translate(330,160)"><circle r="40" class="bx"/><text y="6">build</text></g>
+        <g transform="translate(560,160)"><circle r="40" class="bx"/><text y="6">image</text></g>
+        <g transform="translate(790,160)"><circle r="40" class="bx"/><text y="6">infra</text></g>
+        <g transform="translate(1030,160)"><circle r="40" class="bx"/><text y="6">staging</text></g>
+        <g transform="translate(1290,160)"><circle r="40" class="bx-g"/><text y="6" class="tg">prod</text></g>
+      </g>
+      <circle r="12" class="fa glow-a"><animateMotion dur="7s" repeatCount="indefinite" path="M60 160 H1350"/></circle>
+      <g style="font-size:17px">
+        <g class="f" data-f="1"><path d="M110 200 V250" class="w-r"/><rect x="20" y="250" width="200" height="120" rx="14" class="bx-r"/><text x="36" y="282" class="tr" style="font-weight:700">Secrets scan</text><text x="36" y="310" class="tmut">gitleaks, GitHub</text><text x="36" y="334" class="tmut">push protection</text></g>
+        <g class="f" data-f="2"><path d="M330 200 V250" class="w-b"/><rect x="230" y="250" width="200" height="120" rx="14" class="bx-b"/><text x="246" y="282" class="tb" style="font-weight:700">SAST</text><text x="246" y="310" class="tmut">SonarQube,</text><text x="246" y="334" class="tmut">CodeQL, Semgrep</text></g>
+        <g class="f" data-f="2"><path d="M330 200 C 330 380, 330 400, 330 400" class="w-a"/><rect x="230" y="390" width="200" height="110" rx="14" class="bx-a"/><text x="246" y="422" class="ta" style="font-weight:700">SCA</text><text x="246" y="450" class="tmut">Dependabot, Snyk,</text><text x="246" y="474" class="tmut">OWASP Dep-Check</text></g>
+        <g class="f" data-f="3"><path d="M560 200 V250" class="w-t"/><rect x="460" y="250" width="200" height="120" rx="14" class="bx-t"/><text x="476" y="282" class="tt" style="font-weight:700">Container scan</text><text x="476" y="310" class="tmut">Trivy, ECR scan</text></g>
+        <g class="f" data-f="4"><path d="M790 200 V250" class="w-v"/><rect x="690" y="250" width="200" height="120" rx="14" class="bx-v"/><text x="706" y="282" class="tv" style="font-weight:700">IaC scan</text><text x="706" y="310" class="tmut">Checkov, cfn-nag</text><text x="706" y="334" class="tmut">“S3 bucket public?”</text></g>
+        <g class="f" data-f="5"><path d="M1030 200 V250" class="w-g"/><rect x="930" y="250" width="200" height="120" rx="14" class="bx-g"/><text x="946" y="282" class="tg" style="font-weight:700">DAST</text><text x="946" y="310" class="tmut">OWASP ZAP attacks</text><text x="946" y="334" class="tmut">the running app</text></g>
+      </g>
+      <text x="704" y="60" text-anchor="middle" style="font:600 22px var(--f-body)">“Shift left”: catch problems as early as possible, where they're cheapest to fix.</text>
+    </svg>
+  </div>
+  <aside class="notes"><p>SAST reads your source code. SCA checks the libraries you depend on. Container scanning checks the OS packages in your image. IaC scanning checks your CloudFormation or Terraform for risky settings. DAST attacks the running app from outside, like a hacker would.</p></aside>
+</section>
+
+<section class="slide" data-title="Secrets: Secrets Manager vs Vault" data-phase="compare" data-ch="Code security">
+  <h2>Where passwords should live</h2>
+  <div class="lve">
+    <div class="lab f" data-f="1"><h3 class="hl-r">Before: in the code</h3>
+<pre class="code"><span class="c"># config.py, committed to Git</span>
+DB_PASSWORD = <span class="s">"Fest@2024"</span></pre></div>
+    <div class="ent f" data-f="2"><h3 class="hl-g">After: fetched at runtime</h3>
+<pre class="code">sm = boto3.client(<span class="s">"secretsmanager"</span>)
+db = json.loads(sm.get_secret_value(
+  SecretId=<span class="s">"prod/ticketwave/db"</span>)[<span class="s">"SecretString"</span>])</pre></div>
+  </div>
+  <div class="cmp g3 grow" style="margin-top:6px">
+    <div class="card f" data-f="3" style="--c:var(--amber)"><h3>AWS Secrets Manager</h3><p class="what">Managed, IAM-controlled, automatic rotation for RDS and others. Paid per secret.</p><p class="use"><b>Pick when</b>You're on AWS and want rotation built in.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--violet)"><h3>HashiCorp Vault</h3><p class="what">Multi-cloud, self-hosted or managed. Dynamic secrets: a DB password created per app, per hour.</p><p class="use"><b>Pick when</b>Many clouds, on-prem, advanced policies.</p></div>
+    <div class="card f" data-f="5" style="--c:var(--teal)"><h3>SSM Parameter Store</h3><p class="what">Simple key-value config, SecureString encrypted with KMS. Standard tier is free.</p><p class="use"><b>Pick when</b>Config values and simple secrets, no rotation needed.</p></div>
+  </div>
+  <aside class="notes"><p>The app's IAM role decides which secrets it may read. In Kubernetes, the Secrets Store CSI driver or External Secrets Operator can sync from Secrets Manager or Vault into pods.</p></aside>
+</section>
+
+<section class="slide" data-tpl="perf" data-title="Perf: shift left" data-ch="Code security">
+  <div class="t-h2">Before vs after: find bugs in prod vs in the pull request</div>
+  <div class="t-how">What changed: <b>secret scanning, SonarQube gate, SCA and image scans on every PR</b></div>
+  <script type="application/json">{"rows":[
+    ["Leaked secrets reaching Git","per quarter",80,"3",3,"0 (push blocked)","100%","blocked"],
+    ["Cost to fix one bug","relative effort",100,"found in prod · 30×+",4,"found in PR · 1×","~30×","cheaper"],
+    ["Known-vulnerable libraries","in production",70,"unknown",10,"tracked, auto-PRs","visible","risk"],
+    ["Time to rotate a password","DB credential",80,"redeploy every app",5,"rotate in Secrets Manager","minutes",""]],
+    "note":"The cost multiplier is illustrative; studies disagree on exact figures, but fixing earlier is consistently cheaper."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: secrets on GitHub" data-ch="Code security">
+  <div class="t-recap">How do companies stop passwords ending up on GitHub?</div>
+  <div class="t-ans">They make it <em>impossible to push</em> one, and they <em>never put one in code</em> to begin with: apps fetch secrets at runtime using their role.</div>
+  <div class="t-x">Protected branches, bot reviewers and secret stores turn “please be careful” into “the system won't let you”.</div>
+</section>
+
+<!-- ================= CH21 CI/CD + JENKINS ================= -->
+<section class="slide chapter" data-title="Chapter 21 · CI/CD and Jenkins">
+  <div class="num">21</div><div class="eyebrow">Act 3 · Chapter 21</div>
+  <h2>From git push to production</h2>
+  <p class="q">Rahul merges his PR at 3:12 pm. At 3:31 pm, fans are using his feature. He didn't SSH into anything.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--rose)">JENKINS</span><span class="tile sm" style="--c:var(--steel)">GHA</span><span class="tile sm" style="--c:var(--amber)">CODEPIPE</span></div>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: after git push?" data-ch="CI/CD">
+  <div class="t-q">What actually happens between “git push” and users seeing my change?</div>
+  <div class="t-who">Rahul, watching a green tick appear on his commit</div>
+</section>
+
+<section class="slide" data-title="CI vs CD vs CD" data-phase="concept" data-ch="CI/CD">
+  <h2>CI, continuous delivery, continuous deployment</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <g style="font:600 17px var(--f-body)" text-anchor="middle">
+        <g class="f" data-f="1"><text x="40" y="96" text-anchor="start" class="ta" style="font:700 22px var(--f-body)">CI</text>
+          <rect x="260" y="60" width="180" height="56" rx="12" class="bx"/><text x="350" y="94">commit</text><rect x="470" y="60" width="180" height="56" rx="12" class="bx"/><text x="560" y="94">build</text><rect x="680" y="60" width="180" height="56" rx="12" class="bx"/><text x="770" y="94">test</text>
+          <text x="1100" y="94" class="tmut">every push merges + tests</text></g>
+        <g class="f" data-f="2"><text x="40" y="256" text-anchor="start" class="tt" style="font:700 22px var(--f-body)">Continuous</text><text x="40" y="282" text-anchor="start" class="tt" style="font:700 22px var(--f-body)">delivery</text>
+          <rect x="260" y="230" width="180" height="56" rx="12" class="bx"/><text x="350" y="264">CI</text><rect x="470" y="230" width="180" height="56" rx="12" class="bx"/><text x="560" y="264">deploy to UAT</text>
+          <rect x="680" y="230" width="180" height="56" rx="12" class="bx-a"/><text x="770" y="264" class="ta">✋ approve</text><rect x="890" y="230" width="180" height="56" rx="12" class="bx-g"/><text x="980" y="264" class="tg">prod</text>
+          <text x="1240" y="264" class="tmut">always releasable,</text><text x="1240" y="288" class="tmut">a human presses go</text></g>
+        <g class="f" data-f="3"><text x="40" y="416" text-anchor="start" class="tv" style="font:700 22px var(--f-body)">Continuous</text><text x="40" y="442" text-anchor="start" class="tv" style="font:700 22px var(--f-body)">deployment</text>
+          <rect x="260" y="390" width="180" height="56" rx="12" class="bx"/><text x="350" y="424">CI</text><rect x="470" y="390" width="180" height="56" rx="12" class="bx"/><text x="560" y="424">deploy to UAT</text>
+          <rect x="680" y="390" width="180" height="56" rx="12" class="bx-g"/><text x="770" y="424" class="tg">auto checks</text><rect x="890" y="390" width="180" height="56" rx="12" class="bx-g"/><text x="980" y="424" class="tg">prod</text>
+          <text x="1240" y="424" class="tmut">every green change</text><text x="1240" y="448" class="tmut">goes live by itself</text>
+          <circle r="10" class="fv glow-v"><animateMotion dur="3s" repeatCount="indefinite" path="M260 418 H1070"/></circle></g>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>CI: integrate and test every change. Continuous delivery: every change could go to prod, but a human approves. Continuous deployment: no human gate; good automated checks decide. Most enterprises (especially fintech) use continuous delivery with an approval gate for prod.</p></aside>
+</section>
+
+<!--OLD:Production: CI/CD pipeline-->
+
+<section class="slide" data-title="Jenkins under the hood" data-phase="behind" data-ch="CI/CD">
+  <h2>Jenkins: a controller, many agents, one Jenkinsfile</h2>
+  <div class="row grow" style="gap:24px">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 700 520">
+        <g transform="translate(20,40)"><rect width="200" height="90" rx="14" class="bx-s"/><text x="100" y="40" text-anchor="middle" style="font:700 18px var(--f-body)">GitHub</text><text x="100" y="66" text-anchor="middle" class="tmut tm" style="font-size:13px">webhook on push</text></g>
+        <g transform="translate(260,30)"><rect width="260" height="110" rx="16" class="bx-r"/><text x="130" y="48" text-anchor="middle" class="tr" style="font:700 20px var(--f-body)">Jenkins controller</text><text x="130" y="78" text-anchor="middle" class="tmut" style="font-size:15px">schedules jobs, UI, plugins</text></g>
+        <path d="M220 85 H260" class="w-r"/>
+        <g class="f" data-f="1"><g style="font:600 15px var(--f-body)" text-anchor="middle">
+          <g transform="translate(40,250)"><rect width="190" height="100" rx="14" class="bx"/><text x="95" y="44">agent · EC2</text><text x="95" y="70" class="tmut" style="font-size:13px">Java builds</text></g>
+          <g transform="translate(250,250)"><rect width="190" height="100" rx="14" class="bx"/><text x="95" y="44">agent · K8s pod</text><text x="95" y="70" class="tmut" style="font-size:13px">created per build</text></g>
+          <g transform="translate(460,250)"><rect width="190" height="100" rx="14" class="bx"/><text x="95" y="44">agent · Docker</text><text x="95" y="70" class="tmut" style="font-size:13px">image builds</text></g></g>
+          <path d="M390 140 L135 250 M390 140 V250 M390 140 L555 250" class="w-r dash"/></g>
+        <g class="f" data-f="2"><rect x="40" y="400" width="610" height="90" rx="14" class="bx-g"/><text x="345" y="440" text-anchor="middle" class="tg" style="font:700 18px var(--f-body)">Agents scale up for the 3 pm merge rush,</text><text x="345" y="468" text-anchor="middle" class="tg" style="font:700 18px var(--f-body)">down to zero at night.</text></g>
+      </svg>
+    </div>
+<pre class="code f" data-f="3" style="width:600px;flex:none;font-size:15px">pipeline {
+  agent { label 'docker' }
+  stages {
+    stage('Build')  { steps { sh 'mvn -B package' } }
+    stage('Test')   { steps { sh 'mvn test' } }
+    stage('Scan')   { steps { sh 'trivy image tw-api:$BUILD_NUMBER' } }
+    stage('Push')   { steps { sh './push-to-ecr.sh' } }
+    stage('Deploy UAT') {
+      steps { sh 'helm upgrade --install api ./chart -f values-uat.yaml' }
+    }
+    stage('Approve') { steps { input 'Ship to prod?' } }
+    stage('Deploy prod') {
+      steps { sh 'helm upgrade api ./chart -f values-prod.yaml' }
+    }
+  }
+}</pre>
+  </div>
+  <aside class="notes"><p>The Jenkinsfile lives in the repo, so the pipeline is versioned and reviewed like code. Agents can be EC2 instances or short-lived Kubernetes pods.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: CI/CD tools" data-phase="compare" data-ch="CI/CD">
+  <h2>Jenkins, GitHub Actions, CodePipeline</h2>
+  <div class="cmp g3 grow">
+    <div class="card f" data-f="1" style="--c:var(--rose)"><h3>Jenkins</h3><p class="what">Open source, self-hosted, 1,000s of plugins. Runs anywhere, including on-prem.</p><p class="use"><b>Pick when</b>Complex enterprise pipelines, full control. You maintain the servers.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--steel)"><h3>GitHub Actions</h3><p class="what">YAML workflows next to the code. Hosted runners. OIDC to assume AWS roles without keys.</p><p class="use"><b>Pick when</b>Code is on GitHub and you want zero CI servers.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--amber)"><h3>AWS CodePipeline</h3><p class="what">AWS-native pipeline with CodeBuild and CodeDeploy. IAM everywhere.</p><p class="use"><b>Pick when</b>Everything is on AWS and you want it managed.</p></div>
+  </div>
+  <aside class="notes"><p>Jenkins is still very common in Indian enterprises; GitHub Actions and GitLab CI are common in newer teams. The concepts are identical: stages, agents, artifacts, approvals.</p></aside>
+</section>
+
+<section class="slide" data-tpl="perf" data-title="Perf: CI/CD" data-ch="CI/CD">
+  <div class="t-h2">Before vs after: manual releases vs a pipeline</div>
+  <div class="t-how">What changed: <b>Jenkins pipeline with tests, scans, Helm deploys and an approval gate</b></div>
+  <script type="application/json">{"rows":[
+    ["Deploys","per week",8,"1 big Friday release",100,"20+ small ones","20×","more often"],
+    ["Commit to production","lead time",100,"~2 weeks",6,"~20 minutes","~1,000×","faster"],
+    ["Failed changes","needing a fix",60,"~1 in 3",12,"~1 in 15","~5×","safer"],
+    ["Recover from a bad deploy","time",80,"hours of manual work",5,"one-click rollback","minutes",""]],
+    "note":"Illustrative figures in the spirit of DORA metrics (deployment frequency, lead time, change failure rate, time to restore)."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: after git push" data-ch="CI/CD">
+  <div class="t-recap">What happens between git push and users seeing my change?</div>
+  <div class="t-ans">A <em>pipeline</em>: build → test → scan → package → deploy to UAT → approve → deploy to prod. Same steps, every time, no SSH.</div>
+  <div class="t-x">Small changes shipped often are safer than big changes shipped rarely, because when something breaks, you know exactly what changed.</div>
+</section>
+
+<!-- ================= CH22 ENVIRONMENTS ================= -->
+<section class="slide" data-tpl="q" data-title="Struggle: test in prod?" data-ch="Environments">
+  <div class="t-q">Why can't we just test directly in production? Wouldn't that be more realistic?</div>
+  <div class="t-who">Rahul, waiting two days for UAT sign-off</div>
+</section>
+
+<section class="slide" data-title="DEV to PROD" data-phase="pic" data-ch="Environments">
+  <h2>Four rooms before the stage</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <path id="envp" d="M120 200 H1290" class="w-l" style="stroke-width:6"/>
+      <g text-anchor="middle">
+        <g transform="translate(120,200)"><circle r="70" class="bx-t"/><text y="-6" class="tt" style="font:800 26px var(--f-display)">DEV</text><text y="22" class="tmut" style="font-size:14px">developers</text></g>
+        <g transform="translate(420,200)"><circle r="70" class="bx-b"/><text y="-6" class="tb" style="font:800 24px var(--f-display)">QA/SIT</text><text y="22" class="tmut" style="font-size:14px">testers + automation</text></g>
+        <g transform="translate(720,200)"><circle r="70" class="bx-v"/><text y="-6" class="tv" style="font:800 26px var(--f-display)">UAT</text><text y="22" class="tmut" style="font-size:14px">business users</text></g>
+        <g transform="translate(1000,200)"><circle r="62" class="bx-a"/><text y="-6" class="ta" style="font:800 20px var(--f-display)">PRE-PROD</text><text y="20" class="tmut" style="font-size:13px">prod copy</text></g>
+        <g transform="translate(1290,200)"><circle r="74" class="bx-g"/><text y="-6" class="tg" style="font:800 26px var(--f-display)">PROD</text><text y="22" class="tmut" style="font-size:14px">real fans</text></g>
+      </g>
+      <g style="font-size:15px" text-anchor="middle" class="tm">
+        <text x="270" y="170" class="tmut">unit tests</text><text x="570" y="170" class="tmut">integration</text><text x="860" y="170" class="tmut">sign-off</text><text x="1145" y="170" class="tmut">change approval</text>
+      </g>
+      <g style="font:700 16px var(--f-mono)"><rect x="-44" y="-18" width="88" height="36" rx="8" class="fa"/><text y="6" text-anchor="middle" class="tink">v3.4.1</text><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#envp"/></animateMotion></g>
+      <g class="f" data-f="1"><rect x="80" y="330" width="1250" height="80" rx="16" class="bx"/><text x="110" y="378" style="font-size:21px"><tspan class="ta" font-weight="700">Same artifact</tspan> moves right. Only config changes (Helm values, secrets, sizes). Never rebuild for prod.</text></g>
+      <g class="f" data-f="2"><rect x="80" y="430" width="1250" height="80" rx="16" class="bx"/><text x="110" y="478" style="font-size:21px"><tspan class="tr" font-weight="700">Data</tspan>: fake in DEV · test data in QA · masked copy in UAT · real customer data <tspan class="tg">only in PROD</tspan>.</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Names vary by company: QA is often called SIT (system integration testing), pre-prod is often called staging. The rules don't: one artifact promoted forward, config per environment, and real customer data only in production.</p></aside>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: why not test in prod" data-ch="Environments">
+  <div class="t-recap">Why can't we just test in production?</div>
+  <div class="t-ans">Because prod holds <em>real money and real data</em>. Each room before it catches a different kind of mistake, cheaply.</div>
+  <div class="t-x">And when teams do “test in prod”, they use the safe tricks you'll see next: canaries and feature flags.</div>
+</section>
+
+<!-- ================= CH23 DEPLOYMENT STRATEGIES ================= -->
+<section class="slide chapter" data-title="Chapter 22 · Deployment strategies">
+  <div class="num">22</div><div class="eyebrow">Act 3 · Chapter 22</div>
+  <h2>Changing the engine mid-flight</h2>
+  <p class="q">A ticket sale is live. Rahul's fix must go out now. Nobody can be logged out, and no payment can fail.</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--teal)">ROLLING</span><span class="tile sm" style="--c:var(--blue)">BLUE/GREEN</span><span class="tile sm" style="--c:var(--amber)">CANARY</span><span class="tile sm" style="--c:var(--rose)">ROLLBACK</span></div>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: deploy without downtime" data-ch="Deployments">
+  <div class="t-q">How do big apps ship updates every day without users ever noticing?</div>
+  <div class="t-who">Rahul, who once took FestPass down for an hour to fix a typo</div>
+</section>
+
+<section class="slide" data-title="Rolling vs blue/green" data-phase="pic" data-ch="Deployments">
+  <h2>Rolling and blue/green, side by side</h2>
+  <div class="grid g2 grow" style="gap:24px">
+    <div class="panel f" data-f="1"><h3 class="hl-t">Rolling update</h3><p class="small">Replace a few pods at a time. Old and new run together briefly.</p>
+      <svg class="d" viewBox="0 0 600 300" style="height:300px"><g id="rollPods"></g>
+        <style>.rp{transition:fill .4s}@keyframes r1{0%,10%{fill:#64A0FF}20%,100%{fill:#6EDC92}}</style>
+        <g>
+          <rect x="30" y="60" width="90" height="90" rx="14" class="fb" style="animation:r1 8s infinite 0s"/><rect x="140" y="60" width="90" height="90" rx="14" class="fb" style="animation:r1 8s infinite 1.2s"/><rect x="250" y="60" width="90" height="90" rx="14" class="fb" style="animation:r1 8s infinite 2.4s"/><rect x="360" y="60" width="90" height="90" rx="14" class="fb" style="animation:r1 8s infinite 3.6s"/><rect x="470" y="60" width="90" height="90" rx="14" class="fb" style="animation:r1 8s infinite 4.8s"/>
+        </g>
+        <text x="30" y="200" class="tb" style="font-size:18px">■ v1</text><text x="120" y="200" class="tg" style="font-size:18px">■ v2</text>
+        <text x="30" y="250" class="tmut" style="font-size:17px">Cheap, default in Kubernetes. Rollback = roll again.</text></svg></div>
+    <div class="panel f" data-f="2"><h3 class="hl-b">Blue/green</h3><p class="small">Run a full copy of v2 next to v1, then flip all traffic at once.</p>
+      <svg class="d" viewBox="0 0 600 300" style="height:300px">
+        <rect x="220" y="10" width="160" height="56" rx="12" class="bx-g"/><text x="300" y="44" text-anchor="middle" class="tg" style="font:700 17px var(--f-body)">router / ALB</text>
+        <rect x="40" y="130" width="220" height="100" rx="14" class="fb" opacity=".85"/><text x="150" y="186" text-anchor="middle" class="tink" style="font:700 19px var(--f-body)">blue · v1</text>
+        <rect x="340" y="130" width="220" height="100" rx="14" class="fg" opacity=".85"/><text x="450" y="186" text-anchor="middle" class="tink" style="font:700 19px var(--f-body)">green · v2</text>
+        <path d="M300 66 L150 130" class="w-b" style="stroke-width:5;animation:bgA 6s infinite"/><path d="M300 66 L450 130" class="w-g" style="stroke-width:5;animation:bgB 6s infinite"/>
+        <style>@keyframes bgA{0%,45%{opacity:1}55%,100%{opacity:.08}}@keyframes bgB{0%,45%{opacity:.08}55%,100%{opacity:1}}</style>
+        <text x="40" y="280" class="tmut" style="font-size:17px">Instant switch and instant rollback. Costs 2× while both run.</text></svg></div>
+  </div>
+  <aside class="notes"><p>Rolling: Kubernetes Deployments do this by default (maxSurge and maxUnavailable control the pace). Blue/green: two full environments; the load balancer or DNS flips. Rollback is flipping back.</p></aside>
+</section>
+
+<section class="slide" data-title="Canary (interactive)" data-phase="prod" data-ch="Deployments" data-hook="canary">
+  <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 5</span><h2 style="margin:0;font-size:40px">Release a canary</h2></div>
+  <p class="small">Send a small slice of real traffic to v2. If error rates rise, roll back automatically before most users notice.</p>
+  <div class="row grow" style="gap:24px">
+    <div class="grow" style="display:flex;flex-direction:column;gap:16px">
+      <div class="panel" style="padding:16px 20px"><div class="slider-lab"><span>Traffic to v2</span><span id="canTxt">0%</span></div><input id="canPct" type="range" min="0" max="100" step="5" value="0"></div>
+      <div style="display:flex;height:80px;border-radius:14px;overflow:hidden;border:1px solid var(--line)"><div id="canV1" style="background:var(--blue);display:grid;place-items:center;font:700 20px var(--f-mono);color:var(--ink);width:100%;transition:width .4s">v1</div><div id="canV2" style="background:var(--green);display:grid;place-items:center;font:700 20px var(--f-mono);color:var(--ink);width:0;transition:width .4s">v2</div></div>
+      <div class="grid g3" style="gap:12px"><div class="mtile"><span>users on v2</span><b id="canUsers">0</b></div><div class="mtile"><span>error rate</span><b id="canErr" class="good">0.1%</b></div><div class="mtile"><span>status</span><b id="canStat" style="font-size:26px">ready</b></div></div>
+      <p class="feed" id="canFeed">Try 5% → 25% → 50% → 100%. Then switch on the bug and try again.</p>
+    </div>
+    <div style="width:380px;flex:none;display:flex;flex-direction:column;gap:12px">
+      <button class="tog" id="canBug"><span class="sw"></span><span>v2 has a bug<small>error rate jumps to 8% for v2 users</small></span></button>
+      <div class="panel"><h3 style="font-size:22px">Guardrail</h3><p class="small">If the error rate goes above <b class="hl-r">1%</b>, roll back to 0% automatically.</p></div>
+      <div class="panel"><h3 style="font-size:22px">Tools</h3><p class="small">Argo Rollouts, Flagger, AWS CodeDeploy, App Mesh or ALB weighted target groups.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>Out of 2 million fans, 5% is 100,000 people. With the bug on, the guardrail rolls back at the first step: only the canary slice saw errors, for a minute. That's the point of canaries.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: deployment strategies" data-phase="compare" data-ch="Deployments">
+  <h2>Pick a strategy by risk</h2>
+  <table class="t" style="font-size:21px">
+    <tr><th></th><th>Recreate</th><th class="hl-t">Rolling</th><th class="hl-b">Blue/green</th><th class="hl-a">Canary</th></tr>
+    <tr class="f" data-f="1"><td class="mono">Downtime</td><td class="hl-r">Yes</td><td>None</td><td>None</td><td>None</td></tr>
+    <tr class="f" data-f="2"><td class="mono">Extra cost</td><td>None</td><td>Small</td><td class="hl-r">2× during switch</td><td>Small</td></tr>
+    <tr class="f" data-f="3"><td class="mono">Users hit by a bad release</td><td class="hl-r">All</td><td>Growing share</td><td class="hl-r">All, until flipped back</td><td class="hl-g">A small slice</td></tr>
+    <tr class="f" data-f="4"><td class="mono">Rollback speed</td><td>Slow</td><td>Minutes</td><td class="hl-g">Seconds</td><td class="hl-g">Seconds</td></tr>
+    <tr class="f" data-f="5"><td class="mono">Use for</td><td>Dev, batch jobs</td><td>Most services</td><td>Big risky changes</td><td>High-traffic, user-facing</td></tr>
+  </table>
+  <div class="panel f" data-f="6" style="padding:14px 20px"><p class="txt"><b class="hl-v">Feature flags</b> add one more layer: ship the code switched off, then turn it on for 1% of users, then everyone. Rollback is flipping a switch, no deploy needed.</p></div>
+  <aside class="notes"><p>Real teams combine these: rolling deploys for most services, canaries for checkout and payments, feature flags for product changes, and helm rollback or kubectl rollout undo as the emergency button.</p></aside>
+</section>
+
+<section class="slide" data-tpl="perf" data-title="Perf: safer releases" data-ch="Deployments">
+  <div class="t-h2">Before vs after: “maintenance window” vs canary + rollback</div>
+  <div class="t-how">What changed: <b>rolling by default, canary for payments, automated rollback</b></div>
+  <script type="application/json">{"rows":[
+    ["Downtime per release","users see",100,"30-minute window",2,"zero","0","downtime"],
+    ["Users hit by a bad release","out of 2M",100,"all 2,000,000",5,"~100,000 for 1 min","~95%","fewer"],
+    ["Time to roll back","bad release",80,"~1 hour redeploy",4,"~30 seconds","~100×","faster"],
+    ["Release days","when we can ship",20,"Friday night only",100,"any time","daily","releases"]],
+    "note":"Illustrative figures."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: invisible deploys" data-ch="Deployments">
+  <div class="t-recap">How do big apps ship daily without users noticing?</div>
+  <div class="t-ans">They never switch everyone at once. They <em>roll</em>, <em>flip</em> or <em>canary</em>, watch the metrics, and roll back in seconds if anything looks wrong.</div>
+  <div class="t-x">A deploy stops being an event and becomes routine. That's the goal.</div>
+</section>

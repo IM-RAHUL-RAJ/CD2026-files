@@ -1,0 +1,111 @@
+
+<!-- ================= CH4 IAM ================= -->
+<section class="slide chapter" data-title="Chapter 4 · IAM">
+  <div class="num">04</div><div class="eyebrow">Act 2 · Chapter 4</div>
+  <h2>Day 1: who gets the keys?</h2>
+  <p class="q">In college, everyone shared one login. At TicketWave, Rahul's laptop asks for SSO, MFA, and a role. Why so many locks?</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--rose)">IAM</span><span class="tile sm" style="--c:var(--rose)">ROLE</span><span class="tile sm" style="--c:var(--steel)">STS</span><span class="tile sm" style="--c:var(--violet)">MFA</span></div>
+  <aside class="notes"><p>Based on PDF 03 (AWS IAM). IAM is free and global.</p></aside>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: why no admin password?" data-ch="IAM">
+  <div class="t-q">Why can't Rahul just get the admin password like in college?</div>
+  <div class="t-who">Rahul, Day 1, waiting for access</div>
+  <div class="t-hint">It would be so much faster. What's the worst that could happen?</div>
+</section>
+
+<!--OLD:The account and the root key-->
+<!--OLD:Many accounts-->
+<!--OLD:IAM checkpoint-->
+<!--OLD:IAM building blocks-->
+
+<section class="slide" data-title="MFA" data-phase="pic" data-ch="IAM">
+  <h2>MFA: something you know + something you have</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 540">
+      <g transform="translate(80,120)"><rect width="300" height="300" rx="24" class="bx-a"/><text x="150" y="70" text-anchor="middle" class="ta" style="font:700 24px var(--f-body)">Password</text><text x="150" y="160" text-anchor="middle" style="font:800 46px var(--f-mono)">••••••</text><text x="150" y="240" text-anchor="middle" class="tmut" style="font-size:19px">something you know</text></g>
+      <text x="460" y="290" text-anchor="middle" style="font:800 60px var(--f-display)" class="tmut">+</text>
+      <g transform="translate(540,120)" class="f" data-f="1"><rect width="300" height="300" rx="24" class="bx-t"/><rect x="100" y="40" width="100" height="170" rx="16" class="bx"/><text x="150" y="140" text-anchor="middle" class="tt" style="font:800 26px var(--f-mono)">482 913</text><text x="150" y="250" text-anchor="middle" class="tmut" style="font-size:19px">a code on your phone</text>
+        <circle cx="150" cy="185" r="14" class="w-t" style="stroke-dasharray:88;animation:countdown2 6s linear infinite"/></g>
+      <style>@keyframes countdown2{from{stroke-dashoffset:0}to{stroke-dashoffset:88}}</style>
+      <text x="920" y="290" text-anchor="middle" style="font:800 60px var(--f-display)" class="tmut f" data-f="2">=</text>
+      <g transform="translate(1000,160)" class="f" data-f="2"><rect width="330" height="220" rx="24" class="bx-g"/><text x="165" y="100" text-anchor="middle" class="tg" style="font:700 30px var(--f-body)">Signed in ✓</text><text x="165" y="150" text-anchor="middle" class="tmut" style="font-size:19px">a stolen password alone</text><text x="165" y="176" text-anchor="middle" class="tmut" style="font-size:19px">is no longer enough</text></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>From PDF 03: MFA means username plus password plus a security code, for example from an app like Duo Mobile or Google Authenticator. The code changes every 30 seconds.</p></aside>
+</section>
+
+<!--OLD:Reading a policy-->
+<!--OLD:How AWS decides-->
+<!--OLD:Compare: policy types-->
+<!--OLD:SigV4: signed requests-->
+<!--OLD:Roles expire-->
+<!--OLD:The magic address 169.254.169.254-->
+<!--OLD:Compare: identities + production-->
+
+<section class="slide" data-title="Activity: least privilege" data-phase="prod" data-ch="Activity 1" data-hook="lp">
+  <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 1</span><h2 style="margin:0;font-size:40px">Give the intern exactly enough</h2></div>
+  <p class="small">Ishaan, the new intern, must <b>read reports</b> in <span class="mono">tw-data/reports/</span>. Nothing else. Pick the policy, then see what he can do.</p>
+  <div class="row grow" style="gap:20px">
+    <div class="grow" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start" id="lpOpts">
+      <button class="pol" data-p="0"><b>A · “Just make it work”</b><pre>Action: "*"
+Resource: "*"</pre></button>
+      <button class="pol" data-p="1"><b>B · All of S3</b><pre>Action: "s3:*"
+Resource: "*"</pre></button>
+      <button class="pol" data-p="2"><b>C · Read the reports folder</b><pre>Action: "s3:GetObject"
+Resource: "arn:aws:s3:::tw-data/reports/*"</pre></button>
+      <button class="pol" data-p="3"><b>D · List the bucket only</b><pre>Action: "s3:ListBucket"
+Resource: "arn:aws:s3:::tw-data"</pre></button>
+    </div>
+    <div style="width:520px;flex:none;display:flex;flex-direction:column;gap:8px" id="lpRes">
+      <div class="actrow"><span>Read <span class="mono">reports/june.csv</span></span><b>–</b></div>
+      <div class="actrow"><span>Read <span class="mono">payroll/salaries.csv</span></span><b>–</b></div>
+      <div class="actrow"><span>Delete <span class="mono">reports/june.csv</span></span><b>–</b></div>
+      <div class="actrow"><span>Terminate a prod EC2 instance</span><b>–</b></div>
+      <div class="actrow"><span>Delete the whole bucket</span><b>–</b></div>
+      <p class="feed" id="lpFeed">Ask the room to vote A, B, C or D first.</p>
+    </div>
+  </div>
+  <aside class="notes"><p>Let the room vote, then click each option. A and B "work" but let the intern read payroll and delete data. D can't even read the file. C is least privilege.</p><p>In real life you'd often pair C with s3:ListBucket on the bucket restricted to the reports/ prefix so the console can list files.</p></aside>
+</section>
+
+<section class="slide" data-title="Lab way vs enterprise way: keys" data-phase="prod" data-ch="IAM">
+  <h2>The lab way vs the enterprise way</h2>
+  <div class="lve grow">
+    <div class="lab f" data-f="1"><h3 class="hl-r">Lab: keys in the command</h3>
+<pre class="code">docker run -d -p 80:3000 \
+  -e AWS_ACCESS_KEY_ID=AKIA... \
+  -e AWS_SECRET_ACCESS_KEY=wJal... \
+  node-dynamodb-demo</pre>
+      <p class="small" style="margin-top:10px">Fine for a 10-minute tutorial. Keys sit in shell history, process lists and screenshots.</p></div>
+    <div class="ent f" data-f="2"><h3 class="hl-g">Enterprise: a role, no keys</h3>
+<pre class="code">docker run -d -p 80:3000 \
+  -e AWS_REGION=ap-south-1 \
+  node-dynamodb-demo
+<span class="c"># the SDK finds temporary credentials
+# from the instance role automatically</span></pre>
+      <p class="small" style="margin-top:10px">Attach an IAM role to the EC2 instance or ECS task. Nothing to leak, nothing to rotate.</p></div>
+  </div>
+  <div class="grid g3 f" data-f="3" style="gap:14px">
+    <div class="chip">✓ Never use root after setup</div><div class="chip">✓ Permissions on groups, not people</div><div class="chip">✓ MFA + password policy</div>
+    <div class="chip">✓ Never share keys or passwords</div><div class="chip">✓ Roles for apps, SSO for people</div><div class="chip">✓ Audit with the credential report</div>
+  </div>
+  <aside class="notes"><p>The left command is the DynamoDB lab from PDF 10. It's a great way to learn, and a bad way to run production. The checklist is PDF 03's IAM best practices, updated: modern teams prefer roles and SSO over long-term access keys.</p></aside>
+</section>
+
+<section class="slide" data-tpl="perf" data-title="Perf: IAM done right" data-ch="IAM">
+  <div class="t-h2">Before vs after: shared admin vs least privilege</div>
+  <div class="t-how">What changed: <b>SSO + MFA for people, roles for apps, least-privilege policies</b></div>
+  <script type="application/json">{"rows":[
+    ["People with admin","who can delete prod",100,"everyone (12)",8,"1 break-glass role","12→1","admins"],
+    ["Long-lived access keys","in code and laptops",90,"23 keys",3,"0 keys","100%","removed"],
+    ["Blast radius of a leak","what an attacker gets",100,"whole account",15,"one folder, 1 hour","tiny","exposure"],
+    ["Who did what?","audit answer time",80,"days of guessing",8,"minutes · CloudTrail","instant","audit"]],
+    "note":"Illustrative team numbers. CloudTrail records API calls so you can answer “who did this?”."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: no admin password" data-ch="IAM">
+  <div class="t-recap">Why can't Rahul just get the admin password?</div>
+  <div class="t-ans">Because in an enterprise, <em>nobody</em> has a permanent admin password. People get SSO + MFA, apps get roles, and every key expires.</div>
+  <div class="t-x">If Rahul's laptop is stolen tomorrow, the thief gets almost nothing. That's the whole point.</div>
+</section>

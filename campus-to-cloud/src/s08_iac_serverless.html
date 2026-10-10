@@ -1,0 +1,124 @@
+
+<!-- ================= CH14 CLOUDFORMATION ================= -->
+<section class="slide chapter" data-title="Chapter 14 · CloudFormation">
+  <div class="num">14</div><div class="eyebrow">Act 2 · Chapter 14</div>
+  <h2>Infrastructure you can git commit</h2>
+  <p class="q">Rahul built the whole setup by clicking: VPC, subnets, ALB, ASG, RDS. Now his manager says: “Great. Build the same thing for UAT and prod.”</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--coral)">CFN</span><span class="tile sm" style="--c:var(--violet)">TF</span><span class="tile sm" style="--c:var(--teal)">CDK</span></div>
+  <aside class="notes"><p>Based on PDF 12 (AWS CloudFormation).</p></aside>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: 300 clicks again?" data-ch="CloudFormation">
+  <div class="t-q">How do companies create the same setup in dev, UAT and prod without clicking 300 times?</div>
+  <div class="t-who">Rahul, counting console clicks</div>
+  <div class="t-hint">And how do they know nobody changed prod by hand at midnight?</div>
+</section>
+
+<section class="slide" data-title="Template to stack" data-phase="pic" data-ch="CloudFormation">
+  <h2>Write what you want. AWS builds it.</h2>
+  <div class="row grow" style="gap:24px;align-items:center">
+<pre class="code f" data-f="1" style="width:560px;flex:none;font-size:17px">Resources:
+  <span class="k">WebSG</span>:
+    Type: <span class="s">AWS::EC2::SecurityGroup</span>
+  <span class="k">WebServer</span>:
+    Type: <span class="s">AWS::EC2::Instance</span>
+    Properties:
+      InstanceType: t3.micro
+      ImageId: ami-02db68a01488594c5
+  <span class="k">Uploads</span>:
+    Type: <span class="s">AWS::S3::Bucket</span>
+  <span class="k">Database</span>:
+    Type: <span class="s">AWS::RDS::DBInstance</span></pre>
+    <div class="vis" style="height:440px">
+      <svg class="d" viewBox="0 0 760 440">
+        <rect x="20" y="20" width="720" height="400" rx="22" class="w-l" style="stroke-dasharray:10 8"/><text x="44" y="56" class="lbl">stack · tw-uat</text>
+        <g class="f" data-f="2"><path d="M0 120 H120" class="w-a dash"/><rect x="130" y="80" width="250" height="80" rx="14" class="bx-r"/><text x="255" y="128" text-anchor="middle" class="tr tm">WebSG ✓</text></g>
+        <g class="f" data-f="3"><rect x="410" y="80" width="300" height="80" rx="14" class="bx-a"/><text x="560" y="128" text-anchor="middle" class="ta tm">WebServer ✓</text></g>
+        <g class="f" data-f="4"><rect x="130" y="200" width="250" height="80" rx="14" class="bx-g"/><text x="255" y="248" text-anchor="middle" class="tg tm">Uploads ✓</text></g>
+        <g class="f" data-f="5"><rect x="410" y="200" width="300" height="80" rx="14" class="bx-b"/><text x="560" y="248" text-anchor="middle" class="tb tm">Database ✓</text></g>
+        <g class="f" data-f="6"><rect x="130" y="320" width="580" height="70" rx="14" class="bx-g"/><text x="420" y="363" text-anchor="middle" class="tg" style="font:700 20px var(--f-body)">CREATE_COMPLETE · same file → dev, UAT, prod</text></g>
+      </svg>
+    </div>
+  </div>
+  <p class="small mono f" data-f="6">$ aws cloudformation create-stack --stack-name tw-uat --template-body file://infra.yaml</p>
+  <aside class="notes"><p>The EC2 resource and the create-stack command are from PDF 12. Each click adds a resource as CloudFormation creates it. Delete the stack and everything in it is removed cleanly too.</p></aside>
+</section>
+
+<section class="slide" data-title="CloudFormation concepts" data-phase="concept" data-ch="CloudFormation">
+  <h2>Five ideas behind infrastructure as code</h2>
+  <div class="cmp g5 grow">
+    <div class="card f" data-f="1" style="--c:var(--coral)"><h3>Declarative</h3><p class="what">Say <i>what</i> you want. CloudFormation works out <i>how</i> and in what order.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--teal)"><h3>Template</h3><p class="what">YAML or JSON, stored in Git, reviewed in pull requests.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--amber)"><h3>Stacks</h3><p class="what">Everything from one template, managed together. StackSets: many accounts and Regions.</p></div>
+    <div class="card f" data-f="4" style="--c:var(--violet)"><h3>Managed state</h3><p class="what">AWS tracks what exists. No separate state file to lose.</p></div>
+    <div class="card f" data-f="5" style="--c:var(--rose)"><h3>Drift detection</h3><p class="what">Someone changed prod by hand? CloudFormation reports it.</p></div>
+  </div>
+  <p class="say f" data-f="6">CloudFormation itself is <em>free</em>. You pay only for what it creates.</p>
+  <aside class="notes"><p>All five points from PDF 12. Drift detection answers the "who changed prod at midnight" half of the struggle question.</p></aside>
+</section>
+
+<section class="slide" data-title="Compare: IaC tools" data-phase="compare" data-ch="CloudFormation">
+  <h2>CloudFormation, Terraform, CDK</h2>
+  <div class="cmp g3 grow">
+    <div class="card f" data-f="1" style="--c:var(--coral)"><h3>CloudFormation</h3><p class="what">AWS-native. YAML/JSON. State managed by AWS. Day-one support for new AWS features is common.</p><p class="use"><b>Pick when</b>You're all-in on AWS.</p></div>
+    <div class="card f" data-f="2" style="--c:var(--violet)"><h3>Terraform</h3><p class="what">Multi-cloud. HCL language. You manage a state file (often in S3 + a lock).</p><p class="use"><b>Pick when</b>You use AWS plus other clouds or SaaS.</p></div>
+    <div class="card f" data-f="3" style="--c:var(--teal)"><h3>AWS CDK</h3><p class="what">Write infrastructure in TypeScript, Python or Java. Generates CloudFormation.</p><p class="use"><b>Pick when</b>Your team prefers real code: loops, functions, tests.</p></div>
+  </div>
+  <aside class="notes"><p>All three are common in Indian enterprises. Terraform is especially common in multi-cloud shops; CDK in developer-heavy teams.</p></aside>
+</section>
+
+<section class="slide" data-tpl="perf" data-title="Perf: infrastructure as code" data-ch="CloudFormation">
+  <div class="t-h2">Before vs after: console clicking vs CloudFormation</div>
+  <div class="t-how">What changed: <b>the whole environment is one reviewed template</b></div>
+  <script type="application/json">{"rows":[
+    ["New environment","dev → UAT → prod",100,"~2 days of clicking",8,"~15 min, one command","~100×","faster"],
+    ["Envs that differ","“works in UAT, fails in prod”",80,"often",5,"same template","rare","drift"],
+    ["Who changed what","audit trail",70,"nobody knows",5,"Git history + drift report","full","history"],
+    ["Rebuild after disaster","new Region",100,"weeks",10,"hours","days→","hours"]],
+    "note":"Illustrative figures for a mid-size app with VPC, ALB, ASG and RDS."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: no more clicking" data-ch="CloudFormation">
+  <div class="t-recap">How do companies build identical dev, UAT and prod environments?</div>
+  <div class="t-ans">They don't build environments. They <em>write them down once</em>, and let CloudFormation build them as many times as needed.</div>
+  <div class="t-x">The console is for learning and looking. Production is changed through code that someone reviewed.</div>
+</section>
+
+<!-- ================= CH15 SERVERLESS + MESSAGING ================= -->
+<section class="slide chapter" data-title="Chapter 15 · Lambda, SNS, SQS">
+  <div class="num">15</div><div class="eyebrow">Act 2 · Chapter 15</div>
+  <h2>Code that runs only when needed</h2>
+  <p class="q">Every e-ticket needs a PDF, an email and an SMS. And at noon on drop day, 2 million fans click “Pay” at once.</p>
+  <div class="tiles"><span class="tile sm">λ</span><span class="tile sm" style="--c:var(--violet)">SNS</span><span class="tile sm" style="--c:var(--violet)">SQS</span><span class="tile sm" style="--c:var(--rose)">EB</span></div>
+</section>
+
+<section class="slide" data-tpl="q" data-title="Struggle: idle servers, spikes" data-ch="Serverless">
+  <div class="t-q">Why pay for a server all day for a job that runs 3 seconds? And how do you survive 2 million clicks at the same second?</div>
+  <div class="t-who">Rahul, looking at the payments graph</div>
+</section>
+
+<!--OLD:Events in, functions out-->
+<!--OLD:Cold and warm starts-->
+<!--OLD:Firecracker microVMs (3D)-->
+<!--OLD:Compare: Lambda and friends-->
+<!--OLD:The queue absorbs the spike-->
+<!--OLD:SNS fan-out and SQS mechanics-->
+<!--OLD:Compare: messaging-->
+<!--OLD:At-least-once, idempotency-->
+
+<section class="slide" data-tpl="perf" data-title="Perf: serverless + queues" data-ch="Serverless">
+  <div class="t-h2">Before vs after: always-on workers vs Lambda + SQS</div>
+  <div class="t-how">What changed: <b>e-ticket PDFs in Lambda, payments behind an SQS queue</b></div>
+  <script type="application/json">{"rows":[
+    ["Cost of the PDF job","10,000 tickets a day",100,"server on 24×7",8,"pay per millisecond","~90%","saved"],
+    ["Payment errors at noon","2M clicks",70,"~30% timeouts",2,"~0, queued","~0","lost orders"],
+    ["Scale for a spike","PDF workers",30,"fixed 4 workers",100,"1,000+ in parallel","auto","scaling"],
+    ["Servers to patch","for these jobs",80,"4",2,"0","0","patching"]],
+    "note":"Illustrative figures. Lambda is billed per request and per millisecond of duration."}</script>
+</section>
+
+<section class="slide" data-tpl="wow" data-title="WOW: serverless + queues" data-ch="Serverless">
+  <div class="t-recap">Why pay all day for a 3-second job, and how do you survive 2 million clicks?</div>
+  <div class="t-ans">Run short jobs on <em>Lambda</em> so idle time costs nothing, and put a <em>queue</em> in front of anything that can't keep up.</div>
+  <div class="t-x">The queue turns a spike into a steady line. Nobody's payment is dropped; it just waits a few seconds.</div>
+</section>
