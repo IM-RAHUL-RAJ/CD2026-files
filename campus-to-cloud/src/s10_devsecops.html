@@ -7,12 +7,6 @@
   <div class="tiles"><span class="tile sm" style="--c:var(--steel)">GIT</span><span class="tile sm" style="--c:var(--rose)">GHAS</span><span class="tile sm" style="--c:var(--blue)">SONAR</span><span class="tile sm" style="--c:var(--violet)">VAULT</span><span class="tile sm" style="--c:var(--amber)">SM</span></div>
 </section>
 
-<section class="slide" data-tpl="q" data-title="Struggle: secrets on GitHub" data-ch="Code security">
-  <div class="t-q">How do passwords end up on public GitHub, and how do companies stop it from happening?</div>
-  <div class="t-who">Rahul, remembering his college repo with a DB password in config.py</div>
-  <div class="t-hint">Bots scan public repos for leaked keys constantly. Deleting the commit later isn't enough: it's still in the history.</div>
-</section>
-
 <section class="slide" data-title="Branch, PR, review, merge" data-phase="pic" data-ch="Code security">
   <h2>No one pushes straight to main</h2>
   <div class="vis">
@@ -32,27 +26,6 @@
     </svg>
   </div>
   <aside class="notes"><p>Branch protection on main means nothing merges without a pull request, passing checks, and approvals. Every check you see here runs automatically on every PR.</p></aside>
-</section>
-
-<section class="slide" data-title="Coding practices" data-phase="concept" data-ch="Code security">
-  <h2>Habits that make code reviewable</h2>
-  <div class="row grow" style="gap:24px">
-    <div class="grid g2 grow" style="gap:12px;align-content:start">
-      <div class="card f" data-f="1" style="--c:var(--teal)"><h3>Small PRs</h3><p class="what">Under ~400 lines. Reviewers actually read them.</p></div>
-      <div class="card f" data-f="1" style="--c:var(--amber)"><h3>Clear commits</h3><p class="what"><span class="mono">fix(seats): release hold after 10 min</span></p></div>
-      <div class="card f" data-f="2" style="--c:var(--violet)"><h3>Config outside code</h3><p class="what">Environment variables and secret stores, never hard-coded values.</p></div>
-      <div class="card f" data-f="2" style="--c:var(--green)"><h3>Tests first-class</h3><p class="what">A bug fix comes with a test that would have caught it.</p></div>
-      <div class="card f" data-f="3" style="--c:var(--blue)"><h3>Lint + format</h3><p class="what">Machines argue about spaces so humans don't.</p></div>
-      <div class="card f" data-f="3" style="--c:var(--rose)"><h3>Review kindly</h3><p class="what">Comment on code, not people. Explain the why.</p></div>
-    </div>
-    <div class="vis f" data-f="4" style="width:460px;flex:none">
-      <svg class="d" viewBox="0 0 460 440"><text x="230" y="30" text-anchor="middle" class="lbl">the test pyramid</text>
-        <path d="M230 50 L300 150 H160Z" class="bx-r"/><text x="230" y="130" text-anchor="middle" class="tr" style="font-size:16px">E2E</text>
-        <path d="M160 160 H300 L360 260 H100Z" class="bx-a"/><text x="230" y="220" text-anchor="middle" class="ta" style="font-size:17px">integration</text>
-        <path d="M100 270 H360 L430 400 H30Z" class="bx-g"/><text x="230" y="345" text-anchor="middle" class="tg" style="font-size:18px">unit tests · many, fast</text></svg>
-    </div>
-  </div>
-  <aside class="notes"><p>The pyramid: lots of fast unit tests at the bottom, fewer integration tests, a handful of slow end-to-end tests at the top.</p></aside>
 </section>
 
 <section class="slide" data-title="GitHub security" data-phase="compare" data-ch="Code security">
@@ -142,34 +115,12 @@ db = json.loads(sm.get_secret_value(
   <aside class="notes"><p>The app's IAM role decides which secrets it may read. In Kubernetes, the Secrets Store CSI driver or External Secrets Operator can sync from Secrets Manager or Vault into pods.</p></aside>
 </section>
 
-<section class="slide" data-tpl="perf" data-title="Perf: shift left" data-ch="Code security">
-  <div class="t-h2">Before vs after: find bugs in prod vs in the pull request</div>
-  <div class="t-how">What changed: <b>secret scanning, SonarQube gate, SCA and image scans on every PR</b></div>
-  <script type="application/json">{"rows":[
-    ["Leaked secrets reaching Git","per quarter",80,"3",3,"0 (push blocked)","100%","blocked"],
-    ["Cost to fix one bug","relative effort",100,"found in prod · 30×+",4,"found in PR · 1×","~30×","cheaper"],
-    ["Known-vulnerable libraries","in production",70,"unknown",10,"tracked, auto-PRs","visible","risk"],
-    ["Time to rotate a password","DB credential",80,"redeploy every app",5,"rotate in Secrets Manager","minutes",""]],
-    "note":"The cost multiplier is illustrative; studies disagree on exact figures, but fixing earlier is consistently cheaper."}</script>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: secrets on GitHub" data-ch="Code security">
-  <div class="t-recap">How do companies stop passwords ending up on GitHub?</div>
-  <div class="t-ans">They make it <em>impossible to push</em> one, and they <em>never put one in code</em> to begin with: apps fetch secrets at runtime using their role.</div>
-  <div class="t-x">Protected branches, bot reviewers and secret stores turn “please be careful” into “the system won't let you”.</div>
-</section>
-
 <!-- ================= CH21 CI/CD + JENKINS ================= -->
 <section class="slide chapter" data-title="Chapter 21 · CI/CD and Jenkins">
   <div class="num">21</div><div class="eyebrow">Act 3 · Chapter 21</div>
   <h2>From git push to production</h2>
   <p class="q">Rahul merges his PR at 3:12 pm. At 3:31 pm, fans are using his feature. He didn't SSH into anything.</p>
   <div class="tiles"><span class="tile sm" style="--c:var(--rose)">JENKINS</span><span class="tile sm" style="--c:var(--steel)">GHA</span><span class="tile sm" style="--c:var(--amber)">CODEPIPE</span></div>
-</section>
-
-<section class="slide" data-tpl="q" data-title="Struggle: after git push?" data-ch="CI/CD">
-  <div class="t-q">What actually happens between “git push” and users seeing my change?</div>
-  <div class="t-who">Rahul, watching a green tick appear on his commit</div>
 </section>
 
 <section class="slide" data-title="CI vs CD vs CD" data-phase="concept" data-ch="CI/CD">
@@ -233,38 +184,7 @@ db = json.loads(sm.get_secret_value(
   <aside class="notes"><p>The Jenkinsfile lives in the repo, so the pipeline is versioned and reviewed like code. Agents can be EC2 instances or short-lived Kubernetes pods.</p></aside>
 </section>
 
-<section class="slide" data-title="Compare: CI/CD tools" data-phase="compare" data-ch="CI/CD">
-  <h2>Jenkins, GitHub Actions, CodePipeline</h2>
-  <div class="cmp g3 grow">
-    <div class="card f" data-f="1" style="--c:var(--rose)"><h3>Jenkins</h3><p class="what">Open source, self-hosted, 1,000s of plugins. Runs anywhere, including on-prem.</p><p class="use"><b>Pick when</b>Complex enterprise pipelines, full control. You maintain the servers.</p></div>
-    <div class="card f" data-f="2" style="--c:var(--steel)"><h3>GitHub Actions</h3><p class="what">YAML workflows next to the code. Hosted runners. OIDC to assume AWS roles without keys.</p><p class="use"><b>Pick when</b>Code is on GitHub and you want zero CI servers.</p></div>
-    <div class="card f" data-f="3" style="--c:var(--amber)"><h3>AWS CodePipeline</h3><p class="what">AWS-native pipeline with CodeBuild and CodeDeploy. IAM everywhere.</p><p class="use"><b>Pick when</b>Everything is on AWS and you want it managed.</p></div>
-  </div>
-  <aside class="notes"><p>Jenkins is still very common in Indian enterprises; GitHub Actions and GitLab CI are common in newer teams. The concepts are identical: stages, agents, artifacts, approvals.</p></aside>
-</section>
-
-<section class="slide" data-tpl="perf" data-title="Perf: CI/CD" data-ch="CI/CD">
-  <div class="t-h2">Before vs after: manual releases vs a pipeline</div>
-  <div class="t-how">What changed: <b>Jenkins pipeline with tests, scans, Helm deploys and an approval gate</b></div>
-  <script type="application/json">{"rows":[
-    ["Deploys","per week",8,"1 big Friday release",100,"20+ small ones","20×","more often"],
-    ["Commit to production","lead time",100,"~2 weeks",6,"~20 minutes","~1,000×","faster"],
-    ["Failed changes","needing a fix",60,"~1 in 3",12,"~1 in 15","~5×","safer"],
-    ["Recover from a bad deploy","time",80,"hours of manual work",5,"one-click rollback","minutes",""]],
-    "note":"Illustrative figures in the spirit of DORA metrics (deployment frequency, lead time, change failure rate, time to restore)."}</script>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: after git push" data-ch="CI/CD">
-  <div class="t-recap">What happens between git push and users seeing my change?</div>
-  <div class="t-ans">A <em>pipeline</em>: build → test → scan → package → deploy to UAT → approve → deploy to prod. Same steps, every time, no SSH.</div>
-  <div class="t-x">Small changes shipped often are safer than big changes shipped rarely, because when something breaks, you know exactly what changed.</div>
-</section>
-
 <!-- ================= CH22 ENVIRONMENTS ================= -->
-<section class="slide" data-tpl="q" data-title="Struggle: test in prod?" data-ch="Environments">
-  <div class="t-q">Why can't we just test directly in production? Wouldn't that be more realistic?</div>
-  <div class="t-who">Rahul, waiting two days for UAT sign-off</div>
-</section>
 
 <section class="slide" data-title="DEV to PROD" data-phase="pic" data-ch="Environments">
   <h2>Four rooms before the stage</h2>
@@ -289,23 +209,12 @@ db = json.loads(sm.get_secret_value(
   <aside class="notes"><p>Names vary by company: QA is often called SIT (system integration testing), pre-prod is often called staging. The rules don't: one artifact promoted forward, config per environment, and real customer data only in production.</p></aside>
 </section>
 
-<section class="slide" data-tpl="wow" data-title="WOW: why not test in prod" data-ch="Environments">
-  <div class="t-recap">Why can't we just test in production?</div>
-  <div class="t-ans">Because prod holds <em>real money and real data</em>. Each room before it catches a different kind of mistake, cheaply.</div>
-  <div class="t-x">And when teams do “test in prod”, they use the safe tricks you'll see next: canaries and feature flags.</div>
-</section>
-
 <!-- ================= CH23 DEPLOYMENT STRATEGIES ================= -->
 <section class="slide chapter" data-title="Chapter 22 · Deployment strategies">
   <div class="num">22</div><div class="eyebrow">Act 3 · Chapter 22</div>
   <h2>Changing the engine mid-flight</h2>
   <p class="q">A ticket sale is live. Rahul's fix must go out now. Nobody can be logged out, and no payment can fail.</p>
   <div class="tiles"><span class="tile sm" style="--c:var(--teal)">ROLLING</span><span class="tile sm" style="--c:var(--blue)">BLUE/GREEN</span><span class="tile sm" style="--c:var(--amber)">CANARY</span><span class="tile sm" style="--c:var(--rose)">ROLLBACK</span></div>
-</section>
-
-<section class="slide" data-tpl="q" data-title="Struggle: deploy without downtime" data-ch="Deployments">
-  <div class="t-q">How do big apps ship updates every day without users ever noticing?</div>
-  <div class="t-who">Rahul, who once took FestPass down for an hour to fix a typo</div>
 </section>
 
 <section class="slide" data-title="Rolling vs blue/green" data-phase="pic" data-ch="Deployments">
@@ -350,33 +259,3 @@ db = json.loads(sm.get_secret_value(
   <aside class="notes"><p>Out of 2 million fans, 5% is 100,000 people. With the bug on, the guardrail rolls back at the first step: only the canary slice saw errors, for a minute. That's the point of canaries.</p></aside>
 </section>
 
-<section class="slide" data-title="Compare: deployment strategies" data-phase="compare" data-ch="Deployments">
-  <h2>Pick a strategy by risk</h2>
-  <table class="t" style="font-size:21px">
-    <tr><th></th><th>Recreate</th><th class="hl-t">Rolling</th><th class="hl-b">Blue/green</th><th class="hl-a">Canary</th></tr>
-    <tr class="f" data-f="1"><td class="mono">Downtime</td><td class="hl-r">Yes</td><td>None</td><td>None</td><td>None</td></tr>
-    <tr class="f" data-f="2"><td class="mono">Extra cost</td><td>None</td><td>Small</td><td class="hl-r">2× during switch</td><td>Small</td></tr>
-    <tr class="f" data-f="3"><td class="mono">Users hit by a bad release</td><td class="hl-r">All</td><td>Growing share</td><td class="hl-r">All, until flipped back</td><td class="hl-g">A small slice</td></tr>
-    <tr class="f" data-f="4"><td class="mono">Rollback speed</td><td>Slow</td><td>Minutes</td><td class="hl-g">Seconds</td><td class="hl-g">Seconds</td></tr>
-    <tr class="f" data-f="5"><td class="mono">Use for</td><td>Dev, batch jobs</td><td>Most services</td><td>Big risky changes</td><td>High-traffic, user-facing</td></tr>
-  </table>
-  <div class="panel f" data-f="6" style="padding:14px 20px"><p class="txt"><b class="hl-v">Feature flags</b> add one more layer: ship the code switched off, then turn it on for 1% of users, then everyone. Rollback is flipping a switch, no deploy needed.</p></div>
-  <aside class="notes"><p>Real teams combine these: rolling deploys for most services, canaries for checkout and payments, feature flags for product changes, and helm rollback or kubectl rollout undo as the emergency button.</p></aside>
-</section>
-
-<section class="slide" data-tpl="perf" data-title="Perf: safer releases" data-ch="Deployments">
-  <div class="t-h2">Before vs after: “maintenance window” vs canary + rollback</div>
-  <div class="t-how">What changed: <b>rolling by default, canary for payments, automated rollback</b></div>
-  <script type="application/json">{"rows":[
-    ["Downtime per release","users see",100,"30-minute window",2,"zero","0","downtime"],
-    ["Users hit by a bad release","out of 2M",100,"all 2,000,000",5,"~100,000 for 1 min","~95%","fewer"],
-    ["Time to roll back","bad release",80,"~1 hour redeploy",4,"~30 seconds","~100×","faster"],
-    ["Release days","when we can ship",20,"Friday night only",100,"any time","daily","releases"]],
-    "note":"Illustrative figures."}</script>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: invisible deploys" data-ch="Deployments">
-  <div class="t-recap">How do big apps ship daily without users noticing?</div>
-  <div class="t-ans">They never switch everyone at once. They <em>roll</em>, <em>flip</em> or <em>canary</em>, watch the metrics, and roll back in seconds if anything looks wrong.</div>
-  <div class="t-x">A deploy stops being an event and becomes routine. That's the goal.</div>
-</section>

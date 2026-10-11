@@ -1,0 +1,174 @@
+
+<section class="slide" data-title="Why the database hides in a private subnet" data-phase="pic" data-ch="RDS" data-steps="3">
+  <h2>Why the database hides in a private subnet</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <rect x="250" y="10" width="1146" height="540" rx="24" class="w-l" style="stroke-dasharray:10 8"/><text x="276" y="40" class="lbl">VPC · 10.0.0.0/16</text>
+      <rect x="290" y="56" width="270" height="474" rx="18" class="bx-g" style="fill:rgba(110,220,146,.05)"/><text x="425" y="88" text-anchor="middle" class="tg tm" style="font-size:15px">PUBLIC SUBNET</text><text x="425" y="110" text-anchor="middle" class="tmut" style="font-size:15px">has a road to the internet</text>
+      <rect x="590" y="56" width="310" height="474" rx="18" class="bx" /><text x="745" y="88" text-anchor="middle" class="tm" style="font-size:15px;fill:var(--steel)">PRIVATE · APP</text><text x="745" y="110" text-anchor="middle" class="tmut" style="font-size:15px">no road from the internet</text>
+      <rect x="930" y="56" width="440" height="474" rx="18" class="bx-b" style="fill:rgba(100,160,255,.05)"/><text x="1150" y="88" text-anchor="middle" class="tb tm" style="font-size:15px">PRIVATE · DATABASE</text><text x="1150" y="110" text-anchor="middle" class="tmut" style="font-size:15px">no road, no public IP</text>
+      <circle cx="110" cy="190" r="56" class="bx-t"/><text x="110" y="197" text-anchor="middle" class="tt" style="font:700 19px var(--f-body)">fans</text>
+      <path id="pv1" d="M166 190 H250 C 280 190 290 250 315 250 H535 C 575 250 590 200 630 200 H870 C 940 200 980 270 1050 270" class="w-t" style="stroke-width:3;opacity:.6"/>
+      <circle r="9" class="ft glow-t"><animateMotion dur="3.2s" repeatCount="indefinite"><mpath href="#pv1"/></animateMotion></circle>
+      <circle r="9" class="ft glow-t"><animateMotion dur="3.2s" begin="1.6s" repeatCount="indefinite"><mpath href="#pv1"/></animateMotion></circle>
+      <rect x="236" y="166" width="28" height="48" rx="6" class="ft"/><text x="250" y="152" text-anchor="middle" class="tt tm" style="font-size:14px">IGW</text>
+      <rect x="315" y="210" width="220" height="80" rx="14" class="bx-a" style="fill:var(--ink-2)"/><text x="425" y="257" text-anchor="middle" class="ta" style="font:700 19px var(--f-body)">load balancer</text>
+      <rect x="630" y="160" width="240" height="80" rx="14" class="bx-a" style="fill:var(--ink-2)"/><text x="750" y="194" text-anchor="middle" class="ta" style="font:700 19px var(--f-body)">app server</text><text x="750" y="220" text-anchor="middle" class="tm tmut" style="font-size:14px">sg-app</text>
+      <rect x="630" y="270" width="240" height="80" rx="14" class="bx-a" style="fill:var(--ink-2)"/><text x="750" y="304" text-anchor="middle" class="ta" style="font:700 19px var(--f-body)">app server</text><text x="750" y="330" text-anchor="middle" class="tm tmut" style="font-size:14px">sg-app</text>
+      <g class="" ><rect x="1050.0" y="214" width="200" height="110" class="fb" opacity=".75"/><ellipse cx="1150" cy="324" rx="100.0" ry="14" class="fb" opacity=".75"/><ellipse cx="1150" cy="214" rx="100.0" ry="14" class="fb"/><text x="1150" y="269.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">RDS</text><text x="1150" y="295.0" text-anchor="middle" class="tink" style="font:500 15px var(--f-body)">MySQL · port 3306</text></g>
+      <g class="f" data-f="1">
+        <circle cx="110" cy="420" r="56" class="bx-r"/><text x="110" y="414" text-anchor="middle" class="tr" style="font:700 18px var(--f-body)">attacker</text><text x="110" y="436" text-anchor="middle" class="tr" style="font:500 14px var(--f-body)">scanning 3306</text>
+        <path d="M166 420 H236" class="w-r" style="stroke-width:3"/>
+        <circle r="8" class="fr"><animateMotion dur="1.4s" repeatCount="indefinite" path="M166 420 H236"/></circle>
+        <g class="" transform="translate(250,420)"><circle r="22" class="fr" opacity=".25"/><path d="M-11 -11 L11 11 M11 -11 L-11 11" class="w-r" style="stroke-width:5;stroke-linecap:round"/></g>
+        <text x="110" y="512" text-anchor="middle" class="tr" style="font:700 18px var(--f-body)">no public IP,</text><text x="110" y="536" text-anchor="middle" class="tr" style="font:700 18px var(--f-body)">no road in</text>
+      </g>
+      <g class="f" data-f="2">
+        <rect x="315" y="380" width="220" height="70" rx="14" class="bx-r" style="fill:var(--ink-2)"/><text x="425" y="410" text-anchor="middle" class="tr" style="font:700 17px var(--f-body)">some other server</text><text x="425" y="432" text-anchor="middle" class="tm tmut" style="font-size:13px">not in sg-app</text>
+        <path id="pv2" d="M535 415 C 760 440 900 420 1010 350" class="w-r dash"/>
+        <circle r="8" class="fr"><animateMotion dur="1.8s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1"><mpath href="#pv2"/></animateMotion></circle>
+        <path d="M1150 340 l-26 10 v18 c0 16 12 26 26 32 c14 -6 26 -16 26 -32 v-18 z" class="bx-t glow-t" transform="translate(-130,-20)"/>
+        <g class="" transform="translate(1020,345)"><circle r="22" class="fr" opacity=".25"/><path d="M-11 -11 L11 11 M11 -11 L-11 11" class="w-r" style="stroke-width:5;stroke-linecap:round"/></g>
+        <text x="1150" y="400" text-anchor="middle" class="tt" style="font:700 18px var(--f-body)">sg-db: 3306 only from sg-app</text>
+      </g>
+      <g class="f" data-f="3">
+        <text x="1150" y="450" text-anchor="middle" style="font:600 19px var(--f-body)">Like a bank vault:</text>
+        <text x="1150" y="476" text-anchor="middle" class="tmut" style="font-size:18px">customers talk to the counter,</text>
+        <text x="1150" y="500" text-anchor="middle" class="tmut" style="font-size:18px">only staff can open the vault</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Green dots: the only path. Fans reach the load balancer in the public subnet; it talks to app servers in a private subnet; only app servers talk to the database.</p><p>Click 1: the database has no public IP and its subnet has no route to the Internet Gateway, so an attacker on the internet has no address and no road. Bots scan the whole internet for open port 3306 all day.</p><p>Click 2: even inside the VPC, the database's security group only allows port 3306 from the app servers' security group. A random server in the VPC is dropped.</p><p>Click 3: the analogy. Two locks: no road (subnet and routing) plus a guard at the vault door (security group). The app servers reach the internet for updates through a NAT gateway, but nothing can start a connection to them from outside.</p></aside>
+</section>
+
+
+<section class="slide" data-title="Writes go to one, reads go to many" data-phase="pic" data-ch="RDS">
+  <h2>Writes go to one. Reads go to many.</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <rect x="20" y="100" width="180" height="76" rx="14" class="bx-a" style="fill:var(--ink-2)"/><text x="110" y="146" text-anchor="middle" class="ta" style="font:700 19px var(--f-body)">app</text><rect x="20" y="232" width="180" height="76" rx="14" class="bx-a" style="fill:var(--ink-2)"/><text x="110" y="278" text-anchor="middle" class="ta" style="font:700 19px var(--f-body)">app</text><rect x="20" y="364" width="180" height="76" rx="14" class="bx-a" style="fill:var(--ink-2)"/><text x="110" y="410" text-anchor="middle" class="ta" style="font:700 19px var(--f-body)">app</text>
+      <g class="f" data-f="1">
+        <path id="rw1" d="M200 138 C 260 138 270 95 330 95 H830" class="w-r" style="stroke-width:3;opacity:.7"/>
+        <path id="rw1b" d="M200 270 C 270 270 270 95 330 95 H830" class="w-r" style="stroke-width:3;opacity:.4"/>
+        <circle r="9" class="fr glow-r"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#rw1"/></animateMotion></circle>
+        <circle r="9" class="fr glow-r"><animateMotion dur="2.4s" begin="1.2s" repeatCount="indefinite"><mpath href="#rw1b"/></animateMotion></circle>
+        <rect x="330" y="70" width="240" height="50" rx="25" class="bx-r" style="fill:var(--ink-2)"/><text x="450" y="102" text-anchor="middle" class="tr tm" style="font-size:16px">writer endpoint</text>
+        <text x="1060" y="80" class="tr" style="font:700 22px var(--f-body)">WRITE</text><text x="1060" y="108" class="tmut" style="font-size:18px">book a seat, pay</text>
+      </g>
+      <g class="" ><rect x="830.0" y="44" width="200" height="110" class="fb" opacity=".75"/><ellipse cx="930" cy="154" rx="100.0" ry="14" class="fb" opacity=".75"/><ellipse cx="930" cy="44" rx="100.0" ry="14" class="fb"/><text x="930" y="99.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">PRIMARY</text><text x="930" y="125.0" text-anchor="middle" class="tink" style="font:500 15px var(--f-body)">reads + writes</text></g>
+      <g class="f" data-f="2">
+        <path id="rr1" d="M200 402 C 260 402 270 405 330 405" class="w-t" style="stroke-width:3;opacity:.6"/>
+        <path id="rr0" d="M200 270 C 270 270 270 405 330 405" class="w-t" style="stroke-width:3;opacity:.35"/>
+        <path id="rr2" d="M570 405 H605" class="w-t" style="stroke-width:3;opacity:.6"/>
+        <path id="rr3" d="M570 405 C 640 500 800 500 900 452" class="w-t" style="stroke-width:3;opacity:.6"/>
+        <path id="rr4" d="M570 405 C 680 510 1020 510 1130 452" class="w-t" style="stroke-width:3;opacity:.6"/>
+        <circle r="8" class="ft glow-t"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#rr1"/></animateMotion></circle>
+        <circle r="8" class="ft glow-t"><animateMotion dur="1.6s" begin=".4s" repeatCount="indefinite"><mpath href="#rr0"/></animateMotion></circle>
+        <circle r="8" class="ft glow-t"><animateMotion dur=".6s" repeatCount="indefinite"><mpath href="#rr2"/></animateMotion></circle>
+        <circle r="8" class="ft glow-t"><animateMotion dur="1.6s" begin=".3s" repeatCount="indefinite"><mpath href="#rr3"/></animateMotion></circle>
+        <circle r="8" class="ft glow-t"><animateMotion dur="1.9s" begin=".7s" repeatCount="indefinite"><mpath href="#rr4"/></animateMotion></circle>
+        <g class="" ><rect x="605.0" y="344" width="190" height="96" class="ft" opacity=".75"/><ellipse cx="700" cy="440" rx="95.0" ry="14" class="ft" opacity=".75"/><ellipse cx="700" cy="344" rx="95.0" ry="14" class="ft"/><text x="700" y="392.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">replica</text><text x="700" y="418.0" text-anchor="middle" class="tink" style="font:500 15px var(--f-body)">read-only</text></g><g class="" ><rect x="835.0" y="344" width="190" height="96" class="ft" opacity=".75"/><ellipse cx="930" cy="440" rx="95.0" ry="14" class="ft" opacity=".75"/><ellipse cx="930" cy="344" rx="95.0" ry="14" class="ft"/><text x="930" y="392.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">replica</text><text x="930" y="418.0" text-anchor="middle" class="tink" style="font:500 15px var(--f-body)">read-only</text></g><g class="" ><rect x="1065.0" y="344" width="190" height="96" class="ft" opacity=".75"/><ellipse cx="1160" cy="440" rx="95.0" ry="14" class="ft" opacity=".75"/><ellipse cx="1160" cy="344" rx="95.0" ry="14" class="ft"/><text x="1160" y="392.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">replica</text><text x="1160" y="418.0" text-anchor="middle" class="tink" style="font:500 15px var(--f-body)">read-only</text></g>
+        <rect x="330" y="380" width="240" height="50" rx="25" class="bx-t" style="fill:var(--ink-2)"/><text x="450" y="412" text-anchor="middle" class="tt tm" style="font-size:16px">reader endpoint</text>
+        <text x="1290" y="390" class="tt" style="font:700 22px var(--f-body)">READ</text><text x="1290" y="418" class="tmut" style="font-size:18px">browse,</text><text x="1290" y="442" class="tmut" style="font-size:18px">seat maps</text>
+      </g>
+      <g class="f" data-f="3">
+        <g class="w-a dash" style="stroke-width:3"><path d="M880 170 C 860 240 720 260 700 330"/><path d="M930 170 V330"/><path d="M980 170 C 1000 240 1140 260 1160 330"/></g>
+        <text x="760" y="226" text-anchor="end" class="ta" style="font:700 18px var(--f-body)">copies every change</text><text x="760" y="250" text-anchor="end" class="tmut" style="font-size:16px">milliseconds behind</text>
+      </g>
+      <g class="f" data-f="4">
+        <rect x="20" y="528" width="1260" height="22" rx="11" class="ft" opacity=".8"/><rect x="1150" y="528" width="130" height="22" rx="0" class="fr"/><rect x="1258" y="528" width="22" height="22" rx="11" class="fr"/>
+        <text x="20" y="512" class="tt" style="font:700 19px var(--f-body)">TicketWave: 9 of every 10 queries are reads</text><text x="1280" y="512" text-anchor="end" class="tr" style="font:700 19px var(--f-body)">1 in 10 writes</text>
+        <text x="1290" y="474" class="tt" style="font:700 16px var(--f-body)">up to 15</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Click 1: every write (book a seat, pay) goes through the writer endpoint to the one primary. One writer means no two servers fight over the same seat.</p><p>Click 2: reads go through the reader endpoint, which spreads them across read replicas. Add replicas when browsing gets heavy.</p><p>Click 3: the primary streams every change to the replicas, usually milliseconds behind (asynchronous). So right after booking, read “my booking” from the writer, not a replica.</p><p>Click 4: most apps read far more than they write, which is why this scales. RDS for MySQL and PostgreSQL and Aurora support up to 15 read replicas. The 90/10 split is illustrative.</p></aside>
+</section>
+
+
+<section class="slide" data-title="Multi-AZ: a twin in another building" data-phase="pic" data-ch="RDS" data-steps="3">
+  <h2>Multi-AZ: a twin waiting in another building</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <rect x="40" y="20" width="160" height="60" rx="14" class="bx-a"/><text x="120" y="57" text-anchor="middle" class="ta" style="font:700 19px var(--f-body)">app</text>
+      <path d="M200 50 H404" class="w-a" style="stroke-width:3"/>
+      <rect x="404" y="20" width="600" height="60" rx="30" class="bx" /><text x="704" y="56" text-anchor="middle" class="tm" style="font-size:17px">ticketwave-db.xxxx.ap-south-1.rds.amazonaws.com</text>
+      <rect x="40" y="140" width="620" height="400" rx="22" class="w-l" style="stroke-dasharray:10 8"/><text x="66" y="172" class="lbl">AZ a · data centre 1</text>
+      <rect x="748" y="140" width="620" height="400" rx="22" class="w-l" style="stroke-dasharray:10 8"/><text x="774" y="172" class="lbl">AZ b · data centre 2</text>
+      <path id="maz1" d="M704 80 C 704 140 350 130 350 228" class="w-a hide-on-2" style="stroke-width:4"/>
+      <circle r="9" class="fa glow-a hide-on-2"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#maz1"/></animateMotion></circle>
+      <path id="maz2" d="M704 80 C 704 140 1058 130 1058 228" class="w-a show-on-2" style="stroke-width:4"/>
+      <circle r="9" class="fa glow-a show-on-2"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#maz2"/></animateMotion></circle>
+      <g class="" ><rect x="230.0" y="244" width="240" height="130" class="fb" opacity=".75"/><ellipse cx="350" cy="374" rx="120.0" ry="14" class="fb" opacity=".75"/><ellipse cx="350" cy="244" rx="120.0" ry="14" class="fb"/><text x="350" y="309.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">PRIMARY</text><text x="350" y="335.0" text-anchor="middle" class="tink" style="font:500 15px var(--f-body)">takes all traffic</text></g>
+      <g class="hide-on-2"><g class="" ><rect x="938.0" y="244" width="240" height="130" class="fs" opacity=".75"/><ellipse cx="1058" cy="374" rx="120.0" ry="14" class="fs" opacity=".75"/><ellipse cx="1058" cy="244" rx="120.0" ry="14" class="fs"/><text x="1058" y="309.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">STANDBY</text><text x="1058" y="335.0" text-anchor="middle" class="tink" style="font:500 15px var(--f-body)">waiting, no traffic</text></g></g>
+      <g class="show-on-2"><g class="" ><rect x="938.0" y="244" width="240" height="130" class="fg" opacity=".75"/><ellipse cx="1058" cy="374" rx="120.0" ry="14" class="fg" opacity=".75"/><ellipse cx="1058" cy="244" rx="120.0" ry="14" class="fg"/><text x="1058" y="309.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">NEW PRIMARY</text><text x="1058" y="335.0" text-anchor="middle" class="tink" style="font:500 15px var(--f-body)">promoted</text></g></g>
+      <g class="f" data-f="1"><g class="hide-on-2">
+        <path id="msync" d="M470 310 H938" class="w-t" style="stroke-width:4"/>
+        <rect width="18" height="18" rx="4" x="-9" y="-9" class="ft glow-t"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#msync"/></animateMotion></rect>
+        <text x="704" y="292" text-anchor="middle" class="tt" style="font:700 18px var(--f-body)">every write copied</text><text x="704" y="340" text-anchor="middle" class="tmut" style="font-size:16px">before the app hears “OK”</text>
+      </g></g>
+      <g class="show-on-2">
+        <rect x="40" y="140" width="620" height="400" rx="22" class="fr" opacity=".14"/>
+        <text x="350" y="470" text-anchor="middle" class="tr" style="font:800 30px var(--f-display)">AZ a DOWN</text>
+        <text x="350" y="502" text-anchor="middle" class="tmut" style="font-size:17px">power cut, flood, network failure</text>
+      </g>
+      <g class="f" data-f="3">
+        <text x="1058" y="458" text-anchor="middle" class="tg" style="font:700 22px var(--f-body)">~1–2 minutes</text>
+        <text x="1058" y="488" text-anchor="middle" class="tmut" style="font-size:17px">same endpoint name,</text>
+        <text x="1058" y="512" text-anchor="middle" class="tmut" style="font-size:17px">the app just reconnects</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>The app only knows one name: the endpoint. Behind it, RDS keeps a standby copy in a different AZ, which is a separate data centre with its own power and network.</p><p>Click 1: synchronous replication. A write is confirmed only after it is safely in both AZs, so no committed booking is lost.</p><p>Click 2: AZ a fails. RDS flips the endpoint's DNS to the standby, which becomes the new primary.</p><p>Click 3: AWS documents failover as typically 60–120 seconds. Nobody changes config. Note: a classic Multi-AZ standby does not serve reads. It's insurance, not extra hands; read replicas are the extra hands.</p></aside>
+</section>
+
+
+<!--OLD:Aurora: 6 copies-->
+
+<section class="slide" data-title="What breaks, and what saves you" data-phase="behind" data-ch="RDS">
+  <div><span class="wowtag">Behind the scenes</span></div>
+  <h2 style="margin-top:6px">Six things that break. What saves you.</h2>
+  <div class="row grow" style="gap:28px">
+    <div style="width:400px;flex:none;display:flex;flex-direction:column;gap:0" id="rfOpts">
+      <button class="choice" data-k="disk">A disk dies</button>
+      <button class="choice" data-k="server">A database server crashes</button>
+      <button class="choice" data-k="az">A whole data centre (AZ) goes dark</button>
+      <button class="choice" data-k="region">A whole region goes down</button>
+      <button class="choice" data-k="human">Someone runs DELETE without WHERE</button>
+      <button class="choice" data-k="spike">Traffic jumps 10× at a ticket drop</button>
+    </div>
+    <div class="grow" style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div class="vis">
+        <svg class="d" viewBox="0 0 960 470" id="rfSvg">
+          <style>
+            #rfSvg .fx{opacity:0;transition:opacity .4s}
+            #rfSvg .ok{transition:filter .4s}
+            #rfSvg[data-f="disk"] .fx-disk,#rfSvg[data-f="server"] .fx-server,#rfSvg[data-f="az"] .fx-az,#rfSvg[data-f="region"] .fx-region,#rfSvg[data-f="human"] .fx-human,#rfSvg[data-f="spike"] .fx-spike{opacity:1}
+            #rfSvg[data-f="disk"] .ok-disk,#rfSvg[data-f="server"] .ok-standby,#rfSvg[data-f="az"] .ok-standby,#rfSvg[data-f="region"] .ok-global,#rfSvg[data-f="human"] .ok-backup,#rfSvg[data-f="spike"] .ok-rep{filter:drop-shadow(0 0 10px var(--green)) drop-shadow(0 0 4px var(--green))}
+          </style>
+          <rect x="10" y="10" width="700" height="450" rx="20" class="w-l" style="stroke-dasharray:10 8"/><text x="30" y="40" class="lbl">Mumbai region</text>
+          <rect x="30" y="84" width="210" height="270" rx="16" class="bx"/><rect x="255" y="84" width="210" height="270" rx="16" class="bx"/><rect x="480" y="84" width="210" height="270" rx="16" class="bx"/>
+          <g text-anchor="middle"><text x="135" y="112" class="lbl">AZ a</text><text x="360" y="112" class="lbl">AZ b</text><text x="585" y="112" class="lbl">AZ c</text></g>
+          <g class="ok" ><rect x="60.0" y="142" width="150" height="80" class="fb" opacity=".75"/><ellipse cx="135" cy="222" rx="75.0" ry="14" class="fb" opacity=".75"/><ellipse cx="135" cy="142" rx="75.0" ry="14" class="fb"/><text x="135" y="190.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">primary</text></g>
+          <g class="ok ok-standby" ><rect x="285.0" y="142" width="150" height="80" class="fs" opacity=".75"/><ellipse cx="360" cy="222" rx="75.0" ry="14" class="fs" opacity=".75"/><ellipse cx="360" cy="142" rx="75.0" ry="14" class="fs"/><text x="360" y="190.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">standby</text></g>
+          <g class="ok ok-rep" ><rect x="510.0" y="142" width="150" height="80" class="ft" opacity=".75"/><ellipse cx="585" cy="222" rx="75.0" ry="14" class="ft" opacity=".75"/><ellipse cx="585" cy="142" rx="75.0" ry="14" class="ft"/><text x="585" y="190.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">replica</text></g>
+          <text x="360" y="374" text-anchor="middle" class="lbl">copies of the data, in every AZ</text>
+          <g class="ok"><circle cx="95" cy="320" r="16" class="fb ok-disk" /><circle cx="175" cy="320" r="16" class="fb ok-disk" /><circle cx="320" cy="320" r="16" class="fb ok-disk" /><circle cx="400" cy="320" r="16" class="fb ok-disk" /><circle cx="545" cy="320" r="16" class="fb ok-disk" /><circle cx="625" cy="320" r="16" class="fb ok-disk" /></g>
+          <g class="ok ok-backup"><rect x="200" y="380" width="320" height="64" rx="14" class="bx-g"/><text x="360" y="408" text-anchor="middle" class="tg" style="font:700 17px var(--f-body)">automated backups → S3</text><text x="360" y="430" text-anchor="middle" class="tmut" style="font-size:14px">restore to any second, last 35 days</text></g>
+          <rect x="730" y="10" width="220" height="450" rx="20" class="w-l" style="stroke-dasharray:10 8"/><text x="750" y="40" class="lbl">Hyderabad</text>
+          <g class="ok ok-global" ><rect x="765.0" y="164" width="150" height="80" class="fv" opacity=".75"/><ellipse cx="840" cy="244" rx="75.0" ry="14" class="fv" opacity=".75"/><ellipse cx="840" cy="164" rx="75.0" ry="14" class="fv"/><text x="840" y="212.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">global copy</text></g>
+          <text x="840" y="290" text-anchor="middle" class="tv" style="font-size:15px">&lt; 1 s behind</text>
+          <path d="M210 170 C 380 20 680 20 765 175" class="w-v dash" style="stroke-width:2"/>
+          <g class="fx fx-disk"><g class="" transform="translate(175,320)"><circle r="22" class="fr" opacity=".25"/><path d="M-11 -11 L11 11 M11 -11 L-11 11" class="w-r" style="stroke-width:5;stroke-linecap:round"/></g></g>
+          <g class="fx fx-server"><g class="" transform="translate(135,178)"><circle r="22" class="fr" opacity=".25"/><path d="M-11 -11 L11 11 M11 -11 L-11 11" class="w-r" style="stroke-width:5;stroke-linecap:round"/></g></g>
+          <g class="fx fx-az"><rect x="30" y="84" width="210" height="270" rx="16" class="fr" opacity=".22"/><g class="" transform="translate(135,250)"><circle r="22" class="fr" opacity=".25"/><path d="M-11 -11 L11 11 M11 -11 L-11 11" class="w-r" style="stroke-width:5;stroke-linecap:round"/></g></g>
+          <g class="fx fx-region"><rect x="10" y="10" width="700" height="450" rx="20" class="fr" opacity=".18"/><g class="" transform="translate(360,250)"><circle r="22" class="fr" opacity=".25"/><path d="M-11 -11 L11 11 M11 -11 L-11 11" class="w-r" style="stroke-width:5;stroke-linecap:round"/></g></g>
+          <g class="fx fx-human"><rect x="40" y="254" width="190" height="34" rx="8" class="fk" style="stroke:var(--rose);stroke-width:2"/><text x="135" y="277" text-anchor="middle" class="tr tm" style="font-size:13px">DELETE FROM bookings;</text></g>
+          <g class="fx fx-spike"><g class="" ><rect x="530.0" y="258" width="110" height="26" class="ft" opacity=".75"/><ellipse cx="585" cy="284" rx="55.0" ry="14" class="ft" opacity=".75"/><ellipse cx="585" cy="258" rx="55.0" ry="14" class="ft"/><text x="585" y="279.0" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">+ replica</text></g><g class="fa"><circle cx="500" cy="64" r="5"/><circle cx="540" cy="58" r="5"/><circle cx="600" cy="62" r="5"/><circle cx="660" cy="66" r="5"/><circle cx="520" cy="72" r="5"/><circle cx="630" cy="54" r="5"/></g></g>
+        </svg>
+      </div>
+      <p class="feed" id="rfFeed" style="min-height:4.6em">Pick a failure on the left. Ask the room what saves us first.</p>
+    </div>
+  </div>
+  <aside class="notes"><p>Let the room pick. For each failure, ask “what saves us?” before clicking.</p><p>Disk: Aurora keeps 6 copies across 3 AZs; standard RDS storage (EBS) is replicated inside its AZ. Server crash or AZ loss: Multi-AZ failover, typically 60–120 seconds. Region loss: Aurora Global Database replicates to another region, typically under a second behind, and a secondary region can be promoted. Fans abroad can also read from that nearby copy.</p><p>Human mistake: replicas and standbys copy the mistake instantly. Only backups save you: point-in-time restore to any second within the retention period (up to 35 days). Traffic spike: add read replicas, or let Aurora Auto Scaling add them.</p></aside>
+</section>

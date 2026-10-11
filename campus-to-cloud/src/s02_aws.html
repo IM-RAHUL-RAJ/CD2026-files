@@ -7,12 +7,6 @@
   <aside class="notes"><p>Based on PDF 02, "What is AWS: An Overview", plus current market data.</p></aside>
 </section>
 
-<section class="slide" data-tpl="q" data-title="Struggle: why AWS everywhere?" data-ch="Meet AWS">
-  <div class="t-q">Why does almost every job description say “AWS”?</div>
-  <div class="t-who">Rahul, scrolling job portals</div>
-  <div class="t-hint">Azure and Google Cloud exist too. Is AWS really that big, or is it just hype?</div>
-</section>
-
 <section class="slide" data-title="AWS timeline" data-phase="pic" data-ch="Meet AWS">
   <h2>From one storage service to 200+</h2>
   <div class="vis">
@@ -57,20 +51,6 @@
   <aside class="notes"><p>Q2 2026 figures (Synergy Research Group, reported in October 2026): total spending $143.4 billion; AWS 28%, Azure 20%, Google Cloud 15% (Google's highest on record). The 37% for others is simply the remainder.</p><p>PDF 02 cites a CRN report for the same point: AWS leads the present market.</p></aside>
 </section>
 
-<section class="slide" data-title="Careers in cloud" data-phase="concept" data-ch="Meet AWS">
-  <h2>Ten jobs that ask for AWS</h2>
-  <div class="grid g5 grow" style="gap:12px;align-content:center">
-    <div class="chip f" data-f="1"><span class="tile xs">CE</span>Cloud Engineer</div><div class="chip f" data-f="1"><span class="tile xs" style="--c:var(--teal)">SA</span>Solutions Architect</div><div class="chip f" data-f="1"><span class="tile xs" style="--c:var(--rose)">DO</span>DevOps Engineer</div><div class="chip f" data-f="1"><span class="tile xs" style="--c:var(--blue)">CD</span>Cloud Developer</div><div class="chip f" data-f="1"><span class="tile xs" style="--c:var(--violet)">DE</span>Data Engineer</div>
-    <div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--rose)">SEC</span>Cloud Security</div><div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--violet)">ML</span>ML Engineer</div><div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--green)">CC</span>Cloud Consultant</div><div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--steel)">CS</span>Cloud Support</div><div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--gold)">SRE</span>Site Reliability</div>
-  </div>
-  <div class="grid g3 f" data-f="3" style="gap:20px">
-    <div class="stat" style="--c:var(--amber)"><b>2016</b><span>Mumbai Region opens · Hyderabad follows in 2022</span></div>
-    <div class="stat" style="--c:var(--teal)"><b>$13B</b><span>more for AI and cloud in India, announced June 2026</span></div>
-    <div class="stat" style="--c:var(--violet)"><b>$48B</b><span>Amazon's total India investment plan, 2026–2030</span></div>
-  </div>
-  <aside class="notes"><p>Roles list from PDF 02. India investment from Datacenter Dynamics (June 2026): an additional $13B for AI and cloud infrastructure in Mumbai and Hyderabad, part of $48B Amazon plans to invest across India over five years.</p></aside>
-</section>
-
 <section class="slide" data-title="Prime Day scale" data-phase="behind" data-ch="Meet AWS">
   <div><span class="wowtag">Behind the scenes</span></div>
   <h2 style="margin-top:6px">One shopping event. Numbers that break your brain.</h2>
@@ -105,38 +85,8 @@
 </section>
 
 <!--OLD:Region, AZ, Edge-->
-<!--OLD:Compare: where to run-->
 <!--OLD:Your 'a' is not my 'a'-->
-<!--OLD:Control plane vs data plane-->
 <!--OLD:Design for AZ failure-->
-
-<section class="slide" data-tpl="perf" data-title="Perf: region and AZs" data-ch="Global infrastructure">
-  <div class="t-h2">Before vs after: wrong Region, one AZ vs right Region, many AZs</div>
-  <div class="t-how">What changed: <b>moved from us-east-1 to ap-south-1, spread across 3 AZs</b></div>
-  <script type="application/json">{"rows":[
-    ["Round trip from Bengaluru","network latency",100,"~200+ ms",10,"~20 ms","~10×","faster"],
-    ["EC2 availability SLA","AWS commitment",50,"99.5% · one instance",99,"99.99% · 2+ AZs","","official SLA"],
-    ["Allowed downtime per year","from the SLA",100,"~43.8 hours",2,"~52.6 minutes","50×","less"],
-    ["One data center floods","what users see",100,"site down",3,"nothing","0","downtime"]],
-    "note":"Latency figures are typical, not guaranteed. SLA figures are from the Amazon EC2 SLA (instance-level 99.5%, region-level 99.99% across two or more AZs)."}</script>
-  <aside class="notes"><p>Two easy wins for Indian users: pick a Region close to them, and spread across Availability Zones. The SLA rows are AWS's official commitments; latency is a typical measurement.</p></aside>
-</section>
-
-<section class="slide" data-title="Your first AWS account" data-phase="prod" data-ch="Meet AWS">
-  <h2>Setting up your first AWS account</h2>
-  <div class="tl" style="margin-top:10px">
-    <div class="f" data-f="1" style="--c:var(--amber)"><b>1 · Sign up</b><p>Root user email + account name. The email becomes the master key.</p></div>
-    <div class="f" data-f="2" style="--c:var(--teal)"><b>2 · Verify</b><p>Email code, phone, and a card for identity. Free tier covers learning.</p></div>
-    <div class="f" data-f="3" style="--c:var(--rose)"><b>3 · Lock root</b><p>Turn on MFA for root. Never create root access keys.</p></div>
-    <div class="f" data-f="4" style="--c:var(--violet)"><b>4 · Budget alert</b><p>Set an AWS Budgets alert before any lab.</p></div>
-    <div class="f" data-f="5" style="--c:var(--green)"><b>5 · Daily identity</b><p>Create an admin user or IAM Identity Center login for daily work.</p></div>
-  </div>
-  <div class="panel f" data-f="6" style="display:flex;gap:30px;align-items:center">
-    <div class="stat" style="--c:var(--amber)"><b>12</b><span>digits in every account ID</span></div>
-    <p class="txt">Students: the most common surprise bill comes from a forgotten instance or NAT gateway. <b class="hl-a">Budget alert first, lab second, delete everything third.</b></p>
-  </div>
-  <aside class="notes"><p>From the "AWS Account Setup" section of PDF 02: root user email address (used for account recovery and some administrative functions), account name, verify email. Free tier details change, so point people to aws.amazon.com/free.</p></aside>
-</section>
 
 <section class="slide" data-title="Three ways to talk to AWS" data-phase="concept" data-ch="Meet AWS">
   <h2>Console, CLI, SDK: three doors, one API</h2>
@@ -159,8 +109,3 @@ s3 = boto3.client(<span class="s">"s3"</span>)
   <aside class="notes"><p>From PDF 03 (IAM): the Management Console is graphical, the CLI is command-line and scripting, the SDKs and APIs are programmatic. aws sts get-caller-identity is the "who am I?" command from the EKS PDF; run it whenever credentials are confusing.</p></aside>
 </section>
 
-<section class="slide" data-tpl="wow" data-title="WOW: AWS everywhere" data-ch="Meet AWS">
-  <div class="t-recap">Why does every job description say “AWS”?</div>
-  <div class="t-ans">AWS has the <em>biggest share</em> of a $143B-a-quarter market, and runs on a private network of <em>~20 million km</em> of fibre.</div>
-  <div class="t-x">Learn the core ideas once (compute, network, identity, storage) and they carry over to Azure and Google Cloud too.</div>
-</section>

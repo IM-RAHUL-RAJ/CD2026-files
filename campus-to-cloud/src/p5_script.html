@@ -39,6 +39,11 @@ let cur=0, step=0, builds=true;
       html=`<h2>${g('.t-h2')}</h2><p class="how">${g('.t-how')}</p><div class="perf"><div></div><div class="ph b">Before</div><div class="ph a">After</div><div class="ph">Change</div>${rows}</div><p class="note">${d.note||''}</p>`;}
     s.innerHTML=html;if(notes)s.appendChild(notes);
   });
+  // Nitro pictures
+  const nc=document.getElementById('nitroCores');
+  if(nc){let h='';for(let r=0;r<3;r++)for(let c=0;c<4;c++){const x=100+c*140,y=110+r*106;h+=`<rect x="${x}" y="${y}" width="120" height="86" rx="12" class="fa"/><text x="${x+60}" y="${y+49}" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">yours</text>`}nc.innerHTML=h}
+  const nv=document.getElementById('nitroCarve');
+  if(nv){let h='';for(let i=0;i<16;i++){const x=4+(i%4)*56,y=(i>>2)*56;h+=`<rect x="${x}" y="${y}" width="44" height="44" rx="8" class="${i===5||i===6?'fa glow-a':'bx-s'}"/>`}nv.innerHTML=h}
   // IaaS / PaaS / SaaS stack columns
   const sc=document.getElementById('stackCols');
   if(sc){const cols=[['On-prem','college lab server',0,'Homemade pizza'],['IaaS','EC2',4,'Take and bake'],['PaaS','Elastic Beanstalk',6,'Delivery'],['SaaS','Gmail, Zoom',8,'Dine out']];
@@ -47,9 +52,10 @@ let cur=0, step=0, builds=true;
 })();
 
 /* ---------- phase pips + chapter tag ---------- */
-const PH=[['q','Struggle','var(--rose)'],['pic','Picture','var(--amber)'],['concept','Concept','var(--teal)'],['compare','Compare','var(--blue)'],['behind','Behind','var(--violet)'],['prod','Prod','var(--green)'],['perf','Perf','var(--coral)'],['wow','WOW','var(--gold)']];
+const PH=[['pic','Picture','var(--amber)'],['behind','Behind the scenes','var(--violet)'],['prod','Example','var(--green)']];
+const PMAP={concept:'pic',compare:'pic'};
 slides.forEach(s=>{
-  const p=s.dataset.phase;
+  const p=PMAP[s.dataset.phase]||s.dataset.phase;
   if(p){const d=document.createElement('div');d.className='phase';d.innerHTML=PH.map(([k,l,c])=>`<span style="--c:${c}" class="${k===p?'on':''}">${l}</span>`).join('');s.appendChild(d)}
   if(s.dataset.ch){const c=document.createElement('div');c.className='chtag';c.textContent=s.dataset.ch;s.appendChild(c)}
   // steps
@@ -249,6 +255,27 @@ function simRun(){const u=$('#simUsers');if(!u)return;const users=Math.round(100
   else{const worst=uWeb>=uDb&&uWeb>=uPay?(S.asg?(S.cdn?'Web tier is hot: more servers are coming, or add CloudFront.':'Web tier is hot: CloudFront would take 70% of the load.'):'One server can\'t cope. Turn on ALB + Auto Scaling.'):uDb>=uPay?(S.cache?(S.rr?'Database is maxed even with cache and replicas.':'Add read replicas.'):'Database is the bottleneck. Add a cache or read replicas.'):'Payments can\'t keep up. Put an SQS queue in front.';msg=[worst,'no']}
   const fd=$('#simFeed');fd.textContent=msg[0];fd.className='feed '+msg[1]}
 hooks.sim4={enter(){simRun()}};
+// RDS: what breaks, what saves you
+(function(){const svg=$('#rfSvg');if(!svg)return;const fd=$('#rfFeed');
+  const D={disk:['Saved by: extra copies of the data','Aurora keeps 6 copies across 3 AZs; RDS storage is mirrored too. Users notice: nothing.',1],
+    server:['Saved by: Multi-AZ standby','The standby in AZ b is promoted. Same endpoint name. Users notice: 1–2 minutes of reconnects.',1],
+    az:['Saved by: Multi-AZ standby in another AZ','A different building, its own power and network. Aurora storage still has 4 of 6 copies, so writes continue.',1],
+    region:['Saved by: Aurora Global Database','A copy in another region, usually under 1 second behind. Promote it in about a minute. Fans abroad can read from it every day.',1],
+    human:['Replicas copy the mistake too!','The standby and replicas delete the rows within milliseconds. Only backups save you: point-in-time restore to the second before the DELETE.',0],
+    spike:['Saved by: more read replicas','Up to 15 replicas behind one reader endpoint. Aurora Auto Scaling can add them for you when CPU climbs.',1]};
+  $$('#rfOpts .choice').forEach(b=>b.onclick=()=>{const k=b.dataset.k,d=D[k];svg.dataset.f=k;$$('#rfOpts .choice').forEach(x=>{x.classList.remove('right','wrong')});b.classList.add(d[2]?'right':'wrong');
+    fd.innerHTML=`<b class="${d[2]?'good':'bad'}">${d[0]}</b><br>${d[1]}`;fd.className='feed '+(d[2]?'ok':'no')})})();
+// SG or role? vote
+(function(){const g=$('#sgrQ');if(!g)return;
+  const Q=[["Browser spins, then “This site can't be reached” on https","sg","Packets never arrive: no inbound 443 rule."],
+    ["aws s3 cp fails with AccessDenied","role","S3 got the request and said no: the identity lacks s3:PutObject."],
+    ["Lambda: not authorized to perform sqs:SendMessage","role","An AWS API said no. Fix the Lambda's execution role."],
+    ["App → RDS: “Connection timed out” on port 3306","sg","The connection never opened: sg-db needs 3306 from sg-app."],
+    ["ssh to the server hangs, then times out","sg","Port 22 isn't allowed from your IP."],
+    ["EC2 can't pull from ECR: “no basic auth credentials”","role","Its role needs ecr:GetAuthorizationToken and pull permissions."]];
+  g.innerHTML=Q.map((q,i)=>`<div class="card" data-i="${i}"><p class="mono" style="font-size:18px;line-height:1.4;min-height:4.4em">${q[0]}</p><div style="display:flex;gap:10px"><button class="btn" data-a="sg" style="flex:1;color:var(--teal)">Security group</button><button class="btn" data-a="role" style="flex:1;color:var(--violet)">IAM role</button></div><p class="small sgr-why" style="min-height:2.8em">&nbsp;</p></div>`).join('');
+  $$('.card',g).forEach(c=>{const q=Q[+c.dataset.i];$$('button',c).forEach(b=>b.onclick=()=>{const ok=b.dataset.a===q[1];c.style.setProperty('--c',ok?'var(--green)':'var(--rose)');c.style.borderColor=ok?'var(--green)':'var(--rose)';
+    c.querySelector('.sgr-why').innerHTML=`<b class="${ok?'good':'bad'}">${ok?'Right':'No'}: ${q[1]==='sg'?'security group':'IAM role'}.</b> ${q[2]}`})})})();
 // Activity 5: canary
 (function(){const p=$('#canPct'),b=$('#canBug');if(!p)return;let rb=null;
   function upd(){const pct=+p.value,bug=b.classList.contains('on');$('#canTxt').textContent=pct+'%';$('#canV1').style.width=(100-pct)+'%';$('#canV2').style.width=pct+'%';

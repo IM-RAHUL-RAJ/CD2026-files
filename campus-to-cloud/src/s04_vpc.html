@@ -7,42 +7,14 @@
   <div class="tiles"><span class="tile sm" style="--c:var(--teal)">VPC</span><span class="tile sm" style="--c:var(--teal)">SUBNET</span><span class="tile sm" style="--c:var(--teal)">IGW</span><span class="tile sm" style="--c:var(--steel)">NAT</span><span class="tile sm" style="--c:var(--rose)">SG</span><span class="tile sm" style="--c:var(--teal)">NACL</span></div>
 </section>
 
-<section class="slide" data-tpl="q" data-title="Struggle: friend can't open my app" data-ch="VPC">
-  <div class="t-q">My app runs fine on EC2. Why can't my friend open it in her browser?</div>
-  <div class="t-who">Rahul, refreshing a spinning tab</div>
-  <div class="t-hint">The instance is “running”. The status checks are green. And still: connection timed out.</div>
-</section>
-
 <!--OLD:Build a VPC (3D)-->
 <!--OLD:Route tables-->
-<!--OLD:Compare: ways out of a VPC-->
-<!--OLD:Compare: connecting VPCs-->
 <!--OLD:There are no VPC cables-->
 <!--OLD:Production VPC layout-->
 <!--OLD:Stateful guard-->
 <!--OLD:Inbound and outbound-->
 
-<section class="slide" data-title="Ports to know" data-phase="concept" data-ch="Security groups">
-  <h2>The port numbers every engineer should know</h2>
-  <div class="grid g5 grow" style="gap:14px;align-content:center">
-    <div class="card f" data-f="1" style="--c:var(--teal)"><h3 class="mono">80</h3><p class="what">HTTP · plain web</p></div>
-    <div class="card f" data-f="1" style="--c:var(--green)"><h3 class="mono">443</h3><p class="what">HTTPS · encrypted web</p></div>
-    <div class="card f" data-f="1" style="--c:var(--amber)"><h3 class="mono">22</h3><p class="what">SSH / SFTP · Linux login</p></div>
-    <div class="card f" data-f="1" style="--c:var(--amber)"><h3 class="mono">3389</h3><p class="what">RDP · Windows desktop</p></div>
-    <div class="card f" data-f="1" style="--c:var(--violet)"><h3 class="mono">53</h3><p class="what">DNS · names to IPs</p></div>
-    <div class="card f" data-f="2" style="--c:var(--blue)"><h3 class="mono">3306</h3><p class="what">MySQL</p></div>
-    <div class="card f" data-f="2" style="--c:var(--blue)"><h3 class="mono">5432</h3><p class="what">PostgreSQL</p></div>
-    <div class="card f" data-f="2" style="--c:var(--rose)"><h3 class="mono">21</h3><p class="what">FTP · unencrypted, avoid</p></div>
-    <div class="card f" data-f="2" style="--c:var(--steel)"><h3 class="mono">25</h3><p class="what">SMTP · sending email</p></div>
-    <div class="card f" data-f="2" style="--c:var(--coral)"><h3 class="mono">3000/8080</h3><p class="what">Common app ports</p></div>
-  </div>
-  <p class="say f" data-f="3">Rule of thumb: only <em>80/443</em> should ever be open to the whole internet.</p>
-  <aside class="notes"><p>Port list from PDF 04 (EC2). Security groups are Region-specific, allow-only, and stateful: allow 80 in and the response goes out automatically.</p></aside>
-</section>
-
-<!--OLD:Compare: SG vs NACL-->
 <!--OLD:Where the firewall really lives-->
-<!--OLD:Production: SG chaining-->
 
 <section class="slide" data-title="Activity: why can't Ananya open it?" data-phase="prod" data-ch="Activity 2" data-hook="path">
   <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 2</span><h2 style="margin:0;font-size:40px">Why can't Ananya open Rahul's app?</h2></div>
@@ -104,22 +76,7 @@
       <p class="small" style="margin-top:4px">Bonus question: does IAM need to change? (No. IAM controls API calls, not packets.)</p>
     </div>
   </div>
-  <aside class="notes"><p>The classic peering checklist: non-overlapping CIDRs, a peering connection requested and accepted, routes on both sides, and security group rules. Most people forget the return route.</p><p>For many VPCs, use Transit Gateway instead (see the earlier compare slide).</p></aside>
+  <aside class="notes"><p>The classic peering checklist: non-overlapping CIDRs, a peering connection requested and accepted, routes on both sides, and security group rules. Most people forget the return route.</p><p>For many VPCs, use Transit Gateway instead.</p></aside>
 </section>
 
-<section class="slide" data-tpl="perf" data-title="Perf: VPC done right" data-ch="VPC">
-  <div class="t-h2">Before vs after: everything public vs a proper VPC</div>
-  <div class="t-how">What changed: <b>private subnets, SG chaining, S3 gateway endpoint</b></div>
-  <script type="application/json">{"rows":[
-    ["Ports open to the internet","across the app",100,"22, 80, 3306, 6379",15,"443 on the ALB only","4→1","exposed"],
-    ["Database reachable from","who can try to connect",100,"the whole internet",5,"app servers only","0","public DB"],
-    ["S3 traffic from private servers","path and cost",80,"via NAT · per-GB charge",10,"gateway endpoint · free","$0","NAT data fee"],
-    ["Finding a network bug","debug time",70,"guessing",15,"5-gate checklist","fast","fix"]],
-    "note":"Gateway endpoints for S3 and DynamoDB have no charge; NAT gateways bill per hour and per GB processed."}</script>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: the five gates" data-ch="VPC">
-  <div class="t-recap">Why can't my friend open my app?</div>
-  <div class="t-ans">Every packet passes <em>five gates</em>: public IP → route to IGW → NACL → security group → app listening on 0.0.0.0.</div>
-  <div class="t-x">“Timed out” means a gate blocked it. “Connection refused” means it reached the OS but nothing was listening. Now you can debug any EC2 in two minutes.</div>
-</section>
+<!--INC:s04b_sgrole.html-->

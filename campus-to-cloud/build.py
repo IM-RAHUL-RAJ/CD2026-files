@@ -20,7 +20,8 @@ def sub(m):
     return ren(secs[t])
 parts=[]
 for f in ['p0_head.html','p0b_add.html','s01_campus.html','s02_aws.html','s03_iam.html','s04_vpc.html','s05_compute.html','s06_elb_s3.html','s07_data.html','s08_iac_serverless.html','s09_containers.html','s10_devsecops.html','s11_run.html']:
-    parts.append(re.sub(r'<!--OLD:(.+?)-->',sub,open(SRC+f).read()))
+    t=re.sub(r'<!--INC:(.+?)-->',lambda m:open(SRC+m.group(1)).read(),open(SRC+f).read())
+    parts.append(re.sub(r'<!--OLD:(.+?)-->',sub,t))
 parts.append(ren(open(SRC+'p5_script.html').read()))
 out=''.join(parts)
 open('index.html','w').write(out)

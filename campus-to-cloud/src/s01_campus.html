@@ -8,7 +8,7 @@
     <h1 class="hero">From Campus<br>to <span class="hl-a">Cloud</span></h1>
     <p class="cap" style="max-width:19em">A final-year student lands an enterprise job. Everything he needs to learn, and what really happens behind the scenes.</p>
     <div class="row" style="gap:8px;flex-wrap:wrap;max-width:760px">
-      <span class="tile xs" style="--c:var(--rose)">IAM</span><span class="tile xs" style="--c:var(--teal)">VPC</span><span class="tile xs">EC2</span><span class="tile xs" style="--c:var(--blue)">EBS</span><span class="tile xs">AMI</span><span class="tile xs" style="--c:var(--green)">ELB</span><span class="tile xs" style="--c:var(--green)">S3</span><span class="tile xs" style="--c:var(--blue)">RDS</span><span class="tile xs" style="--c:var(--violet)">DDB</span><span class="tile xs" style="--c:var(--blue)">CDN</span><span class="tile xs" style="--c:var(--coral)">IaC</span><span class="tile xs" style="--c:var(--teal)">DOCKER</span><span class="tile xs" style="--c:var(--blue)">K8S</span><span class="tile xs" style="--c:var(--rose)">CI/CD</span><span class="tile xs" style="--c:var(--gold)">OBS</span>
+      <span class="tile xs" style="--c:var(--rose)">IAM</span><span class="tile xs" style="--c:var(--teal)">VPC</span><span class="tile xs">EC2</span><span class="tile xs" style="--c:var(--blue)">EBS</span><span class="tile xs">AMI</span><span class="tile xs" style="--c:var(--green)">ELB</span><span class="tile xs" style="--c:var(--green)">S3</span><span class="tile xs" style="--c:var(--blue)">RDS</span><span class="tile xs" style="--c:var(--blue)">CDN</span><span class="tile xs" style="--c:var(--coral)">IaC</span><span class="tile xs" style="--c:var(--teal)">DOCKER</span><span class="tile xs" style="--c:var(--blue)">K8S</span><span class="tile xs" style="--c:var(--rose)">CI/CD</span><span class="tile xs" style="--c:var(--gold)">OBS</span>
     </div>
   </div>
   <p class="small mono" style="position:absolute;left:96px;bottom:40px;z-index:2">→ next · N notes · O overview · F fullscreen · B builds on/off</p>
@@ -68,32 +68,20 @@
 
 <section class="slide" data-title="How every topic works">
   <div class="eyebrow">How today works</div>
-  <h2>Every topic, the same eight beats</h2>
+  <h2>Every topic: three pictures, no essays</h2>
   <div class="vis">
     <svg class="d" viewBox="0 0 1408 560">
-      <path id="beat" d="M80 230 H1330" class="w-l" style="stroke-width:4"/>
-      <circle r="12" class="fa glow-a"><animateMotion dur="9s" repeatCount="indefinite"><mpath href="#beat"/></animateMotion></circle>
-      <g text-anchor="middle" style="font:700 15px var(--f-mono)">
-        <g transform="translate(110,230)"><circle r="58" class="bx-r"/><text y="6" class="tr">STRUGGLE</text></g>
-        <g transform="translate(284,230)"><circle r="58" class="bx-a"/><text y="6" class="ta">PICTURE</text></g>
-        <g transform="translate(458,230)"><circle r="58" class="bx-t"/><text y="6" class="tt">CONCEPT</text></g>
-        <g transform="translate(632,230)"><circle r="58" class="bx-b"/><text y="6" class="tb">COMPARE</text></g>
-        <g transform="translate(806,230)"><circle r="58" class="bx-v"/><text y="6" class="tv">BEHIND</text></g>
-        <g transform="translate(980,230)"><circle r="58" class="bx-g"/><text y="6" class="tg">PROD</text></g>
-        <g transform="translate(1154,230)"><circle r="58" style="fill:rgba(255,148,102,.12);stroke:var(--coral);stroke-width:2"/><text y="6" style="fill:var(--coral)">PERF</text></g>
-        <g transform="translate(1310,230)"><circle r="58" style="fill:rgba(255,209,102,.14);stroke:var(--gold);stroke-width:2"/><text y="6" style="fill:var(--gold)">WOW</text></g>
+      <path id="beat" d="M230 230 H1180" class="w-l" style="stroke-width:4"/>
+      <circle r="12" class="fa glow-a"><animateMotion dur="5s" repeatCount="indefinite"><mpath href="#beat"/></animateMotion></circle>
+      <g text-anchor="middle">
+        <g transform="translate(230,230)"><circle r="110" class="bx-a"/><text y="-8" class="ta" style="font:800 30px var(--f-display)">PICTURE</text><text y="30" class="tmut" style="font-size:20px">what it is</text></g>
+        <g transform="translate(704,230)" class="f" data-f="1"><circle r="110" class="bx-v"/><text y="-8" class="tv" style="font:800 26px var(--f-display)">BEHIND</text><text y="24" class="tv" style="font:800 26px var(--f-display)">THE SCENES</text><text y="58" class="tmut" style="font-size:20px">how AWS builds it</text></g>
+        <g transform="translate(1180,230)" class="f" data-f="2"><circle r="110" class="bx-g"/><text y="-8" class="tg" style="font:800 30px var(--f-display)">EXAMPLE</text><text y="30" class="tmut" style="font-size:20px">Rahul at work</text></g>
       </g>
-      <g class="f" data-f="1" style="font-size:19px" text-anchor="middle">
-        <text x="110" y="330" class="tmut">the question</text><text x="110" y="354" class="tmut">you never asked</text>
-        <text x="284" y="330" class="tmut">an animation</text><text x="458" y="330" class="tmut">real AWS terms</text>
-        <text x="632" y="330" class="tmut">which tool, when</text><text x="806" y="330" class="tmut">how AWS builds it</text>
-        <text x="980" y="330" class="tmut">how teams use it</text><text x="1154" y="330" class="tmut">before vs after</text>
-        <text x="1310" y="330" class="tmut">the answer</text>
-      </g>
-      <g class="f" data-f="2"><rect x="300" y="420" width="808" height="90" rx="18" style="fill:rgba(255,148,102,.08);stroke:var(--coral);stroke-width:2"/><text x="704" y="474" text-anchor="middle" style="font:600 24px var(--f-body)">+ 6 hands-on activities where <tspan style="fill:var(--coral)">you</tspan> fix the architecture</text></g>
+      <g class="f" data-f="3"><rect x="300" y="420" width="808" height="90" rx="18" style="fill:rgba(255,148,102,.08);stroke:var(--coral);stroke-width:2"/><text x="704" y="474" text-anchor="middle" style="font:600 24px var(--f-body)">+ hands-on activities where <tspan style="fill:var(--coral)">you</tspan> fix the architecture</text></g>
     </svg>
   </div>
-  <aside class="notes"><p>Explain the rhythm once. The coloured markers in the top right of every slide show which beat we're on.</p><p>Encourage people to shout answers during struggle questions and activities.</p></aside>
+  <aside class="notes"><p>Explain the rhythm once. The coloured markers in the top right of every slide show which of the three we're on: Picture, Behind the scenes, Example.</p></aside>
 </section>
 
 <section class="slide" data-title="The route map">
@@ -101,7 +89,7 @@
   <h2>Four acts, one career</h2>
   <div class="grid g4 grow" style="gap:18px;align-content:center">
     <div class="card f" data-f="1" style="--c:var(--amber)"><h3>1 · Campus to cloud</h3><p class="what">Cloud computing, virtualization, AWS, regions, undersea cables.</p><p class="use"><b>Rahul learns</b>why the cloud exists</p></div>
-    <div class="card f" data-f="2" style="--c:var(--teal)"><h3>2 · Foundations</h3><p class="what">IAM, VPC, EC2, EBS, AMI, ELB, ASG, S3, RDS, DynamoDB, CloudFront, CloudFormation, Lambda, SQS.</p><p class="use"><b>Rahul learns</b>to build on AWS</p></div>
+    <div class="card f" data-f="2" style="--c:var(--teal)"><h3>2 · Foundations</h3><p class="what">IAM, VPC, security group vs role, EC2, EBS, AMI, ELB, ASG, S3, RDS, CloudFront, CloudFormation, Lambda, SQS.</p><p class="use"><b>Rahul learns</b>to build on AWS</p></div>
     <div class="card f" data-f="3" style="--c:var(--violet)"><h3>3 · Ship it</h3><p class="what">Docker, ECR, ECS, Kubernetes, EKS, Helm, code security, secrets, Jenkins, CI/CD, environments, deployments.</p><p class="use"><b>Rahul learns</b>how code reaches users</p></div>
     <div class="card f" data-f="4" style="--c:var(--gold)"><h3>4 · Run it</h3><p class="what">Incidents, observability, CloudWatch, Prometheus, Grafana, Splunk, Datadog.</p><p class="use"><b>Rahul learns</b>to keep it alive at 2 am</p></div>
   </div>
@@ -114,13 +102,6 @@
   <h2>What is the cloud, really?</h2>
   <p class="q">Rahul's laptop melted. The obvious fix is to buy a bigger machine. Why does nobody do that any more?</p>
   <aside class="notes"><p>From PDF 01: cloud computing is on-demand delivery of IT resources over the internet with pay-as-you-go pricing.</p></aside>
-</section>
-
-<section class="slide" data-tpl="q" data-title="Struggle: why not buy a server?" data-ch="Cloud computing">
-  <div class="t-q">Why does a 5-person startup never buy its own server?</div>
-  <div class="t-who">Rahul, after the fest crash</div>
-  <div class="t-hint">Buying one feels cheaper: pay once, own it forever. Hold that thought.</div>
-  <aside class="notes"><p>Take two or three answers from the room before moving on.</p></aside>
 </section>
 
 <section class="slide" data-title="Buy vs rent race" data-phase="pic" data-ch="Cloud computing">
@@ -148,19 +129,6 @@
   <aside class="notes"><p>Both bars run on the same 10-second clock. The rent bar fills almost instantly. Durations for buying are typical for a company purchase process; exact times vary.</p></aside>
 </section>
 
-<section class="slide" data-title="Cloud in five words" data-phase="concept" data-ch="Cloud computing">
-  <h2>On-demand IT over the internet, pay-as-you-go</h2>
-  <div class="cmp g5 grow">
-    <div class="card f" data-f="1" style="--c:var(--amber)"><div class="ico"><svg width="90" height="70" viewBox="0 0 90 70"><circle cx="45" cy="35" r="26" class="w-a"/><path d="M45 35 V18 M45 35 L58 42" class="w-a"/></svg></div><h3>On-demand</h3><p class="what">Ask for a server, get it in seconds.</p></div>
-    <div class="card f" data-f="2" style="--c:var(--green)"><div class="ico"><svg width="90" height="70" viewBox="0 0 90 70"><text x="45" y="48" text-anchor="middle" class="tg" style="font:800 40px var(--f-display)">₹</text></svg></div><h3>Pay as you go</h3><p class="what">Billed per second or per request. Stop paying when you stop.</p></div>
-    <div class="card f" data-f="3" style="--c:var(--teal)"><div class="ico"><svg width="90" height="70" viewBox="0 0 90 70"><rect x="10" y="40" width="14" height="20" class="ft"/><rect x="30" y="28" width="14" height="32" class="ft"/><rect x="50" y="14" width="14" height="46" class="ft"/><rect x="70" y="30" width="14" height="30" class="ft" opacity=".5"/></svg></div><h3>Elastic</h3><p class="what">Grow for fest day, shrink the day after.</p></div>
-    <div class="card f" data-f="4" style="--c:var(--blue)"><div class="ico"><svg width="90" height="70" viewBox="0 0 90 70"><circle cx="45" cy="35" r="26" class="w-b"/><ellipse cx="45" cy="35" rx="12" ry="26" class="w-b"/><path d="M19 35 H71" class="w-b"/></svg></div><h3>Global</h3><p class="what">Run near users in any continent.</p></div>
-    <div class="card f" data-f="5" style="--c:var(--violet)"><div class="ico"><svg width="90" height="70" viewBox="0 0 90 70"><path d="M45 10 L70 22 V38 C70 52 45 62 45 62 C45 62 20 52 20 38 V22Z" class="w-v"/></svg></div><h3>Managed</h3><p class="what">Someone else patches, cools and guards the hardware.</p></div>
-  </div>
-  <div class="panel f" data-f="6" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:14px 20px"><span class="small mono">Providers:</span><span class="pill hl-a">AWS</span><span class="pill hl-b">Azure</span><span class="pill hl-t">Google Cloud</span><span class="pill hl-m">IBM</span><span class="pill hl-r">Oracle</span><span class="pill hl-m">Alibaba</span><span class="pill hl-b">DigitalOcean</span></div>
-  <aside class="notes"><p>Definition from PDF 01: access computing resources like servers, storage, databases and software over the internet, rather than owning and maintaining physical hardware.</p></aside>
-</section>
-
 <section class="slide" data-title="IaaS, PaaS, SaaS" data-phase="concept" data-ch="Cloud computing">
   <h2>Who manages what? The pizza test</h2>
   <div class="vis">
@@ -173,57 +141,12 @@
   <aside class="notes"><p>Pizza analogy: homemade (on-prem: you do everything), take-and-bake (IaaS: you get the dough, you cook), delivery (PaaS: just bring the table), dine out (SaaS: just eat).</p><p>Examples: IaaS = EC2; PaaS = AWS Elastic Beanstalk; SaaS = Gmail, Zoom.</p></aside>
 </section>
 
-<section class="slide" data-title="Compare: public, private, hybrid" data-phase="compare" data-ch="Cloud computing">
-  <h2>Three ways to deploy a cloud</h2>
-  <div class="cmp g3 grow">
-    <div class="card f" data-f="1" style="--c:var(--teal)"><div class="ico"><svg width="140" height="90" viewBox="0 0 140 90"><path d="M30 60 a20 20 0 0 1 10-38 a26 26 0 0 1 50-4 a20 20 0 0 1 22 42z" class="bx-t"/><g class="fa"><circle cx="20" cy="80" r="6"/><circle cx="60" cy="84" r="6"/><circle cx="100" cy="84" r="6"/><circle cx="130" cy="78" r="6"/></g></svg></div><h3>Public cloud</h3><p class="what">Shared provider infrastructure, used by many customers over the internet.</p><p class="use"><b>Example</b>AWS, Azure, Google Cloud. Most startups and enterprises.</p></div>
-    <div class="card f" data-f="2" style="--c:var(--violet)"><div class="ico"><svg width="140" height="90" viewBox="0 0 140 90"><rect x="40" y="20" width="60" height="60" rx="8" class="bx-v"/><path d="M60 20 V10 H80 V20" class="w-v"/><circle cx="70" cy="50" r="8" class="fv"/></svg></div><h3>Private cloud</h3><p class="what">Cloud-style infrastructure dedicated to one organization.</p><p class="use"><b>Example</b>Banks or governments with strict data rules, often on VMware or OpenStack.</p></div>
-    <div class="card f" data-f="3" style="--c:var(--amber)"><div class="ico"><svg width="140" height="90" viewBox="0 0 140 90"><rect x="10" y="30" width="40" height="40" rx="6" class="bx-v"/><path d="M80 60 a14 14 0 0 1 8-26 a18 18 0 0 1 34-2 a14 14 0 0 1 10 28z" class="bx-t"/><path d="M50 50 H82" class="w-a dash"/></svg></div><h3>Hybrid cloud</h3><p class="what">Private and public together. Data and apps move between them.</p><p class="use"><b>Example</b>Core banking on-prem, mobile app and analytics on AWS.</p></div>
-  </div>
-  <aside class="notes"><p>From PDF 01. Ask: which one is your college lab? (Usually private/on-prem.) Which one runs your favourite food delivery app? (Usually public cloud.)</p></aside>
-</section>
-
-<section class="slide" data-title="What a cloud gives you" data-phase="concept" data-ch="Cloud computing">
-  <h2>One login, a whole data center of services</h2>
-  <div class="grid g5 grow" style="gap:12px;align-content:center">
-    <div class="chip f" data-f="1"><span class="tile xs">EC2</span>Compute</div><div class="chip f" data-f="1"><span class="tile xs" style="--c:var(--green)">S3</span>Storage</div><div class="chip f" data-f="1"><span class="tile xs" style="--c:var(--blue)">RDS</span>Databases</div><div class="chip f" data-f="1"><span class="tile xs" style="--c:var(--teal)">VPC</span>Networking</div><div class="chip f" data-f="1"><span class="tile xs" style="--c:var(--teal)">ECS</span>Containers</div>
-    <div class="chip f" data-f="2"><span class="tile xs">λ</span>Serverless</div><div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--violet)">ML</span>Machine learning</div><div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--rose)">IAM</span>Identity</div><div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--gold)">CW</span>Monitoring</div><div class="chip f" data-f="2"><span class="tile xs" style="--c:var(--blue)">CDN</span>Content delivery</div>
-    <div class="chip f" data-f="3"><span class="tile xs" style="--c:var(--steel)">BKP</span>Backup + DR</div><div class="chip f" data-f="3"><span class="tile xs" style="--c:var(--rose)">SEC</span>Security tools</div><div class="chip f" data-f="3"><span class="tile xs" style="--c:var(--violet)">BI</span>Analytics</div><div class="chip f" data-f="3"><span class="tile xs" style="--c:var(--coral)">API</span>API management</div><div class="chip f" data-f="3"><span class="tile xs" style="--c:var(--coral)">IaC</span>Infra as code</div>
-  </div>
-  <p class="say f" data-f="4">Things that once needed a whole IT team are now <em>a few clicks or one API call</em>.</p>
-  <aside class="notes"><p>This list is the "features commonly offered by cloud providers" slide from PDF 01.</p></aside>
-</section>
-
-<section class="slide" data-tpl="perf" data-title="Perf: on-prem vs cloud" data-ch="Cloud computing">
-  <div class="t-h2">Before vs after: owning vs renting</div>
-  <div class="t-how">What changed: <b>moved FestPass from a laptop to the cloud</b></div>
-  <script type="application/json">{"rows":[
-    ["New server ready","from decision to running",100,"~6 weeks",3,"~1 minute","40,000×","faster"],
-    ["Capacity on fest day","students served",8,"300",100,"5,000+","16×","more"],
-    ["Paying for idle","days a year",98,"360 days",5,"~0 days","no","idle bill"],
-    ["Upfront cost","before day one",90,"Lakhs",4,"₹0","pay","per use"]],
-    "note":"Illustrative numbers for a small team. Exact times and costs vary by company and workload."}</script>
-  <aside class="notes"><p>Walk through each row as it animates. The point is the shape of the change, not exact rupees.</p></aside>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: why startups rent" data-ch="Cloud computing">
-  <div class="t-recap">Why does a 5-person startup never buy a server?</div>
-  <div class="t-ans">Because the cloud turns a <em>6-week purchase</em> into a <em>1-minute API call</em>, and you pay only for what you use.</div>
-  <div class="t-x">Money that would sit in idle hardware goes into the product. That's why every job description now says “AWS”.</div>
-</section>
-
 <!-- ================= CH2 VIRTUALIZATION ================= -->
 <section class="slide chapter" data-title="Chapter 2 · Virtualization">
   <div class="num">02</div><div class="eyebrow">Act 1 · Chapter 2</div>
   <h2>One machine, many computers</h2>
   <p class="q">The cloud rents you “a server”. But nobody gets a whole physical machine. So what do you actually get?</p>
   <aside class="notes"><p>Based on the "What is Virtualization" PDF.</p></aside>
-</section>
-
-<section class="slide" data-tpl="q" data-title="Struggle: my server, your server?" data-ch="Virtualization">
-  <div class="t-q">How can one physical server be <em>my</em> server and <em>your</em> server at the same time?</div>
-  <div class="t-who">Rahul, looking at his first EC2 bill</div>
-  <div class="t-hint">And how come I can run Linux on my Windows laptop without buying a second laptop?</div>
 </section>
 
 <section class="slide" data-title="Stack it up" data-phase="pic" data-ch="Virtualization" data-steps="3">
@@ -276,60 +199,5 @@
   <aside class="notes"><p>These are the exact numbers from the virtualization PDF: an 8 GB / 100 GB host gives VM1 2 GB RAM and 20 GB disk, VM2 2 GB and 10 GB. The rest stays free for more VMs.</p></aside>
 </section>
 
-<section class="slide" data-title="Compare: hypervisor types" data-phase="compare" data-ch="Virtualization">
-  <h2>Type 2 on your laptop, Type 1 in the cloud</h2>
-  <div class="grid g2 grow" style="gap:28px">
-    <div class="panel f" data-f="1">
-      <h3 class="hl-a">Type 2 · hosted</h3>
-      <svg class="d" viewBox="0 0 600 300" style="height:300px"><g style="font:600 17px var(--f-body)" text-anchor="middle">
-        <rect x="40" y="240" width="520" height="46" rx="10" class="bx-s"/><text x="300" y="269">Hardware</text>
-        <rect x="40" y="186" width="520" height="46" rx="10" class="bx-b"/><text x="300" y="215" class="tb">Host OS (Windows / macOS)</text>
-        <rect x="40" y="132" width="520" height="46" rx="10" class="bx-v"/><text x="300" y="161" class="tv">Hypervisor app</text>
-        <rect x="40" y="20" width="250" height="104" rx="10" class="bx-t"/><text x="165" y="78" class="tt">VM · Linux</text>
-        <rect x="310" y="20" width="250" height="104" rx="10" class="bx-t"/><text x="435" y="78" class="tt">VM · CentOS</text></g></svg>
-      <p class="small">VirtualBox, VMware Workstation. Great for learning: “Linux VirtualBox on Windows”.</p>
-    </div>
-    <div class="panel f" data-f="2" style="border-color:var(--violet)">
-      <h3 class="hl-v">Type 1 · bare metal</h3>
-      <svg class="d" viewBox="0 0 600 300" style="height:300px"><g style="font:600 17px var(--f-body)" text-anchor="middle">
-        <rect x="40" y="240" width="520" height="46" rx="10" class="bx-s"/><text x="300" y="269">Hardware</text>
-        <rect x="40" y="186" width="520" height="46" rx="10" class="bx-v"/><text x="300" y="215" class="tv">Hypervisor (directly on hardware)</text>
-        <rect x="40" y="20" width="160" height="158" rx="10" class="bx-t"/><text x="120" y="104" class="tt">VM</text>
-        <rect x="220" y="20" width="160" height="158" rx="10" class="bx-t"/><text x="300" y="104" class="tt">VM</text>
-        <rect x="400" y="20" width="160" height="158" rx="10" class="bx-t"/><text x="480" y="104" class="tt">VM</text></g></svg>
-      <p class="small">VMware ESXi, Xen, KVM, AWS Nitro. No host OS in the way. Used by cloud providers and enterprise servers.</p>
-    </div>
-  </div>
-  <aside class="notes"><p>Type 2 runs as an app on top of your OS, so it's slower but convenient. Type 1 runs directly on the hardware, which is faster and more secure. AWS EC2 originally used Xen and now uses the Nitro hypervisor, which is based on KVM.</p></aside>
-</section>
+<!--INC:s01b_nitro.html-->
 
-<!--OLD:Nitro-->
-
-<section class="slide" data-title="Why companies virtualize" data-phase="prod" data-ch="Virtualization">
-  <h2>Why every company virtualizes</h2>
-  <div class="cmp g5 grow">
-    <div class="card f" data-f="1" style="--c:var(--green)"><h3>Cheaper</h3><p class="what">One big server replaces many half-empty ones.</p></div>
-    <div class="card f" data-f="2" style="--c:var(--teal)"><h3>Less space</h3><p class="what">Fewer racks, smaller rooms.</p></div>
-    <div class="card f" data-f="3" style="--c:var(--amber)"><h3>Less energy</h3><p class="what">Fewer machines to power and cool.</p></div>
-    <div class="card f" data-f="4" style="--c:var(--blue)"><h3>Snapshots</h3><p class="what">Save a whole machine's state in seconds.</p></div>
-    <div class="card f" data-f="5" style="--c:var(--violet)"><h3>Fast recovery</h3><p class="what">Host died? Restart the VM on another host.</p></div>
-  </div>
-  <aside class="notes"><p>From the virtualization PDF: cheap, reduces workload, space, energy, easy backup using snapshots, easy recovery.</p></aside>
-</section>
-
-<section class="slide" data-tpl="perf" data-title="Perf: virtualization" data-ch="Virtualization">
-  <div class="t-h2">Before vs after: one app per server vs VMs</div>
-  <div class="t-how">What changed: <b>put a hypervisor under the apps</b></div>
-  <script type="application/json">{"rows":[
-    ["Server utilization","average CPU busy",15,"~15%",70,"~60–80%","4–5×","better use"],
-    ["New test machine","Linux for a quick test",90,"buy hardware",6,"VM in minutes","days→","minutes"],
-    ["Recovery after crash","restore a machine",85,"rebuild by hand",10,"restore snapshot","hours→","minutes"],
-    ["Machines to power","for 10 apps",100,"10 servers",25,"2–3 hosts","~4×","fewer"]],
-    "note":"Illustrative ranges. Underused single-app servers are common in on-prem data centers; consolidation ratios vary."}</script>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: your EC2 is a VM" data-ch="Virtualization">
-  <div class="t-recap">How can one server be my server and your server at the same time?</div>
-  <div class="t-ans">Your EC2 instance <em>is a virtual machine</em>: a slice of a real server, cut by a Type 1 hypervisor.</div>
-  <div class="t-x">AWS built its own hypervisor and hardware, the Nitro System, so the slices run at nearly bare-metal speed and stay isolated from every other customer.</div>
-</section>

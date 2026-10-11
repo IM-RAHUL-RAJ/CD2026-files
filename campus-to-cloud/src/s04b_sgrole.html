@@ -1,0 +1,182 @@
+
+<!-- ================= SG vs IAM ROLE ================= -->
+<section class="slide chapter" data-title="Chapter 6 · Security group vs IAM role">
+  <div class="num">06</div><div class="eyebrow">Act 2 · Chapter 6</div>
+  <h2>Security group vs IAM role</h2>
+  <p class="q">Rahul's server already has a security group. His lead says “attach a role too.” Isn't one lock enough?</p>
+  <div class="tiles"><span class="tile sm" style="--c:var(--teal)">SG</span><span class="tile sm" style="--c:var(--violet)">IAM</span></div>
+  <aside class="notes"><p>The most common confusion for people new to AWS. We'll settle it with one picture, one console screen and three real examples.</p></aside>
+</section>
+
+<section class="slide" data-title="Two locks, two questions" data-phase="pic" data-ch="SG vs role">
+  <h2>Two locks. Two different questions.</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <rect x="520" y="130" width="368" height="300" rx="24" class="bx-a"/><text x="704" y="270" text-anchor="middle" class="ta" style="font:800 32px var(--f-display)">EC2</text><text x="704" y="306" text-anchor="middle" class="tmut" style="font-size:19px">your app</text>
+      <g class="f" data-f="1">
+        <rect x="474" y="110" width="30" height="340" rx="10" class="ft glow-t"/>
+        <text x="489" y="96" text-anchor="middle" class="tt tm" style="font-size:15px">SECURITY GROUP</text>
+        <g style="font:600 17px var(--f-body)"><rect x="30" y="150" width="200" height="64" rx="14" class="bx-t"/><text x="130" y="189" text-anchor="middle" class="tt">users</text>
+        <rect x="30" y="250" width="200" height="64" rx="14" class="bx-t"/><text x="130" y="289" text-anchor="middle" class="tt">other servers</text>
+        <rect x="30" y="350" width="200" height="64" rx="14" class="bx-r"/><text x="130" y="389" text-anchor="middle" class="tr">hacker</text></g>
+        <path id="tl1" d="M230 182 C 350 182 380 230 520 230" class="w-t" style="opacity:.5"/><circle r="9" class="ft glow-t"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#tl1"/></animateMotion></circle>
+        <path id="tl2" d="M230 282 H520" class="w-t" style="opacity:.5"/><circle r="9" class="ft glow-t"><animateMotion dur="1.8s" begin=".6s" repeatCount="indefinite"><mpath href="#tl2"/></animateMotion></circle>
+        <path id="tl3" d="M230 382 C 350 382 380 350 470 350" class="w-r" style="opacity:.5"/><circle r="9" class="fr glow-r"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#tl3"/></animateMotion></circle>
+        <g transform="translate(455,350)"><circle r="20" class="fr" opacity=".25"/><path d="M-10 -10 L10 10 M10 -10 L-10 10" class="w-r" style="stroke-width:5;stroke-linecap:round"/></g>
+        <text x="250" y="480" text-anchor="middle" class="tt" style="font:800 26px var(--f-display)">Can this packet</text><text x="250" y="516" text-anchor="middle" class="tt" style="font:800 26px var(--f-display)">REACH me?</text>
+        <text x="250" y="548" text-anchor="middle" class="tmut" style="font-size:17px">checks port · protocol · source</text>
+      </g>
+      <g class="f" data-f="2">
+        <g class="" transform="translate(813.0,160.0)"><rect width="150" height="80" rx="12" class="bx-v glow-v" style="fill:#221d44"/><rect x="61.0" y="8" width="28" height="7" rx="3.5" class="fk"/><circle cx="24" cy="46.0" r="10" class="fv"/><text x="87.0" y="51.0" text-anchor="middle" class="tv" style="font:700 16px var(--f-mono)">IAM ROLE</text></g>
+        <g style="font:700 18px var(--f-body)"><rect x="1150" y="140" width="230" height="64" rx="14" class="bx-g"/><text x="1265" y="179" text-anchor="middle" class="tg">S3</text>
+        <rect x="1150" y="240" width="230" height="64" rx="14" class="bx-g"/><text x="1265" y="279" text-anchor="middle" class="tg">SQS</text>
+        <rect x="1150" y="340" width="230" height="64" rx="14" class="bx-g"/><text x="1265" y="379" text-anchor="middle" class="tg">Secrets Manager</text></g>
+        <path id="tr1" d="M963 200 C 1060 200 1060 172 1150 172" class="w-v" style="opacity:.5"/><circle r="9" class="fv glow-v"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#tr1"/></animateMotion></circle>
+        <path id="tr2" d="M888 300 C 1000 300 1050 372 1150 372" class="w-v" style="opacity:.5"/><circle r="9" class="fv glow-v"><animateMotion dur="1.9s" begin=".5s" repeatCount="indefinite"><mpath href="#tr2"/></animateMotion></circle>
+        <text x="1160" y="480" text-anchor="middle" class="tv" style="font:800 26px var(--f-display)">Am I ALLOWED</text><text x="1160" y="516" text-anchor="middle" class="tv" style="font:800 26px var(--f-display)">to do this?</text>
+        <text x="1160" y="548" text-anchor="middle" class="tmut" style="font-size:17px">checks AWS actions · s3:PutObject</text>
+      </g>
+      <g class="f" data-f="3">
+        <rect x="474" y="460" width="460" height="96" rx="18" class="bx" style="fill:var(--ink-3)"/>
+        <text x="704" y="498" text-anchor="middle" style="font:600 19px var(--f-body)"><tspan class="tt">SG</tspan> = the guard at the gate</text>
+        <text x="704" y="532" text-anchor="middle" style="font:600 19px var(--f-body)"><tspan class="tv">Role</tspan> = your employee ID card</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Click 1: traffic coming IN to the server. The security group is a firewall: it only understands network things like ports, protocols and source IPs. It decides whether a packet may reach the server at all.</p><p>Click 2: calls going OUT from the server to AWS services. S3, SQS and Secrets Manager are not inside your VPC; they're AWS APIs. They don't care about your firewall. They ask: who are you, and are you allowed to do this action? The role answers that.</p><p>Click 3: the guard at the office gate decides if you can enter the building. Your employee ID card decides which systems you can use once you're in. You need both, and neither replaces the other.</p></aside>
+</section>
+
+<section class="slide" data-title="Where each one is attached" data-phase="pic" data-ch="SG vs role">
+  <h2>Both are attached to the resource</h2>
+  <div class="row grow" style="gap:30px">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 820 600">
+        <rect x="10" y="10" width="360" height="110" rx="18" class="bx-t"/><text x="190" y="54" text-anchor="middle" class="tt" style="font:700 21px var(--f-body)">VPC console</text><text x="190" y="86" text-anchor="middle" class="tmut" style="font-size:17px">you create the security group</text>
+        <rect x="450" y="10" width="360" height="110" rx="18" class="bx-v"/><text x="630" y="54" text-anchor="middle" class="tv" style="font:700 21px var(--f-body)">IAM console</text><text x="630" y="86" text-anchor="middle" class="tmut" style="font-size:17px">you create the role</text>
+        <rect x="150" y="230" width="520" height="300" rx="24" class="bx-a"/><text x="176" y="268" class="ta tm" style="font-size:17px">EC2 instance</text>
+        <rect x="176" y="400" width="250" height="100" rx="14" class="bx-s" style="fill:var(--ink-2)"/><text x="301" y="440" text-anchor="middle" style="font:700 17px var(--f-body);fill:var(--steel)">network card (ENI)</text><text x="301" y="470" text-anchor="middle" class="tmut tm" style="font-size:14px">10.0.1.25</text>
+        <g class="" transform="translate(470,450) scale(1.25)"><path d="M0 -34 L30 -22 V4 C30 25 15 36 0 42 C-15 36 -30 25 -30 4 V-22 Z" class="bx-t glow-t"/><text y="8" text-anchor="middle" class="tt" style="font:700 15px var(--f-mono)">sg</text></g>
+        <g class="" transform="translate(485.0,260.0)"><rect width="150" height="80" rx="12" class="bx-v glow-v" style="fill:#221d44"/><rect x="61.0" y="8" width="28" height="7" rx="3.5" class="fk"/><circle cx="24" cy="46.0" r="10" class="fv"/><text x="87.0" y="51.0" text-anchor="middle" class="tv" style="font:700 17px var(--f-mono)">role</text></g>
+        <g class="f" data-f="1"><path d="M340 120 C 340 300 470 300 470 404" class="w-t dash" style="stroke-width:3"/><text x="40" y="200" class="tt" style="font:700 18px var(--f-body)">attached to its</text><text x="40" y="224" class="tt" style="font:700 18px var(--f-body)">network card</text></g>
+        <g class="f" data-f="2"><path d="M630 120 V258" class="w-v dash" style="stroke-width:3"/><text x="650" y="200" class="tv" style="font:700 18px var(--f-body)">attached to</text><text x="650" y="224" class="tv" style="font:700 18px var(--f-body)">the instance</text></g>
+        <g class="f" data-f="3" style="font-size:16px">
+          <text x="10" y="566" class="tt" font-weight="700">SGs also go on:</text><text x="180" y="566" class="tmut">RDS, load balancers, Lambda in a VPC, EKS nodes</text>
+          <text x="10" y="592" class="tv" font-weight="700">Roles also go on:</text><text x="180" y="592" class="tmut">Lambda, ECS tasks, EKS pods, CodeBuild</text>
+        </g>
+      </svg>
+    </div>
+    <div class="f" data-f="4" style="width:520px;flex:none;display:flex;flex-direction:column;justify-content:center;gap:14px">
+      <div class="panel" style="padding:0;overflow:hidden">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--line);font:500 15px var(--f-mono);color:var(--muted)">Instances › i-0a12b3c4 <span style="color:var(--fg)">seat-map-api</span></div>
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--line);font:600 15px var(--f-body)"><span style="padding:12px 18px;color:var(--muted)">Details</span><span style="padding:12px 18px;color:var(--amber);border-bottom:3px solid var(--amber)">Security</span><span style="padding:12px 18px;color:var(--muted)">Networking</span></div>
+        <div style="padding:16px 18px;display:grid;grid-template-columns:150px 1fr;gap:16px 12px;font-size:18px;align-items:center">
+          <span class="small">IAM role</span><span><span class="pill" style="color:var(--violet)">tw-app-role</span></span>
+          <span class="small">Security groups</span><span><span class="pill" style="color:var(--teal)">sg-web</span></span>
+          <span class="small">Inbound rules</span><span class="mono" style="font-size:16px">443 · TCP · 0.0.0.0/0<br>22 · TCP · 10.0.0.0/16</span>
+        </div>
+      </div>
+      <p class="small">Same instance, same tab, two different things.</p>
+    </div>
+  </div>
+  <aside class="notes"><p>Answer to the question “is the SG associated with the resource or with IAM?”: with the resource. Precisely, with its network interface (ENI). You create it in the VPC/EC2 console; IAM has nothing to do with it.</p><p>The role is created in IAM, but it's also attached to the resource: for EC2 through an “instance profile”, in the console under Actions › Security › Modify IAM role. Lambda calls it an execution role, ECS a task role.</p><p>People (Rahul, Neha) never get security groups. People get IAM users or SSO access; resources get roles and security groups.</p><p>Click 4: this is literally what you see on the instance's Security tab.</p></aside>
+</section>
+
+<section class="slide" data-title="Example: app can't upload to S3" data-phase="prod" data-ch="SG vs role" data-steps="2">
+  <h2>Example 1: the app can't upload a poster to S3</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <rect x="40" y="110" width="380" height="260" rx="22" class="bx-a"/><text x="66" y="148" class="ta tm" style="font-size:17px">EC2 · seat-map-api</text>
+      <rect x="420" y="96" width="26" height="290" rx="9" class="ft"/>
+      <text x="433" y="80" text-anchor="middle" class="tt tm hide-on-1" style="font-size:14px">SG: outbound all ✓</text>
+      <text x="433" y="80" text-anchor="middle" class="tt tm show-on-1" style="font-size:14px">SG: every port open!</text>
+      <g class="show-on-2" transform="translate(140.0,232.0)"><rect width="180" height="76" rx="12" class="bx-v glow-v" style="fill:#221d44"/><rect x="76.0" y="8" width="28" height="7" rx="3.5" class="fk"/><circle cx="24" cy="44.0" r="10" class="fv"/><text x="102.0" y="49.0" text-anchor="middle" class="tv" style="font:700 16px var(--f-mono)">s3-upload</text></g>
+      <g transform="translate(1060,140)"><path d="M0 0 H280 L256 190 H24 Z" class="bx-g" style="fill:rgba(110,220,146,.12)"/><ellipse cx="140.0" cy="0" rx="140.0" ry="16" class="bx-g"/><text x="140.0" y="109.0" text-anchor="middle" class="tg" style="font:700 22px var(--f-body)">S3</text><text x="140.0" y="137.0" text-anchor="middle" class="tmut tm" style="font-size:15px">tw-posters</text></g>
+      <path id="e1" d="M446 240 H930" class="w-l" style="stroke-width:3"/>
+      <g class="hide-on-2"><circle r="11" class="fr glow-r"><animateMotion dur="1.6s" repeatCount="indefinite" keyPoints="0;1;0.9" keyTimes="0;0.8;1"><mpath href="#e1"/></animateMotion></circle>
+        <g transform="translate(880,200)"><circle r="20" class="fr" opacity=".25"/><path d="M-10 -10 L10 10 M10 -10 L-10 10" class="w-r" style="stroke-width:5;stroke-linecap:round"/></g><text x="680" y="210" text-anchor="middle" class="tr" style="font:700 24px var(--f-mono)">403 AccessDenied</text></g>
+      <g class="show-on-2"><path id="e2" d="M446 240 H1060" class="w-g" style="stroke-width:3"/><circle r="11" class="fg glow-g"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#e2"/></animateMotion></circle>
+        <g transform="translate(880,200)"><circle r="20" class="fg" opacity=".25"/><path d="M-10 0 L-3 8 L11 -9" class="w-g" style="stroke-width:5;stroke-linecap:round;stroke-linejoin:round"/></g><text x="680" y="210" text-anchor="middle" class="tg" style="font:700 24px var(--f-mono)">200 OK</text></g>
+      <g style="font:700 24px var(--f-body)">
+        <text x="40" y="440" class="tr hide-on-1">No role → AccessDenied</text>
+        <text x="40" y="440" class="tr show-on-1 hide-on-2">Open more SG ports → still AccessDenied</text>
+        <text x="40" y="440" class="tg show-on-2">Attach a role that allows s3:PutObject → works</text>
+      </g>
+      <text x="40" y="474" class="tmut show-on-1 hide-on-2" style="font-size:19px">S3 lives outside your VPC. It never looks at your security group. It asks who you are.</text>
+      <g class="show-on-2"><rect x="760" y="400" width="600" height="130" rx="14" style="fill:#0A0F1B;stroke:var(--line)"/>
+        <text x="784" y="436" class="tm" style="font-size:16px"><tspan class="tt">"Effect"</tspan>:   <tspan class="ta">"Allow"</tspan>,</text>
+        <text x="784" y="464" class="tm" style="font-size:16px"><tspan class="tt">"Action"</tspan>:   <tspan class="ta">"s3:PutObject"</tspan>,</text>
+        <text x="784" y="492" class="tm" style="font-size:16px"><tspan class="tt">"Resource"</tspan>: <tspan class="ta">"arn:aws:s3:::tw-posters/*"</tspan></text></g>
+      <rect x="930" y="170" width="120" height="130" rx="14" class="bx"/>
+      <g class="hide-on-2"><text x="990" y="224" text-anchor="middle" class="tmut" style="font-size:15px">“show me</text><text x="990" y="246" text-anchor="middle" class="tmut" style="font-size:15px">your badge”</text></g>
+      <g class="show-on-2"><text x="990" y="224" text-anchor="middle" class="tg" style="font-size:15px">badge</text><text x="990" y="246" text-anchor="middle" class="tg" style="font-size:15px">allows it ✓</text></g>
+      <text x="66" y="190" class="tmut tm" style="font-size:16px">PutObject poster.jpg</text>
+    </svg>
+  </div>
+  <aside class="notes"><p>Start: the app calls S3's PutObject. The security group allows all outbound traffic, so the request reaches S3. S3 checks the caller's identity, finds no permission, and returns 403 AccessDenied.</p><p>Click 1: Rahul's first instinct: open more ports. It changes nothing, because S3 never sees or cares about your security group.</p><p>Click 2: attach a role whose policy allows s3:PutObject on that bucket. Same network, same SG. Now it works. The fix was identity, not network.</p></aside>
+</section>
+
+<section class="slide" data-title="Example: admin role, site times out" data-phase="prod" data-ch="SG vs role" data-steps="2">
+  <h2>Example 2: the role is admin, the site still times out</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <rect x="40" y="110" width="320" height="230" rx="18" class="bx-t"/><rect x="40" y="110" width="320" height="40" rx="18" class="bx" style="fill:var(--ink-3)"/><text x="64" y="137" class="tmut tm" style="font-size:14px">https://seats.ticketwave.in</text>
+      <g class="hide-on-1"><circle cx="200" cy="245" r="34" class="w-l" style="stroke-width:8"/><circle cx="200" cy="245" r="34" class="w-t spin" style="stroke-width:8;stroke-dasharray:60 160"/><text x="200" y="318" text-anchor="middle" class="tmut" style="font-size:17px">loading… forever</text></g>
+      <g class="show-on-1"><rect x="80" y="180" width="240" height="24" rx="6" class="ft" opacity=".7"/><rect x="80" y="216" width="180" height="16" rx="5" class="fm" opacity=".5"/><rect x="80" y="244" width="200" height="16" rx="5" class="fm" opacity=".5"/><rect x="80" y="282" width="110" height="34" rx="8" class="fa"/></g>
+      <rect x="840" y="80" width="26" height="320" rx="9" class="ft"/>
+      <rect x="866" y="100" width="480" height="280" rx="22" class="bx-a"/><text x="892" y="140" class="ta tm" style="font-size:17px">EC2 · web server</text>
+      <g class="" transform="translate(956.0,190.0)"><rect width="300" height="80" rx="12" class="bx-v glow-v" style="fill:#221d44"/><rect x="136.0" y="8" width="28" height="7" rx="3.5" class="fk"/><circle cx="24" cy="46.0" r="10" class="fv"/><text x="162.0" y="51.0" text-anchor="middle" class="tv" style="font:700 17px var(--f-mono)">AdministratorAccess</text></g>
+      <rect x="560" y="420" width="560" height="120" rx="16" style="fill:#0A0F1B;stroke:var(--line)"/><text x="584" y="452" class="lbl">sg-web inbound rules</text>
+      <text x="584" y="486" class="tm" style="font-size:18px">22  · TCP · office IP</text>
+      <text x="584" y="518" class="tm tg show-on-1" style="font-size:18px">443 · TCP · 0.0.0.0/0   ← added</text>
+      <path id="a1" d="M360 225 H840" class="w-l" style="stroke-width:3"/>
+      <g class="hide-on-1"><circle r="11" class="fr glow-r"><animateMotion dur="1.6s" repeatCount="indefinite" keyPoints="0;0.96;0.96" keyTimes="0;0.7;1"><mpath href="#a1"/></animateMotion></circle><g transform="translate(800,190)"><circle r="20" class="fr" opacity=".25"/><path d="M-10 -10 L10 10 M10 -10 L-10 10" class="w-r" style="stroke-width:5;stroke-linecap:round"/></g><text x="600" y="200" text-anchor="middle" class="tr" style="font:700 22px var(--f-mono)">port 443 dropped</text></g>
+      <g class="show-on-1"><path id="a2" d="M360 225 H960" class="w-g" style="stroke-width:3"/><circle r="11" class="fg glow-g"><animateMotion dur="1.3s" repeatCount="indefinite"><mpath href="#a2"/></animateMotion></circle><g transform="translate(800,190)"><circle r="20" class="fg" opacity=".25"/><path d="M-10 0 L-3 8 L11 -9" class="w-g" style="stroke-width:5;stroke-linecap:round;stroke-linejoin:round"/></g></g>
+      <g style="font:700 24px var(--f-body)"><text x="40" y="400" class="tr hide-on-1">Admin role, but no 443 rule</text><text x="40" y="400" class="tg show-on-1">Add the inbound rule → page loads</text></g>
+      <text x="40" y="434" class="tmut" style="font-size:19px">A role never opens a port.</text>
+      <g class="f" data-f="2" style="font:600 19px var(--f-body)">
+        <rect x="40" y="466" width="480" height="34" rx="10" class="bx-t"/><text x="58" y="490" class="tt">“Timed out” → network: SG, NACL, route</text>
+        <rect x="40" y="508" width="480" height="34" rx="10" class="bx-v"/><text x="58" y="532" class="tv">“AccessDenied” → IAM: role, policy</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>The opposite mistake. The server's role is AdministratorAccess, the most powerful policy there is. Fans still can't open the site: the security group has no inbound rule for 443, so packets are silently dropped and the browser spins until it times out.</p><p>Click 1: add “443 from anywhere” and the page loads instantly. No IAM change was needed.</p><p>Click 2: the debugging rule of thumb. A timeout means the packet never arrived: look at the network (security group, NACL, route table). An AccessDenied message means it arrived and AWS said no: look at IAM.</p></aside>
+</section>
+
+<section class="slide" data-title="Example: app to RDS needs both" data-phase="prod" data-ch="SG vs role">
+  <h2>Example 3: the app talks to RDS. Three gates.</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <rect x="30" y="220" width="230" height="140" rx="20" class="bx-a"/><text x="145" y="282" text-anchor="middle" class="ta" style="font:700 22px var(--f-body)">app</text><text x="145" y="312" text-anchor="middle" class="tmut tm" style="font-size:14px">EC2 · sg-app</text>
+      <rect x="470" y="10" width="330" height="96" rx="18" class="bx-g"/><text x="635" y="52" text-anchor="middle" class="tg" style="font:700 21px var(--f-body)">Secrets Manager</text><text x="635" y="80" text-anchor="middle" class="tmut" style="font-size:16px">holds the DB password</text>
+      <g transform="translate(1140,200)"><rect y="14" width="230" height="150" class="fb" opacity=".75"/><ellipse cx="115" cy="164" rx="115" ry="16" class="fb" opacity=".75"/><ellipse cx="115" cy="14" rx="115" ry="16" class="fb"/><text x="115" y="100" text-anchor="middle" class="tink" style="font:800 22px var(--f-body)">RDS MySQL</text></g>
+      <g class="f" data-f="1">
+        <path id="sgr1" d="M200 220 C 200 100 330 58 470 58" class="w-v" style="stroke-width:3"/><circle r="9" class="fv glow-v"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#sgr1"/></animateMotion></circle>
+        <g class="" transform="translate(245.0,77.0)"><rect width="110" height="66" rx="12" class="bx-v glow-v" style="fill:#221d44"/><rect x="41.0" y="8" width="28" height="7" rx="3.5" class="fk"/><circle cx="24" cy="39.0" r="10" class="fv"/><text x="67.0" y="44.0" text-anchor="middle" class="tv" style="font:700 15px var(--f-mono)">role</text></g>
+        <text x="360" y="170" class="tv" style="font:700 19px var(--f-body)">1 · IAM role</text><text x="360" y="194" class="tmut tm" style="font-size:14px">secretsmanager:GetSecretValue ✓</text>
+      </g>
+      <path id="sgr2" d="M260 290 H1140" class="w-l" style="stroke-width:3"/>
+      <g class="f" data-f="2">
+        <g class="" transform="translate(700,290) scale(1.5)"><path d="M0 -34 L30 -22 V4 C30 25 15 36 0 42 C-15 36 -30 25 -30 4 V-22 Z" class="bx-t glow-t"/><text y="8" text-anchor="middle" class="tt" style="font:700 16px var(--f-mono)">SG</text></g>
+        <text x="700" y="380" text-anchor="middle" class="tt" style="font:700 19px var(--f-body)">2 · Security group</text><text x="700" y="404" text-anchor="middle" class="tmut tm" style="font-size:14px">sg-db: 3306 from sg-app ✓</text>
+      </g>
+      <g class="f" data-f="3">
+        <circle r="10" class="fa glow-a"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#sgr2"/></animateMotion></circle>
+        <g transform="translate(990,290)"><circle r="40" class="bx-a" style="fill:#2a2212"/><circle cx="-10" r="11" class="w-a" style="stroke-width:4"/><path d="M1 0 H22 M16 0 V10" class="w-a" style="stroke-width:4"/></g>
+        <text x="990" y="380" text-anchor="middle" class="ta" style="font:700 19px var(--f-body)">3 · DB login</text><text x="990" y="404" text-anchor="middle" class="tmut tm" style="font-size:14px">user + password ✓</text>
+      </g>
+      <g class="f" data-f="4" style="font:600 18px var(--f-body)">
+        <rect x="30" y="456" width="440" height="80" rx="14" class="bx-v"/><text x="50" y="488" class="tv tm" style="font-size:15px">AccessDeniedException</text><text x="50" y="518" class="tmut">→ fix the role's policy</text>
+        <rect x="484" y="456" width="440" height="80" rx="14" class="bx-t"/><text x="504" y="488" class="tt tm" style="font-size:15px">Connection timed out</text><text x="504" y="518" class="tmut">→ fix sg-db's inbound rule</text>
+        <rect x="938" y="456" width="440" height="80" rx="14" class="bx-a"/><text x="958" y="488" class="ta tm" style="font-size:15px">Access denied for user 'app'</text><text x="958" y="518" class="tmut">→ wrong DB password</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Real enterprise flow. Click 1: the app fetches the DB password from Secrets Manager. That's an AWS API call, so the role must allow secretsmanager:GetSecretValue.</p><p>Click 2: the app opens a connection to RDS on port 3306. That's network, so sg-db must allow 3306 from sg-app.</p><p>Click 3: MySQL itself checks the username and password. That's the database's own login, neither IAM nor SG.</p><p>Click 4: each gate fails with a different error message. Read the error, and you know which gate to fix.</p></aside>
+</section>
+
+<section class="slide" data-title="Activity: SG or role?" data-phase="prod" data-ch="Activity" >
+  <div><span class="act-badge">Activity · vote</span></div>
+  <h2 style="margin-top:6px">Security group or IAM role? You decide.</h2>
+  <div class="grid g3 grow" id="sgrQ" style="gap:16px;align-content:center"></div>
+  <aside class="notes"><p>Read each error out loud. Room votes by raising hands: left hand for security group, right hand for role. Then click.</p></aside>
+</section>

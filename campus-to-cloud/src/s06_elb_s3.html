@@ -1,17 +1,11 @@
 
 <!-- ================= CH9 ELB + ASG ================= -->
-<section class="slide chapter" data-title="Chapter 9 · ELB and ASG">
-  <div class="num">09</div><div class="eyebrow">Act 2 · Chapter 9</div>
+<section class="slide chapter" data-title="Chapter 10 · ELB and ASG">
+  <div class="num">10</div><div class="eyebrow">Act 2 · Chapter 10</div>
   <h2>Many servers, one front door</h2>
   <p class="q">The cricket ticket sale opens at noon. One server will melt, just like Rahul's laptop did on fest day.</p>
   <div class="tiles"><span class="tile sm" style="--c:var(--green)">ALB</span><span class="tile sm" style="--c:var(--green)">NLB</span><span class="tile sm" style="--c:var(--green)">ASG</span></div>
   <aside class="notes"><p>Based on PDF 07 (ELB and ASG).</p></aside>
-</section>
-
-<section class="slide" data-tpl="q" data-title="Struggle: one giant server?" data-ch="ELB · ASG">
-  <div class="t-q">Why don't big sites just buy one giant server?</div>
-  <div class="t-who">Rahul, after fest day</div>
-  <div class="t-hint">The biggest EC2 instances have hundreds of CPUs. Wouldn't one of those be enough?</div>
 </section>
 
 <section class="slide" data-title="Scale up vs scale out" data-phase="pic" data-ch="ELB · ASG">
@@ -38,16 +32,6 @@
   <aside class="notes"><p>PDF 07: vertical scalability means adding CPU and RAM to an existing server (t2.micro to m5.large). Horizontal scalability means adding more instances behind a load balancer.</p></aside>
 </section>
 
-<section class="slide" data-title="Three words to know" data-phase="concept" data-ch="ELB · ASG">
-  <h2>Scalability, high availability, elasticity</h2>
-  <div class="cmp g3 grow">
-    <div class="card f" data-f="1" style="--c:var(--teal)"><div class="ico"><svg width="140" height="90" viewBox="0 0 140 90"><rect x="10" y="50" width="22" height="30" class="ft"/><rect x="40" y="36" width="22" height="44" class="ft"/><rect x="70" y="22" width="22" height="58" class="ft"/><rect x="100" y="8" width="22" height="72" class="ft"/></svg></div><h3>Scalability</h3><p class="what">Can the system grow when users grow?</p><p class="use"><b>Example</b>From 1 to 20 servers for the sale.</p></div>
-    <div class="card f" data-f="2" style="--c:var(--amber)"><div class="ico"><svg width="140" height="90" viewBox="0 0 140 90"><rect x="10" y="20" width="36" height="50" rx="6" class="bx-a"/><rect x="52" y="20" width="36" height="50" rx="6" class="bx-a" opacity=".3"/><rect x="94" y="20" width="36" height="50" rx="6" class="bx-a"/><path d="M60 35 L80 55 M80 35 L60 55" class="w-r"/></svg></div><h3>High availability</h3><p class="what">Stays up even when a piece fails.</p><p class="use"><b>Example</b>Servers in AZ a, b and c.</p></div>
-    <div class="card f" data-f="3" style="--c:var(--green)"><div class="ico"><svg width="140" height="90" viewBox="0 0 140 90"><path d="M10 70 C 40 70, 50 10, 70 10 S 100 70, 130 70" class="w-g"/></svg></div><h3>Elasticity</h3><p class="what">Grows <i>and shrinks</i> automatically with demand.</p><p class="use"><b>Example</b>An Auto Scaling group.</p></div>
-  </div>
-  <aside class="notes"><p>Definitions from PDF 07. Elasticity is scalability done automatically in both directions, which is what saves money.</p></aside>
-</section>
-
 <section class="slide" data-title="Load balancer in action" data-phase="pic" data-ch="ELB · ASG" data-steps="2">
   <h2>One address, many servers, sick ones skipped</h2>
   <div class="vis">
@@ -69,87 +53,18 @@
   <aside class="notes"><p>Click 1: the AZ b server fails its health check and the load balancer stops sending it traffic. Click 2: the classroom trick from PDF 07: put $(hostname) in the page so each refresh shows a different server.</p><p>Only the load balancer needs to be exposed publicly: a single point of access.</p></aside>
 </section>
 
-<section class="slide" data-title="Compare: ALB, NLB, GWLB" data-phase="compare" data-ch="ELB · ASG">
-  <h2>Three load balancers, three jobs</h2>
-  <div class="cmp g3 grow">
-    <div class="card f" data-f="1" style="--c:var(--green)"><h3>ALB · layer 7</h3><p class="what">Understands HTTP: paths, hosts, headers. <span class="mono">/api → api servers</span>, <span class="mono">/images → S3-backed service</span>.</p><p class="use"><b>Use for</b>Websites, APIs, microservices, Kubernetes ingress.</p></div>
-    <div class="card f" data-f="2" style="--c:var(--blue)"><h3>NLB · layer 4</h3><p class="what">TCP/UDP. Very high performance and very low latency. Static IPs.</p><p class="use"><b>Use for</b>Gaming, trading, IoT, millions of connections.</p></div>
-    <div class="card f" data-f="3" style="--c:var(--violet)"><h3>GWLB</h3><p class="what">Sends traffic through third-party appliances transparently.</p><p class="use"><b>Use for</b>Firewalls, intrusion detection, deep packet inspection.</p></div>
-  </div>
-  <aside class="notes"><p>From PDF 07: ALB for HTTP/HTTPS (layer 7), NLB for high-performance TCP/UDP (layer 4), Gateway Load Balancer for virtual appliances like firewalls.</p></aside>
-</section>
-
 <!--OLD:Production: Auto Scaling-->
 
-<section class="slide" data-title="Building an ASG" data-phase="prod" data-ch="ELB · ASG">
-  <h2>Eight steps to servers that manage themselves</h2>
-  <div class="tl" style="margin-top:6px">
-    <div class="f" data-f="1" style="--c:var(--amber)"><b>1</b><p>Launch template</p></div>
-    <div class="f" data-f="1" style="--c:var(--amber)"><b>2</b><p>Create the group</p></div>
-    <div class="f" data-f="2" style="--c:var(--teal)"><b>3</b><p>Pick VPC + subnets in 3 AZs</p></div>
-    <div class="f" data-f="2" style="--c:var(--green)"><b>4</b><p>Attach the load balancer</p></div>
-    <div class="f" data-f="3" style="--c:var(--violet)"><b>5</b><p>Scaling policy: CPU 60%</p></div>
-    <div class="f" data-f="3" style="--c:var(--rose)"><b>6</b><p>Health checks</p></div>
-    <div class="f" data-f="4" style="--c:var(--blue)"><b>7</b><p>Notifications</p></div>
-    <div class="f" data-f="4" style="--c:var(--gold)"><b>8</b><p>Review and create</p></div>
-  </div>
-  <div class="grid g3 f" data-f="5" style="gap:16px">
-    <div class="panel"><h3 class="hl-t">Target tracking</h3><p class="small">“Keep average CPU at 60%.” ASG adds or removes servers to stay there.</p></div>
-    <div class="panel"><h3 class="hl-a">Scheduled</h3><p class="small">“At 11:45 on sale day, go to 40 servers.” Pre-warm before a known spike.</p></div>
-    <div class="panel"><h3 class="hl-r">Self-healing</h3><p class="small">A server fails health checks? It's terminated and replaced automatically.</p></div>
-  </div>
-  <aside class="notes"><p>Steps from PDF 07. For ticket drops, TicketWave uses scheduled scaling to pre-warm, plus target tracking for surprises.</p></aside>
-</section>
-
-<section class="slide" data-tpl="perf" data-title="Perf: ELB + ASG" data-ch="ELB · ASG">
-  <div class="t-h2">Before vs after: one big server vs ALB + Auto Scaling</div>
-  <div class="t-how">What changed: <b>ALB in front, 2–20 instances across 3 AZs</b></div>
-  <script type="application/json">{"rows":[
-    ["Peak requests handled","per second",10,"~800",100,"~8,000","10×","throughput"],
-    ["One server dies","what users see",100,"site down",4,"nothing","0","downtime"],
-    ["Cost at 3 am","quiet hours",100,"big server idling",15,"2 small servers","~85%","less"],
-    ["Deploying a fix","users affected",80,"downtime window",5,"rolling, none","0","downtime"]],
-    "note":"Throughput and cost figures are illustrative; real numbers depend on the app and instance types."}</script>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: why not one giant server" data-ch="ELB · ASG">
-  <div class="t-recap">Why don't big sites just buy one giant server?</div>
-  <div class="t-ans">Because one giant server is <em>one giant point of failure</em>, and it costs the same at 3 am as at peak.</div>
-  <div class="t-x">Many small servers behind a load balancer survive failures, grow with demand, and shrink when everyone's asleep.</div>
-</section>
-
 <!-- ================= CH10 S3 ================= -->
-<section class="slide chapter" data-title="Chapter 10 · S3">
-  <div class="num">10</div><div class="eyebrow">Act 2 · Chapter 10</div>
+<section class="slide chapter" data-title="Chapter 11 · S3">
+  <div class="num">11</div><div class="eyebrow">Act 2 · Chapter 11</div>
   <h2>A warehouse that never fills</h2>
   <p class="q">Concert posters, e-tickets as PDFs, invoices, logs, backups. TicketWave stores billions of files. Not on disks Rahul manages.</p>
   <div class="tiles"><span class="tile sm" style="--c:var(--green)">S3</span></div>
 </section>
 
-<section class="slide" data-tpl="q" data-title="Struggle: where do files live?" data-ch="S3">
-  <div class="t-q">Where do millions of uploaded photos and PDFs actually live, and why don't they ever get lost?</div>
-  <div class="t-who">Rahul, uploading his 10th e-ticket</div>
-</section>
-
 <!--OLD:Buckets and keys-->
 <!--OLD:Storage classes-->
-<!--OLD:Compare: storage-->
 <!--OLD:How S3 never loses data (3D)-->
 <!--OLD:Production: S3 patterns-->
 
-<section class="slide" data-tpl="perf" data-title="Perf: S3 at speed" data-ch="S3">
-  <div class="t-h2">Before vs after: files on the server vs S3 done right</div>
-  <div class="t-how">What changed: <b>moved files to S3, spread across prefixes, multipart uploads</b></div>
-  <script type="application/json">{"rows":[
-    ["Requests per prefix","per second",30,"one server's disk",100,"3,500 PUT · 5,500 GET","per","prefix"],
-    ["10 prefixes in parallel","GET per second",10,"same disk",100,"55,000","scales","linearly"],
-    ["2 GB video upload","one slow stream",90,"one stream, retry all",30,"multipart, parallel","faster","+ resumable"],
-    ["Lose a whole AZ","what happens to files",100,"gone if on that server",2,"still there","11 nines","durability"]],
-    "note":"S3 supports at least 3,500 PUT/COPY/POST/DELETE and 5,500 GET/HEAD requests per second per partitioned prefix (AWS documentation)."}</script>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: files never lost" data-ch="S3">
-  <div class="t-recap">Where do millions of files live, and why are they never lost?</div>
-  <div class="t-ans">In S3: each object is stored across <em>at least three AZs</em> and checked byte by byte, all the time.</div>
-  <div class="t-x">500 trillion+ objects, 200 million+ requests a second, and you pay by the GB.</div>
-</section>

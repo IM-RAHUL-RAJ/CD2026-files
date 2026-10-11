@@ -15,12 +15,6 @@
   <div class="tiles"><span class="tile sm" style="--c:var(--teal)">DOCKER</span><span class="tile sm" style="--c:var(--teal)">IMAGE</span><span class="tile sm" style="--c:var(--amber)">CONTAINER</span></div>
 </section>
 
-<section class="slide" data-tpl="q" data-title="Struggle: works on my machine" data-ch="Containers">
-  <div class="t-q">Why does code that works on my laptop break on someone else's machine?</div>
-  <div class="t-who">Every developer, at least once a week</div>
-  <div class="t-hint">Same code. Different Python, different libraries, different OS settings. Which one broke it?</div>
-</section>
-
 <section class="slide" data-title="The shipping container idea" data-phase="pic" data-ch="Containers" data-steps="1">
   <h2>Before shipping containers, every cargo was a puzzle</h2>
   <div class="vis">
@@ -99,27 +93,10 @@
       </svg>
     </div>
   </div>
-  <aside class="notes"><p>Dockerfile = recipe. Image = the frozen, versioned result of following the recipe. Container = a running instance of the image. One image can run as many containers.</p><p>The RDS and DynamoDB labs in the PDFs use exactly this: docker pull, then docker run with -p and -e flags.</p></aside>
+  <aside class="notes"><p>Dockerfile = recipe. Image = the frozen, versioned result of following the recipe. Container = a running instance of the image. One image can run as many containers.</p><p>The RDS labs in the PDFs use exactly this: docker pull, then docker run with -p and -e flags.</p></aside>
 </section>
 
 <!--OLD:Layers-->
-
-<section class="slide" data-tpl="perf" data-title="Perf: containers" data-ch="Containers">
-  <div class="t-h2">Before vs after: VM per service vs containers</div>
-  <div class="t-how">What changed: <b>packaged every service as a Docker image</b></div>
-  <script type="application/json">{"rows":[
-    ["Start time","new copy of a service",90,"VM boot · minutes",6,"container · seconds","~20×","faster"],
-    ["Size on disk","per service",100,"~10 GB VM image",8,"~150 MB image","~60×","smaller"],
-    ["Services per server","8 GB host",20,"~3 VMs",100,"~20 containers","~6×","denser"],
-    ["“Works on my machine”","bugs per release",70,"weekly",5,"rare","same","everywhere"]],
-    "note":"Illustrative figures; sizes and densities vary by app."}</script>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: works everywhere" data-ch="Containers">
-  <div class="t-recap">Why does code break on someone else's machine?</div>
-  <div class="t-ans">Because you shipped the code but not its world. A container ships <em>the code and its world</em> together.</div>
-  <div class="t-x">Same image on the laptop, in testing, and in production. If it ran once, it runs everywhere.</div>
-</section>
 
 <!-- ================= CH17 ECR ================= -->
 <section class="slide chapter" data-title="Chapter 17 · ECR">
@@ -127,11 +104,6 @@
   <h2>A private library for images</h2>
   <p class="q">TicketWave has 60 services. Each build makes a new image. Where do thousands of images live, safely?</p>
   <div class="tiles"><span class="tile sm" style="--c:var(--teal)">ECR</span><span class="tile sm" style="--c:var(--green)">JFROG</span><span class="tile sm" style="--c:var(--blue)">HUB</span></div>
-</section>
-
-<section class="slide" data-tpl="q" data-title="Struggle: where do images live?" data-ch="ECR">
-  <div class="t-q">If every company builds thousands of Docker images, where do they keep them, and who's allowed to pull them?</div>
-  <div class="t-who">Rahul, after his first docker push</div>
 </section>
 
 <!--OLD:Inside ECR-->
@@ -170,12 +142,6 @@
   <aside class="notes"><p>Many enterprises use Artifactory as the central store for everything (JARs, npm packages, images) and ECR close to the AWS runtimes. Both are valid; the choice depends on how many artifact types and platforms you have.</p></aside>
 </section>
 
-<section class="slide" data-tpl="wow" data-title="WOW: where images live" data-ch="ECR">
-  <div class="t-recap">Where do companies keep thousands of images?</div>
-  <div class="t-ans">In a <em>private registry</em> (ECR or Artifactory) where every image is scanned, versioned by digest, and pulled only by roles allowed to.</div>
-  <div class="t-x">The image that passed tests is byte-for-byte the image that runs in prod. The sha256 digest proves it.</div>
-</section>
-
 <!-- ================= CH18 ECS ================= -->
 <section class="slide chapter" data-title="Chapter 18 · ECS">
   <div class="num">18</div><div class="eyebrow">Act 3 · Chapter 18</div>
@@ -183,11 +149,6 @@
   <p class="q">50 containers across 10 servers. One crashes at 3 am. Who restarts it? Who decides which server it goes on?</p>
   <div class="tiles"><span class="tile sm" style="--c:var(--violet)">ECS</span><span class="tile sm" style="--c:var(--violet)">FARGATE</span></div>
   <aside class="notes"><p>Based on the AWS ECS PDF.</p></aside>
-</section>
-
-<section class="slide" data-tpl="q" data-title="Struggle: who restarts containers?" data-ch="ECS">
-  <div class="t-q">I have 50 containers. Who restarts them at 3 am, and who decides where they run?</div>
-  <div class="t-who">Rahul, setting a 3 am alarm, just in case</div>
 </section>
 
 <section class="slide" data-title="ECS cluster, service, task" data-phase="concept" data-ch="ECS">
@@ -209,21 +170,6 @@
   <aside class="notes"><p>Terms from the ECS PDF: cluster (group of tasks and services, hosts the infrastructure), service (handles scaling and load balancing), task (your running containers).</p></aside>
 </section>
 
-<section class="slide" data-title="Compare: ECS on EC2 vs Fargate" data-phase="compare" data-ch="ECS">
-  <h2>Run ECS on your servers, or on none</h2>
-  <div class="cmp g2 grow">
-    <div class="card f" data-f="1" style="--c:var(--amber)"><h3>ECS on EC2</h3><p class="what">You run a fleet of EC2 instances; ECS places tasks on them. You patch and scale the fleet.</p><p class="use"><b>Pick when</b>Steady heavy load, GPUs, special instance types, lowest cost at scale.</p></div>
-    <div class="card f" data-f="2" style="--c:var(--violet)"><h3>ECS on Fargate</h3><p class="what">No instances at all. Say “0.5 vCPU, 1 GB” per task; AWS finds the capacity. Each task runs in its own isolated microVM.</p><p class="use"><b>Pick when</b>Small team, spiky load, you never want to patch a node.</p></div>
-  </div>
-  <aside class="notes"><p>Fargate runs on Firecracker microVMs, the same technology behind Lambda (see the Firecracker slide).</p></aside>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: who restarts containers" data-ch="ECS">
-  <div class="t-recap">Who restarts containers at 3 am?</div>
-  <div class="t-ans">An <em>orchestrator</em>. You declare “keep 3 running”, and ECS keeps that promise forever, replacing anything that dies.</div>
-  <div class="t-x">That idea, called desired state, is the heart of Kubernetes too. Which is where we're going next.</div>
-</section>
-
 <!-- ================= CH19 KUBERNETES + EKS ================= -->
 <section class="slide chapter" data-title="Chapter 19 · Kubernetes and EKS">
   <div class="num">19</div><div class="eyebrow">Act 3 · Chapter 19</div>
@@ -231,12 +177,6 @@
   <p class="q">TicketWave's platform team runs 60 services on Kubernetes. Rahul's service is next. Every senior keeps saying “just put it in the cluster”.</p>
   <div class="tiles"><span class="tile sm" style="--c:var(--blue)">K8S</span><span class="tile sm" style="--c:var(--blue)">EKS</span><span class="tile sm" style="--c:var(--teal)">POD</span><span class="tile sm" style="--c:var(--green)">INGRESS</span><span class="tile sm" style="--c:var(--violet)">HELM</span></div>
   <aside class="notes"><p>Based on the AWS EKS PDF.</p></aside>
-</section>
-
-<section class="slide" data-tpl="q" data-title="Struggle: why Kubernetes?" data-ch="Kubernetes">
-  <div class="t-q">Why does every senior engineer talk about Kubernetes as if it's magic?</div>
-  <div class="t-who">Rahul, nodding along in a design review</div>
-  <div class="t-hint">What does it actually do that Docker alone doesn't?</div>
 </section>
 
 <section class="slide" data-title="Kubernetes cluster (3D)" data-phase="pic" data-ch="Kubernetes" data-hook="k8s" data-steps="3" style="padding:24px">
@@ -354,19 +294,3 @@ $ kubectl get pods -w</pre>
   <aside class="notes"><p>Tool install steps and eksctl flags (--enable-auto-mode, --nodes, --nodes-min/max, --node-type, --managed/fargate) are from the EKS PDF.</p></aside>
 </section>
 
-<section class="slide" data-tpl="perf" data-title="Perf: Kubernetes + ingress" data-ch="Kubernetes">
-  <div class="t-h2">Before vs after: services on hand-managed VMs vs EKS</div>
-  <div class="t-how">What changed: <b>EKS + one ingress (ALB) + horizontal pod autoscaling</b></div>
-  <script type="application/json">{"rows":[
-    ["Load balancers for 10 services","cost and config",100,"10 separate LBs",10,"1 ALB via ingress","10→1","LBs"],
-    ["Pod crash at 3 am","recovery",80,"human gets paged",5,"replaced in seconds","auto","healing"],
-    ["Scale for a ticket drop","pods",20,"edit by hand",100,"HPA adds pods on CPU","auto","scaling"],
-    ["Node utilization","packing",30,"~25%",80,"~65%+","~2.5×","denser"]],
-    "note":"Illustrative figures. The AWS Load Balancer Controller can group multiple ingresses onto one ALB."}</script>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: why Kubernetes" data-ch="Kubernetes">
-  <div class="t-recap">What does Kubernetes do that Docker alone doesn't?</div>
-  <div class="t-ans">Docker runs <em>a container</em>. Kubernetes runs <em>a promise</em>: “always 12 healthy copies, spread out, reachable, scaled to load.”</div>
-  <div class="t-x">You stop managing servers and start declaring outcomes. That's the magic the seniors are talking about.</div>
-</section>

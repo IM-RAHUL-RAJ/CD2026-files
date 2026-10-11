@@ -14,12 +14,6 @@
   <p class="q">He's on call for the first time. The alert says: “checkout error rate 12%”. His heart rate says more.</p>
 </section>
 
-<section class="slide" data-tpl="q" data-title="Struggle: prod breaks at 2 am" data-ch="Incidents">
-  <div class="t-q">What actually happens inside a company when production breaks at 2 am?</div>
-  <div class="t-who">Rahul, first on-call week</div>
-  <div class="t-hint">Who decides what to do? Who talks to customers? Does someone get blamed?</div>
-</section>
-
 <section class="slide" data-title="Incident timeline" data-phase="pic" data-ch="Incidents">
   <h2>Anatomy of a 22-minute incident</h2>
   <div class="vis">
@@ -81,22 +75,11 @@
   <aside class="notes"><p>Four decisions: acknowledge and declare, look at what changed, mitigate with a rollback, then communicate and write the postmortem. Wrong answers explain why, without judgement.</p></aside>
 </section>
 
-<section class="slide" data-tpl="wow" data-title="WOW: 2 am incidents" data-ch="Incidents">
-  <div class="t-recap">What happens when production breaks at 2 am?</div>
-  <div class="t-ans">A practised routine: <em>detect → page → declare → mitigate → resolve → learn</em>. Roll back first, find the root cause after.</div>
-  <div class="t-x">Nobody gets blamed. The system gets better. And the first question is always: “what changed?”</div>
-</section>
-
 <!-- ================= CH24 OBSERVABILITY ================= -->
 <section class="slide chapter" data-title="Chapter 24 · Observability">
   <div class="num">24</div><div class="eyebrow">Act 4 · Chapter 24</div>
   <h2>Seeing inside a running system</h2>
   <p class="q">The alert reached Rahul because someone built dashboards, metrics and alarms. Let's learn how.</p>
-</section>
-
-<section class="slide" data-tpl="q" data-title="Struggle: know before users do" data-ch="Observability">
-  <div class="t-q">How do companies know something's wrong before users start tweeting about it?</div>
-  <div class="t-who">Rahul, after reading angry tweets about FestPass in college</div>
 </section>
 
 <section class="slide" data-title="Metrics, logs, traces" data-phase="pic" data-ch="Observability">
@@ -157,7 +140,7 @@
     <svg class="d" viewBox="0 0 1408 520">
       <g style="font:600 16px var(--f-body)" text-anchor="middle">
         <g transform="translate(30,40)"><g class="bx"><rect width="180" height="60" rx="12"/><rect y="80" width="180" height="60" rx="12"/><rect y="160" width="180" height="60" rx="12"/><rect y="240" width="180" height="60" rx="12"/><rect y="320" width="180" height="60" rx="12"/></g>
-          <text x="90" y="36">EC2 · ALB</text><text x="90" y="116">RDS · DynamoDB</text><text x="90" y="196">Lambda · SQS</text><text x="90" y="276">EKS · ECS</text><text x="90" y="356">your app logs</text></g>
+          <text x="90" y="36">EC2 · ALB</text><text x="90" y="116">RDS · Aurora</text><text x="90" y="196">Lambda · SQS</text><text x="90" y="276">EKS · ECS</text><text x="90" y="356">your app logs</text></g>
         <g transform="translate(380,90)"><rect width="300" height="280" rx="20" style="fill:rgba(255,209,102,.1);stroke:var(--gold);stroke-width:2"/><text x="150" y="44" style="fill:var(--gold);font:700 22px var(--f-body)">CloudWatch</text>
           <g style="font-size:16px"><rect x="24" y="70" width="252" height="40" rx="10" class="bx"/><text x="150" y="96">Metrics</text><rect x="24" y="120" width="252" height="40" rx="10" class="bx"/><text x="150" y="146">Logs · Logs Insights</text><rect x="24" y="170" width="252" height="40" rx="10" class="bx"/><text x="150" y="196">Alarms</text><rect x="24" y="220" width="252" height="40" rx="10" class="bx"/><text x="150" y="246">Dashboards</text></g></g>
         <g class="f" data-f="1" transform="translate(830,60)"><rect width="230" height="80" rx="14" class="bx-v"/><text x="115" y="48" class="tv">SNS topic</text></g>
@@ -176,35 +159,6 @@
   --statistic Sum --period 60 --threshold 50 --comparison-operator GreaterThanThreshold \
   --evaluation-periods 3 --alarm-actions arn:aws:sns:ap-south-1:4821…:oncall</pre></div>
   <aside class="notes"><p>Every AWS service sends metrics to CloudWatch automatically. Alarms can notify through SNS or trigger actions like Auto Scaling. The CLI alarm fires when the ALB sees more than 50 target 5xx errors per minute for 3 minutes in a row.</p></aside>
-</section>
-
-<section class="slide" data-title="Compare: observability tools" data-phase="compare" data-ch="Observability">
-  <h2>CloudWatch, Prometheus + Grafana, Splunk, Datadog</h2>
-  <div class="cmp g4 grow">
-    <div class="card f" data-f="1" style="--c:var(--gold)"><h3>CloudWatch</h3><p class="what">Built into AWS. Every service already reports here. Alarms drive Auto Scaling.</p><p class="use"><b>Pick when</b>AWS-first teams, quick start, AWS service metrics.</p></div>
-    <div class="card f" data-f="2" style="--c:var(--coral)"><h3>Prometheus + Grafana</h3><p class="what">Open source, Kubernetes standard. Pull-based metrics, PromQL, beautiful dashboards.</p><p class="use"><b>Pick when</b>Kubernetes-heavy, multi-cloud, want control.</p></div>
-    <div class="card f" data-f="3" style="--c:var(--green)"><h3>Splunk</h3><p class="what">Search and analyse huge volumes of logs. Strong in security (SIEM) and compliance.</p><p class="use"><b>Pick when</b>Banks, large enterprises, security teams.</p></div>
-    <div class="card f" data-f="4" style="--c:var(--violet)"><h3>Datadog</h3><p class="what">SaaS: metrics, logs, traces, APM, dashboards in one place. Install an agent, done.</p><p class="use"><b>Pick when</b>You want everything unified and are fine paying for it.</p></div>
-  </div>
-  <p class="say f" data-f="5">Most enterprises mix them: CloudWatch for AWS, Prometheus/Grafana for Kubernetes, Splunk for logs and security.</p>
-  <aside class="notes"><p>No single right answer. Mention cost: log volume is often the biggest observability bill, so teams set retention and sampling carefully.</p></aside>
-</section>
-
-<section class="slide" data-tpl="perf" data-title="Perf: observability" data-ch="Observability">
-  <div class="t-h2">Before vs after: users tell you vs dashboards tell you</div>
-  <div class="t-how">What changed: <b>golden-signal dashboards, CloudWatch alarms, tracing, on-call rota</b></div>
-  <script type="application/json">{"rows":[
-    ["Time to detect","MTTD",100,"~40 min (via Twitter)",6,"~2 min (alarm)","~20×","faster"],
-    ["Time to find the cause","diagnosis",80,"grep logs on 30 servers",10,"one trace, one query","minutes",""],
-    ["Time to restore","MTTR",100,"~3 hours",12,"~20 minutes","~9×","faster"],
-    ["Incidents found by customers","share",80,"most",10,"few","proactive",""]],
-    "note":"Illustrative figures."}</script>
-</section>
-
-<section class="slide" data-tpl="wow" data-title="WOW: before users tweet" data-ch="Observability">
-  <div class="t-recap">How do companies know before users tweet?</div>
-  <div class="t-ans">They watch <em>four golden signals</em>, alarm on the ones users feel, and keep <em>metrics, logs and traces</em> for the why.</div>
-  <div class="t-x">The best incidents are the ones fixed before anyone outside the company noticed.</div>
 </section>
 
 <!-- ================= FINALE ================= -->
@@ -229,7 +183,7 @@
         <g transform="translate(1250,140)"><circle r="52" class="bx-b"/><text y="-4" class="tb">EKS</text><text y="18" class="tmut" style="font-size:13px">pods</text></g>
         <g transform="translate(1250,420)"><circle r="52" class="bx-g"/><text y="-4" class="tg">ALB</text><text y="18" class="tmut" style="font-size:13px">+ CloudFront</text></g>
         <g transform="translate(1000,420)"><circle r="52" class="bx-a"/><text y="-4" class="ta">2M fans</text><text y="18" class="tmut" style="font-size:13px">book tickets</text></g>
-        <g transform="translate(740,420)"><circle r="52" class="bx-b"/><text y="-4" class="tb">RDS · DDB</text><text y="18" class="tmut" style="font-size:13px">S3 · SQS</text></g>
+        <g transform="translate(740,420)"><circle r="52" class="bx-b"/><text y="-4" class="tb">RDS</text><text y="18" class="tmut" style="font-size:13px">S3 · SQS</text></g>
         <g transform="translate(480,420)"><circle r="52" style="fill:rgba(255,209,102,.12);stroke:var(--gold);stroke-width:2"/><text y="-4" style="fill:var(--gold)">CloudWatch</text><text y="18" class="tmut" style="font-size:13px">Grafana</text></g>
         <g transform="translate(220,420)"><circle r="52" class="bx-r"/><text y="-4" class="tr">On-call</text><text y="18" class="tmut" style="font-size:13px">learn + improve</text></g>
       </g>
@@ -279,7 +233,7 @@
     <div><span class="tile xs" style="--c:var(--green)">ELB</span><div><b>ELB + ASG</b><span>Scale out, self-heal</span></div></div>
     <div><span class="tile xs" style="--c:var(--green)">S3</span><div><b>S3</b><span>3+ AZs, 11 nines</span></div></div>
     <div><span class="tile xs" style="--c:var(--blue)">RDS</span><div><b>RDS</b><span>Multi-AZ uptime, replicas reads</span></div></div>
-    <div><span class="tile xs" style="--c:var(--violet)">DDB</span><div><b>DynamoDB</b><span>Partitions, any scale, DAX</span></div></div>
+    <div><span class="tile xs" style="--c:var(--violet)">SG</span><div><b>SG vs role</b><span>Packets vs permissions</span></div></div>
     <div><span class="tile xs" style="--c:var(--blue)">CDN</span><div><b>CloudFront</b><span>Files near users</span></div></div>
     <div><span class="tile xs" style="--c:var(--coral)">IaC</span><div><b>CloudFormation</b><span>Infra from a template</span></div></div>
     <div><span class="tile xs">λ</span><div><b>Lambda + SQS</b><span>Pay per ms, queue spikes</span></div></div>
