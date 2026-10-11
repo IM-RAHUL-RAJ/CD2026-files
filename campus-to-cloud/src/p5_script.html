@@ -1,6 +1,6 @@
 
 <div id="notes" hidden><h4 id="notesTitle">Speaker notes</h4><div id="notesBody"></div></div>
-<div id="overview" hidden><h4>All slides · click to jump</h4><div class="ov" id="ovGrid"></div></div>
+<div id="overview" hidden><h4>All slides · click to jump · <span id="ovHidInfo"></span> <button class="btn" id="unhideAll" style="font-size:13px;padding:7px 12px;margin-left:8px">Unhide all</button></h4><div class="ov" id="ovGrid"></div></div>
 <div id="hud">
   <div id="progress"></div>
   <button class="hbtn" id="prevBtn" aria-label="Previous">←</button>
@@ -8,6 +8,8 @@
   <span id="counter">1 / 1</span>
   <span id="stepDots"></span>
   <span id="slideTitle"></span>
+  <span id="hidPill" hidden>Hidden</span>
+  <button class="hbtn" id="hideBtn" title="Hide this slide when presenting"><span class="lab">Hide</span><kbd>H</kbd></button>
   <button class="hbtn" id="buildBtn"><span class="lab">Builds</span><kbd>B</kbd></button>
   <button class="hbtn" id="notesBtn"><span class="lab">Notes</span><kbd>N</kbd></button>
   <button class="hbtn" id="ovBtn"><span class="lab">Overview</span><kbd>O</kbd></button>
@@ -94,16 +96,28 @@ function go(i,atEnd){
   try{history.replaceState(null,'','#'+(cur+1))}catch(e){}
   const c=s.querySelector('canvas.three');activeScene=c?ensure(c.id):null;
   const h=hooks[s.dataset.hook];if(h&&h.enter)h.enter(s);
-  applyStep();
+  applyStep();try{refreshHid()}catch(e){}
 }
-function next(){const s=slides[cur];if(builds&&step<s._max){step++;applyStep()}else go(cur+1)}
-function prev(){if(builds&&step>0){step--;applyStep()}else go(cur-1,true)}
+/* ---------- hidden slides (remembered in this browser) ---------- */
+const HKEY='ctc-hidden-slides';let hidden=new Set();
+try{hidden=new Set(JSON.parse(localStorage.getItem(HKEY)||'[]'))}catch(e){}
+const isHid=i=>hidden.has(slides[i].dataset.title);
+function saveHid(){try{localStorage.setItem(HKEY,JSON.stringify([...hidden]))}catch(e){}}
+function findVis(from,dir){for(let i=from;i>=0&&i<slides.length;i+=dir)if(!isHid(i))return i;return -1}
+function toast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t)}t.textContent=msg;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2200)}
+function refreshHid(){const h=isHid(cur);$('#hidPill').hidden=!h;$('#hideBtn').classList.toggle('on',h);$('#hideBtn .lab').textContent=h?'Unhide':'Hide';
+  const n=hidden.size;$('#ovHidInfo').textContent=n?`${n} hidden (skipped when presenting)`:'no hidden slides';$('#unhideAll').hidden=!n;
+  [...$('#ovGrid').children].forEach((b,i)=>b.classList.toggle('hid',isHid(i)));counter.title=`${slides.length-n} slides shown, ${n} hidden`}
+function toggleHide(i=cur){const t=slides[i].dataset.title;if(hidden.has(t))hidden.delete(t);else hidden.add(t);saveHid();refreshHid();
+  if(i===cur)toast(hidden.has(t)?'Slide hidden: it will be skipped. Press H to undo.':'Slide visible again.')}
+function next(){const s=slides[cur];if(builds&&step<s._max){step++;applyStep()}else{const j=findVis(cur+1,1);if(j>=0)go(j)}}
+function prev(){if(builds&&step>0){step--;applyStep()}else{const j=findVis(cur-1,-1);if(j>=0)go(j,true)}}
 function typing(e){const t=e.target;return t&&/INPUT|SELECT|TEXTAREA/.test(t.tagName)}
 addEventListener('keydown',e=>{
   if(typing(e)&&e.key!=='Escape')return;const k=e.key;
   if(['ArrowRight','PageDown',' ','ArrowDown'].includes(k)){e.preventDefault();next()}
   else if(['ArrowLeft','PageUp','ArrowUp'].includes(k)){e.preventDefault();prev()}
-  else if(k==='Home')go(0);else if(k==='End')go(slides.length-1);
+  else if(k==='Home')go(Math.max(0,findVis(0,1)));else if(k==='End')go(Math.max(0,findVis(slides.length-1,-1)));else if(/^[hH]$/.test(k))toggleHide();
   else if(/^[nN]$/.test(k))toggleNotes();else if(/^[oO]$/.test(k))toggleOv();else if(/^[fF]$/.test(k))toggleFs();else if(/^[bB]$/.test(k))toggleBuilds();
   else if(k==='Escape'){notes.hidden=true;ov.hidden=true}
 });
@@ -115,8 +129,10 @@ $('#fsBtn').onclick=toggleFs;addEventListener('fullscreenchange',()=>setTimeout(
 let sx=null;viewport.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
 viewport.addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>60&&!e.target.closest('canvas,button,select,input'))(dx<0?next:prev)();sx=null});
 const ov=$('#overview'),ovGrid=$('#ovGrid');
-slides.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<b>${String(i+1).padStart(2,'0')}</b><span>${s.dataset.title}</span>`;if(s.classList.contains('chapter'))b.classList.add('ch');b.onclick=()=>{go(i);ov.hidden=true};ovGrid.appendChild(b)});
+slides.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<b>${String(i+1).padStart(2,'0')}</b><span>${s.dataset.title}</span><i class="eye" title="Hide or show this slide">HIDE</i>`;if(s.classList.contains('chapter'))b.classList.add('ch');
+  b.onclick=e=>{if(e.target.classList.contains('eye')){e.stopPropagation();toggleHide(i);return}go(i);ov.hidden=true};ovGrid.appendChild(b)});
 function toggleOv(){ov.hidden=!ov.hidden;[...ovGrid.children].forEach((b,i)=>b.classList.toggle('cur',i===cur))}$('#ovBtn').onclick=toggleOv;
+$('#hideBtn').onclick=()=>toggleHide();$('#unhideAll').onclick=()=>{hidden.clear();saveHid();refreshHid();toast('All slides visible.')};refreshHid();
 
 /* ---------- widgets ---------- */
 const cidr=$('#cidr'),cidrOut=$('#cidrOut'),cidrTxt=$('#cidrTxt');

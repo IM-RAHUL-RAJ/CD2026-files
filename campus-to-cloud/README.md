@@ -13,6 +13,7 @@ A visual, interactive AWS + DevOps training deck. It follows Rahul, a final-year
 | O | overview, jump to any slide |
 | F | fullscreen |
 | B | turn step-by-step builds on/off |
+| H | hide or unhide the current slide (hidden slides are skipped; manage them in the overview, remembered in your browser) |
 
 ## What's inside (141 slides)
 - **Act 1 · Campus to cloud:** cloud computing, virtualization, AWS overview, market ranking, global infrastructure in 3D, undersea cables

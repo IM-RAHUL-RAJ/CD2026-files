@@ -204,6 +204,21 @@ input[type=range]{width:100%;accent-color:var(--teal)}
 #overview button.ch{background:var(--ink-3);border-color:var(--muted)}
 #overview h4{max-width:1240px;margin:0 auto 16px;font:600 14px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
+/* hidden slides */
+#hidPill{font:700 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:var(--rose);padding:6px 10px;border-radius:999px}
+#hidPill[hidden]{display:none}
+#hideBtn.on{color:var(--rose);border-color:var(--rose)}
+#overview button{position:relative;padding-right:66px}
+#overview button .eye{position:absolute;right:8px;bottom:8px;font:700 10px/1 var(--f-mono);letter-spacing:.1em;font-style:normal;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:4px 6px;opacity:0;transition:opacity .15s;background:var(--ink-2)}
+#overview button:hover .eye,#overview button.hid .eye{opacity:1}
+#overview button.hid{opacity:.5;border-style:dashed}
+#overview button.hid .eye{color:var(--rose);border-color:var(--rose)}
+#overview button.hid .eye::before{content:"UN"}
+#overview button.hid span{text-decoration:line-through}
+#unhideAll[hidden]{display:none}
+#toast{position:fixed;left:50%;bottom:76px;transform:translate(-50%,20px);background:#0A0F1B;border:1px solid var(--rose);color:var(--fg);font-size:16px;padding:12px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:all .25s;z-index:40}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media (hover:none){#overview button .eye{opacity:1}}
 /* quiz */
 .quiz{display:grid;gap:18px}
 .quiz .q{font:600 36px/1.25 var(--f-body);max-width:28em;min-height:2.6em}
