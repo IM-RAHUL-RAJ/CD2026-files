@@ -16,7 +16,7 @@ A visual, interactive AWS + DevOps training deck. It follows Rahul, a final-year
 
 ## What's inside (141 slides)
 - **Act 1 · Campus to cloud:** cloud computing, virtualization, AWS overview, market ranking, global infrastructure in 3D, undersea cables
-- **Act 2 · Foundations:** IAM, VPC and security groups, security group vs IAM role, EC2, EBS, AMI, ELB and ASG, S3, RDS (private subnets, read replicas, Multi-AZ, failure recovery), CloudFront, CloudFormation, Lambda, SNS, SQS
+- **Act 2 · Foundations:** IAM, VPC and security groups, security group vs IAM role, EC2, EBS, AMI, ELB and ASG, RDS (private subnets, read replicas, Multi-AZ, failure recovery), S3, CloudFront, CloudFormation, Lambda, SNS, SQS
 - **Act 3 · Ship it:** Docker, ECR, ECS, Kubernetes, EKS, Helm, code quality and security, secrets, Jenkins, CI/CD, environments, deployment strategies
 - **Act 4 · Run it:** incidents, observability, CloudWatch, Prometheus, Grafana, Splunk, Datadog
 

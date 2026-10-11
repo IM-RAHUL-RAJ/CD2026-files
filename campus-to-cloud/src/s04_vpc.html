@@ -16,13 +16,13 @@
 
 <!--OLD:Where the firewall really lives-->
 
-<section class="slide" data-title="Activity: why can't Ananya open it?" data-phase="prod" data-ch="Activity 2" data-hook="path">
-  <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 2</span><h2 style="margin:0;font-size:40px">Why can't Ananya open Rahul's app?</h2></div>
+<section class="slide" data-title="Activity: why can't Ramya open it?" data-phase="prod" data-ch="Activity 2" data-hook="path">
+  <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 2</span><h2 style="margin:0;font-size:40px">Why can't Ramya open Rahul's app?</h2></div>
   <div class="row grow" style="gap:20px">
     <div class="vis">
       <svg class="d" viewBox="0 0 960 520" id="pathSvg">
         <g text-anchor="middle" style="font:600 16px var(--f-body)">
-          <g transform="translate(60,200)"><circle r="46" class="bx-t"/><text y="6" class="tt">Ananya</text></g>
+          <g transform="translate(60,200)"><circle r="46" class="bx-t"/><text y="6" class="tt">Ramya</text></g>
           <g class="gate" id="g0" transform="translate(200,170)"><rect width="110" height="60" rx="12" class="bx"/><text x="55" y="27">Public IP</text><text x="55" y="47" class="tmut tm" style="font-size:13px">13.233.41.7</text></g>
           <g class="gate" id="g1" transform="translate(340,170)"><rect width="110" height="60" rx="12" class="bx"/><text x="55" y="27">Route</text><text x="55" y="47" class="tmut tm" style="font-size:13px">0.0.0.0/0→igw</text></g>
           <g class="gate" id="g2" transform="translate(480,170)"><rect width="110" height="60" rx="12" class="bx"/><text x="55" y="27">NACL</text><text x="55" y="47" class="tmut tm" style="font-size:13px">subnet</text></g>
@@ -50,15 +50,15 @@
 </section>
 
 <section class="slide" data-title="Activity: peering to another team" data-phase="prod" data-ch="Activity 3" data-hook="peer">
-  <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 3</span><h2 style="margin:0;font-size:40px">Ananya's team needs Rahul's database</h2></div>
-  <p class="small">Rahul's database lives in <b class="hl-t">VPC A</b>. Ananya's analytics app lives in <b class="hl-v">VPC B</b>, owned by another team. Make the connection work.</p>
+  <div class="row" style="align-items:center;gap:16px"><span class="act-badge">Activity 3</span><h2 style="margin:0;font-size:40px">Ramya's team needs Rahul's database</h2></div>
+  <p class="small">Rahul's database lives in <b class="hl-t">VPC A</b>. Ramya's analytics app lives in <b class="hl-v">VPC B</b>, owned by another team. Make the connection work.</p>
   <div class="row grow" style="gap:20px">
     <div class="vis">
       <svg class="d" viewBox="0 0 900 460">
         <g transform="translate(20,40)"><rect width="340" height="360" rx="22" class="bx-t" style="fill:rgba(63,213,194,.05)"/><text x="20" y="36" class="tt tm">VPC A · Rahul</text><text x="20" y="62" class="tmut tm" style="font-size:15px">10.0.0.0/16</text>
           <g transform="translate(110,140)"><ellipse cx="60" cy="10" rx="60" ry="16" class="fb"/><rect y="10" width="120" height="80" class="fb" opacity=".7"/><ellipse cx="60" cy="90" rx="60" ry="16" class="fb"/><text x="60" y="62" text-anchor="middle" class="tink" style="font:700 16px var(--f-body)">Postgres</text></g>
           <text x="20" y="320" class="tmut tm" style="font-size:14px" id="rtA">RT-A: no route to VPC B</text></g>
-        <g transform="translate(540,40)"><rect width="340" height="360" rx="22" class="bx-v" style="fill:rgba(161,147,255,.05)"/><text x="20" y="36" class="tv tm">VPC B · Ananya</text><text x="20" y="62" class="tmut tm" style="font-size:15px" id="cidrB">10.0.0.0/16</text>
+        <g transform="translate(540,40)"><rect width="340" height="360" rx="22" class="bx-v" style="fill:rgba(161,147,255,.05)"/><text x="20" y="36" class="tv tm">VPC B · Ramya</text><text x="20" y="62" class="tmut tm" style="font-size:15px" id="cidrB">10.0.0.0/16</text>
           <g transform="translate(110,140)"><rect width="120" height="100" rx="14" class="fa"/><text x="60" y="56" text-anchor="middle" class="tink" style="font:700 16px var(--f-body)">analytics</text></g>
           <text x="20" y="320" class="tmut tm" style="font-size:14px" id="rtB">RT-B: no route to VPC A</text></g>
         <g id="pcx" opacity=".2"><rect x="380" y="190" width="140" height="60" rx="14" class="bx-a"/><text x="450" y="226" text-anchor="middle" class="ta tm" style="font-size:16px">pcx-peering</text></g>
