@@ -76,82 +76,95 @@ function initLayers(){const c=$('#layers3d'),{r,sc,cam,g}=dk(c);g.add(new THREE.
     const cp=((el-1)%3)/2.2;cow.visible=cowL.visible=stage>=3&&el>1;if(cow.visible){const a=V(SX-1.75,ly(4),.6),b=V(SX-1.75,ly(5)+.35,.6);cow.position.copy(a).lerp(b,ease(c01(cp)));cow.material.color.setHex(cp>.9?0xFF6F8E:0xFFB547);cowL.position.copy(cow.position).add(V(-2.2,.2,.8))}
     r.render(sc,cam)}}}
 
-/* C · docker exec: inside the container */
+/* C · docker exec: real use cases */
+function makeScreen(w,h){const cv=document.createElement('canvas');cv.width=1400;cv.height=Math.round(1400*h/w);const ctx=cv.getContext('2d');const tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tex,transparent:true}));let key='';
+  function draw(title,col,lines,n){const k=title+n;if(k===key)return;key=k;ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle='rgba(6,9,16,.94)';ctx.fillRect(0,0,cv.width,cv.height);ctx.strokeStyle=col;ctx.lineWidth=8;ctx.strokeRect(4,4,cv.width-8,cv.height-8);
+    ctx.fillStyle=col;ctx.font='700 50px "JetBrains Mono",monospace';ctx.fillText(title,44,80);ctx.font='500 44px "JetBrains Mono",monospace';
+    lines.slice(0,n).forEach((l,i)=>{ctx.fillStyle=l[1]||'#D4DCEC';ctx.fillText(l[0],44,170+i*68)});tex.needsUpdate=true}
+  return {m,draw}}
 function initExec(){const c=$('#exec3d'),{r,sc,cam,g}=dk(c);let stage=0,t0=0;
-  const kern=mbox(g,24,.6,15,0x0d3d3a,{at:V(0,-.32,0),ec:0x3FD5C2,eo:.9,emi:.25});const kg=new THREE.GridHelper(24,24,0x3FD5C2,0x1a5c56);kg.position.y=.0;kg.scale.z=15/24;g.add(kg);
-  const kL=lab(g,'Linux kernel · shared by every container','#3FD5C2',V(0,0,7.8),.8);
+  const kern=mbox(g,24,.6,15,0x0d3d3a,{at:V(0,-.32,0),ec:0x3FD5C2,eo:.9,emi:.25});const kg=new THREE.GridHelper(24,24,0x3FD5C2,0x1a5c56);kg.scale.z=15/24;g.add(kg);
+  const kL=lab(g,'one EC2 host · one Linux kernel','#3FD5C2',V(0,0,7.8),.8);
   const O=new THREE.Group();g.add(O);const boxes={};
-  [['web',-5.5,0xFFB547],['api',0,0x3FD5C2],['db',5.5,0x64A0FF]].forEach(([n,x,col])=>{const b=new THREE.Group();b.position.set(x,0,0);
-    const m=mbox(b,3,2.6,3,col,{at:V(0,1.3,0),op:.16,ec:col,eo:1,emi:.4});const core=new THREE.Mesh(new THREE.IcosahedronGeometry(.45,0),new THREE.MeshBasicMaterial({color:col,wireframe:true}));core.position.y=1.3;b.add(core);b.userData.core=core;
-    const l=label(n,'#'+col.toString(16).padStart(6,'0'),.7);l.position.set(0,3.4,0);b.add(l);O.add(b);boxes[n]=b});
-  // host processes (dim specks on the kernel, invisible from inside)
-  const hp=[];for(let i=0;i<70;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.07,6,6),new THREE.MeshBasicMaterial({color:0x97A3BE,transparent:true,opacity:.5}));s.position.set((Math.random()-.5)*22,.08,(Math.random()-.5)*13);if(Math.abs(s.position.z)<2.2&&Math.abs(s.position.x)<8)s.position.z+=4;O.add(s);hp.push(s)}
-  // inside world
+  [['kafka',-5.5,0xFF9466],['backend',0,0x3FD5C2],['postgres',5.5,0x64A0FF]].forEach(([n,x,col])=>{const b=new THREE.Group();b.position.set(x,0,0);
+    const m=mbox(b,3,2.6,3,col,{at:V(0,1.3,0),op:.16,ec:col,eo:1,emi:.4});b.userData.m=m;const core=new THREE.Mesh(new THREE.IcosahedronGeometry(.45,0),new THREE.MeshBasicMaterial({color:col,wireframe:true}));core.position.y=1.3;b.add(core);b.userData.core=core;
+    const l=label(n,'#'+col.toString(16).padStart(6,'0'),.8);l.position.set(0,3.4,0);b.add(l);O.add(b);boxes[n]=b});
   const I=new THREE.Group();g.add(I);I.visible=false;
-  const room=new THREE.BoxGeometry(16,8,14);room.translate(0,4,0);I.add(new THREE.LineSegments(new THREE.EdgesGeometry(room),new THREE.LineBasicMaterial({color:0x3FD5C2})));
-  I.add(new THREE.Mesh(room,new THREE.MeshBasicMaterial({color:0x3FD5C2,transparent:true,opacity:.05,side:THREE.BackSide})));
-  const floorM=new THREE.MeshBasicMaterial({color:0x0C1220,transparent:true,opacity:.85});const floor=new THREE.Mesh(new THREE.PlaneGeometry(16,14),floorM);floor.rotation.x=-Math.PI/2;floor.position.y=.02;I.add(floor);
+  const room=new THREE.BoxGeometry(16,8,14);room.translate(0,4,0);const roomE=new THREE.LineSegments(new THREE.EdgesGeometry(room),new THREE.LineBasicMaterial({color:0x3FD5C2}));I.add(roomE);
+  const roomW=new THREE.Mesh(room,new THREE.MeshBasicMaterial({color:0x3FD5C2,transparent:true,opacity:.05,side:THREE.BackSide}));I.add(roomW);
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(16,14),new THREE.MeshBasicMaterial({color:0x0C1220,transparent:true,opacity:.85}));floor.rotation.x=-Math.PI/2;floor.position.y=.02;I.add(floor);
   const fgrid=new THREE.GridHelper(14,14,0x3FD5C2,0x1d3b4a);fgrid.position.y=.04;fgrid.scale.set(16/14,1,1);I.add(fgrid);
-  const N=1100,pp=new Float32Array(N*3),pd=[];for(let i=0;i<N;i++){const a=Math.random()*Math.PI*2,rr=4+Math.random()*3.5,y=1+Math.random()*6.5;pd.push([a,rr,y]);pp[i*3]=Math.cos(a)*rr;pp[i*3+1]=y;pp[i*3+2]=Math.sin(a)*rr}
-  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pp,3));const swirl=new THREE.Points(pg,new THREE.PointsMaterial({color:0x7FE8DA,size:.07,transparent:true,opacity:.8}));I.add(swirl);
-  const nsL=['PID','NET','MNT','UTS','IPC','USER'].map(n=>{const l=plainLabel(n,'#3FD5C2',.6,800);I.add(l);return l});
-  const pid=new THREE.Group();I.add(pid);const o1=new THREE.Mesh(new THREE.SphereGeometry(.85,32,32),std(0xFFB547,{emissive:0xFFB547,emissiveIntensity:.6}));o1.position.set(-4.6,3.3,-3);pid.add(o1);
-  const o2=new THREE.Mesh(new THREE.SphereGeometry(.45,24,24),std(0x6EDC92,{emissive:0x6EDC92,emissiveIntensity:.6}));o2.position.set(-2.4,2.1,-1.6);pid.add(o2);
-  pid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([o1.position,o2.position]),new THREE.LineBasicMaterial({color:0xEBF0F9,transparent:true,opacity:.5})));
-  lab(pid,'PID 1 · python app.py','#FFB547',V(-4.6,4.6,-3),.55);lab(pid,'PID 7 · sh (you)','#6EDC92',V(-2.4,2.95,-1.6),.45);
-  const fs=new THREE.Group();I.add(fs);['/var','/usr','/etc','/bin','/app'].forEach((n,i)=>{mbox(fs,2.8,.38,1.7,0x64A0FF,{at:V(2.9,.9+i*.6,-5),op:.6,ec:0x9CC2FF,eo:.9,emi:.4});const l=plainLabel(n,'#EBF0F9',.34,700);l.position.set(2.9,.9+i*.6,-4);fs.add(l)});
-  lab(fs,'root filesystem = image layers','#64A0FF',V(2.9,4.3,-5),.55);
-  const net=new THREE.Group();I.add(net);const ring=new THREE.Mesh(new THREE.TorusGeometry(1.1,.12,12,48),std(0x6EDC92,{emissive:0x6EDC92,emissiveIntensity:.7}));ring.position.set(0,5.6,-6.2);net.add(ring);
-  net.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(0,5.6,-6.2),V(0,5.6,-7),V(0,5.6,-12)]),new THREE.LineBasicMaterial({color:0x6EDC92})));
-  lab(net,'eth0 · 172.18.0.3','#6EDC92',V(0,4.1,-6.2),.5);lab(net,'hostname: 3f2a9c1b','#EBF0F9',V(0,7.1,-6.2),.5);
-  const here=lab(I,'you are inside api · 3f2a9c1b','#EBF0F9',V(0,4.6,-6.4),.75);const kIn=lab(I,'same kernel as the host · 6.1.0-aws','#3FD5C2',V(0,-.1,2.5),.6);
-  const out=lab(g,'sh ended · app (PID 1) still running','#6EDC92',V(0,4.3,0),.55);
-  const st={yaw:0,pitch:0};drag(c,st);const OUT={p:V(0,9,17),l:V(0,1.4,0)},IN={p:V(0,3.5,6.4),l:V(0,3.1,-3)},DOWN={p:V(0,6.4,4.6),l:V(0,-.6,-1.5)};
-  cam.position.copy(OUT.p);const look=OUT.l.clone();let sc_=0.19,spin=0;
-  let spinT=-1e9;function setStage(n){const was=stage;stage=n;t0=performance.now();if(n===1&&was<1)spinT=performance.now()}
-  return {setStage,render(t){size(r,cam,c);const el=(performance.now()-t0)/1000,inside=stage>=1&&stage<=5;
-    const tgt=stage===5?DOWN:inside?IN:OUT;cam.position.lerp(tgt.p,.045);look.lerp(tgt.l,.06);cam.lookAt(look);g.rotation.y=st.yaw*.5;
-    sc_+=((inside?1:.19)-sc_)*.06;I.visible=sc_>.2;I.scale.setScalar(sc_);spin=Math.exp(-(performance.now()-spinT)/700);I.rotation.y=-spin*Math.PI*1.4;
-    O.visible=sc_<.6;['web','db'].forEach(n=>boxes[n].visible=!inside||sc_<.3);boxes.api.visible=sc_<.25;
-    Object.values(boxes).forEach(b=>{b.userData.core.rotation.y=t*.002;b.userData.core.rotation.x=t*.0013});
-    const sp=.0004+spin*.01;for(let i=0;i<N;i++){const d=pd[i];d[0]+=sp*(1+(i%5)*.2);pp[i*3]=Math.cos(d[0])*d[1];pp[i*3+2]=Math.sin(d[0])*d[1]}pg.attributes.position.needsUpdate=true;
-    nsL.forEach((l,i)=>{l.position.set(-6.2+i*2.48,7.25+.12*Math.sin(t*.002+i),-6.6)});
-    pid.visible=stage>=2&&stage<5&&inside;fs.visible=stage>=3&&stage<5&&inside;net.visible=stage===4&&inside;
-    floorM.opacity+=((stage===5?.06:.85)-floorM.opacity)*.08;fgrid.visible=stage!==5;kIn.visible=stage===5;kL.visible=!inside;
-    kern.material.emissiveIntensity=stage===5?.35+.3*Math.sin(t*.006):.25;o1.scale.setScalar(1+.06*Math.sin(t*.005));
-    out.visible=stage===6;here.visible=stage===1;r.render(sc,cam)}}}
+  const N=900,pp=new Float32Array(N*3),pd=[];for(let i=0;i<N;i++){const a=Math.random()*Math.PI*2,rr=4+Math.random()*3.5,y=1+Math.random()*6.5;pd.push([a,rr,y]);pp[i*3]=Math.cos(a)*rr;pp[i*3+1]=y;pp[i*3+2]=Math.sin(a)*rr}
+  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pp,3));const swirlM=new THREE.PointsMaterial({color:0x7FE8DA,size:.07,transparent:true,opacity:.75});I.add(new THREE.Points(pg,swirlM));
+  const scr=makeScreen(8.6,4.6);scr.m.position.set(-2.6,4,-6.85);I.add(scr.m);
+  const where={backend:lab(I,'you are inside: backend','#3FD5C2',V(-2.6,7.1,-6.6),.75),kafka:lab(I,'you are inside: kafka','#FF9466',V(-2.6,7.1,-6.6),.75),postgres:lab(I,'you are inside: postgres','#64A0FF',V(-2.6,7.1,-6.6),.75)};
+  // kafka conveyor
+  const kz=new THREE.Group();I.add(kz);mbox(kz,13,.3,1.2,0x3a2a1a,{at:V(0,.9,-3.6),ec:0xFF9466,eo:.9});lab(kz,'topic: orders','#FF9466',V(-5.2,1.9,-3.6),.55);
+  const evs=[];for(let i=0;i<6;i++){const e=new THREE.Mesh(new THREE.BoxGeometry(.7,.7,.7),std(0xFF9466,{emissive:0xFF9466,emissiveIntensity:.5}));kz.add(e);evs.push(e)}
+  // postgres rows
+  const pzg=new THREE.Group();I.add(pzg);const cyl=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,2.6,40),std(0x64A0FF,{emissive:0x64A0FF,emissiveIntensity:.35,transparent:true,opacity:.8}));cyl.position.set(4.6,1.4,-4.6);pzg.add(cyl);
+  const rings=[0,1,2].map(k=>{const rg=new THREE.Mesh(new THREE.TorusGeometry(1.15,.06,8,48),new THREE.MeshBasicMaterial({color:k===2?0xFFB547:0xEBF0F9}));rg.rotation.x=Math.PI/2;rg.position.set(4.6,.7+k*.7,-4.6);pzg.add(rg);return rg});
+  lab(pzg,'table: orders','#64A0FF',V(4.6,3.3,-4.6),.55);
+  // log sheets
+  const lgz=new THREE.Group();I.add(lgz);const sheets=[];for(let i=0;i<5;i++){const sh=new THREE.Mesh(new THREE.PlaneGeometry(1.6,.34),new THREE.MeshBasicMaterial({color:i===4?0xFF6F8E:0x97A3BE,transparent:true,opacity:.85,side:THREE.DoubleSide}));lgz.add(sh);sheets.push(sh)}
+  lab(lgz,'logs/app.log','#EBF0F9',V(4.6,5.6,-3.4),.55);
+  const stdout=lab(g,'docker logs = what the app printed','#EBF0F9',V(0,4.4,0),.6);const strm=[];for(let i=0;i<8;i++){const d=new THREE.Mesh(new THREE.SphereGeometry(.12,8,8),new THREE.MeshBasicMaterial({color:0x3FD5C2}));g.add(d);strm.push(d)}
+  const CONTENT={1:['backend : /app','#3FD5C2',[['$ ls'],['app.jar   logs/   config/','#97A3BE'],['$ whoami'],['app','#97A3BE']]],
+    2:['backend : logs/app.log','#3FD5C2',[['10:42:01 INFO  Order 1042 created'],['10:42:01 INFO  Event sent to orders'],['10:42:05 WARN  Payment slow (4s)','#FFB547'],['10:42:07 ERROR Payment timeout 1042','#FF6F8E']]],
+    3:['kafka : topic orders','#FF9466',[['{"orderId":1040,"status":"PAID"}'],['{"orderId":1041,"status":"PAID"}'],['{"orderId":1042,"status":"CREATED"}','#FFB547'],['^C  Processed 3 messages','#97A3BE']]],
+    4:['postgres : shop','#64A0FF',[['  id  | status'],[' ------+---------','#97A3BE'],[' 1041 | PAID'],[' 1042 | PENDING','#FFB547']]]};
+  const ROOMC={1:0x3FD5C2,2:0x3FD5C2,3:0xFF9466,4:0x64A0FF},WHO={1:'backend',2:'backend',3:'kafka',4:'postgres'};
+  const st={yaw:0};drag(c,st);const OUT={p:V(0,9,17),l:V(0,1.4,0)},IN={p:V(0,3.6,6.6),l:V(0,3.4,-3)};
+  cam.position.copy(OUT.p);const look=OUT.l.clone();let sc_=.19,spinT=-1e9;
+  function setStage(n){const was=stage;stage=n;t0=performance.now();const inN=n>=1&&n<=4;if(inN&&(was<1||was>4||WHO[n]!==WHO[was]))spinT=performance.now()}
+  return {setStage,render(t){size(r,cam,c);const el=(performance.now()-t0)/1000,inside=stage>=1&&stage<=4;
+    const tgt=inside?IN:OUT;cam.position.lerp(tgt.p,.045);look.lerp(tgt.l,.06);cam.lookAt(look);g.rotation.y=st.yaw*.5;
+    const spin=Math.exp(-(performance.now()-spinT)/700);const tgS=inside?Math.max(.19,1-spin*.8):.19;sc_+=(tgS-sc_)*.08;I.visible=sc_>.2;I.scale.setScalar(sc_);I.rotation.y=-spin*Math.PI*1.2;
+    O.visible=sc_<.6;Object.entries(boxes).forEach(([n,b])=>{b.visible=!inside||sc_<.3;b.userData.core.rotation.y=t*.002;b.userData.core.rotation.x=t*.0013;b.userData.m.material.emissiveIntensity=(stage===5&&n==='backend')?.9:.4});
+    if(inside){const col=ROOMC[stage];roomE.material.color.setHex(col);roomW.material.color.setHex(col);swirlM.color.setHex(col);const [ti,tc,ls]=CONTENT[stage];scr.draw(ti,tc,ls,Math.min(ls.length,Math.floor(el/.55)+1))}
+    Object.entries(where).forEach(([n,l])=>l.visible=inside&&WHO[stage]===n);
+    const sp=.0004+spin*.012;for(let i=0;i<N;i++){const d=pd[i];d[0]+=sp*(1+(i%5)*.2);pp[i*3]=Math.cos(d[0])*d[1];pp[i*3+2]=Math.sin(d[0])*d[1]}pg.attributes.position.needsUpdate=true;
+    kz.visible=inside&&stage===3;evs.forEach((e,i)=>{const k=((t*.00012)+i/6)%1;e.position.set(-6+k*12,1.45,-3.6);e.rotation.y=t*.002});
+    pzg.visible=inside&&stage===4;rings[2].material.color.setHex(Math.sin(t*.008)>0?0xFFB547:0x6b5320);
+    lgz.visible=inside&&stage===2;sheets.forEach((sh,i)=>{const k=((t*.0002)+i/5)%1;sh.position.set(4.6,1+k*4,-3.4);sh.material.opacity=.9*(1-Math.abs(k-.5)*1.6)});
+    kL.visible=!inside;stdout.visible=stage===5;strm.forEach((d,i)=>{d.visible=stage===5;const k=((t*.0006)+i/8)%1;d.position.set(k*6,1.5+k*3,0)});
+    r.render(sc,cam)}}}
 
-/* D · docker compose network */
+/* D · docker compose: a walled network region */
 function initCompose(){const c=$('#compose3d'),{r,sc,cam,g}=dk(c);let stage=0,t0=0;
-  mbox(g,21,.5,14,0x111827,{at:V(0,-.25,0),ec:0x3a4766,eo:.8,emi:.05});lab(g,"Rahul's laptop · Docker host",'#C9D2E3',V(-3.6,0,7.3),.8,true);
-  const netM=new THREE.Group();g.add(netM);mbox(netM,15,.12,10,0x1f8f84,{at:V(0,.08,0),op:.35,ec:0x3FD5C2,eo:1,emi:.5});lab(netM,'network: ticketwave_default','#3FD5C2',V(-4.4,.5,5.4),.8);
-  const S={};[['web','web · nginx :80',0,3,0xFFB547],['api','api :3000',0,-.4,0x3FD5C2],['db','db · postgres :5432',-4.6,-3.4,0x64A0FF],['redis','redis :6379',4.6,-3.4,0xFF6F8E]].forEach(([k,n,x,z,col])=>{
-    const b=new THREE.Group();b.position.set(x,.15,z);mbox(b,2.6,1.7,2.1,col,{at:V(0,.85,0),op:.85,emi:.35,ec:0xEBF0F9,eo:.5});const l=label(n,'#'+col.toString(16).padStart(6,'0'),.95);l.position.set(0,2.6,0);b.add(l);b.scale.setScalar(.001);g.add(b);S[k]={b,home:V(x,.15,z),col}});
-  const delay={db:0,redis:.15,api:1,web:2};
-  const dns=new THREE.Group();g.add(dns);const tw=new THREE.Mesh(new THREE.CylinderGeometry(.35,.55,2.2,16),std(0x6EDC92,{emissive:0x6EDC92,emissiveIntensity:.4}));tw.position.set(-5.6,1.2,1.6);dns.add(tw);lab(dns,'DNS 127.0.0.11','#6EDC92',V(-5.6,2.9,1.6),.7);
-  const vol=new THREE.Group();g.add(vol);const cy=new THREE.Mesh(new THREE.CylinderGeometry(.85,.85,1.3,32),std(0xA193FF,{emissive:0xA193FF,emissiveIntensity:.4}));cy.position.set(-8.9,.65,-3.4);vol.add(cy);lab(vol,'volume db-data','#A193FF',V(-8.9,2.1,-3.4),.7);
-  const vline=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(-8,.65,-3.4),V(-5.9,.65,-3.4)]),new THREE.LineDashedMaterial({color:0xA193FF,dashSize:.2,gapSize:.15}));vline.computeLineDistances();g.add(vline);
-  const gate=new THREE.Mesh(new THREE.TorusGeometry(.75,.12,12,40,Math.PI),std(0xFFB547,{emissive:0xFFB547,emissiveIntensity:.5}));gate.position.set(0,.15,5);g.add(gate);const gL=lab(g,'8080 → 80','#FFB547',V(2.2,1,5.2),.7);
-  const you=new THREE.Mesh(new THREE.SphereGeometry(.55,24,24),std(0xEBF0F9,{emissive:0x555c6c,emissiveIntensity:.5}));you.position.set(0,1,8.6);g.add(you);lab(g,'you · localhost:8080','#EBF0F9',V(0,2.1,8.6),.7);
-  const bad=new THREE.Mesh(new THREE.SphereGeometry(.45,20,20),std(0xFF6F8E,{emissive:0xFF6F8E,emissiveIntensity:.5}));bad.position.set(8.8,1,-6);g.add(bad);const badL=lab(g,'outsider → db:5432','#FF6F8E',V(8.6,2.2,-6),.8);
-  const xm=lab(g,'✗ no published port','#FF6F8E',V(7,1.8,-3.6),.8);
-  const q1=lab(g,'“db?”','#EBF0F9',V(0,0,0),.65),q2=lab(g,'172.18.0.4','#6EDC92',V(0,0,0),.65);
-  const P=(pts,col)=>{const cv=new THREE.CatmullRomCurve3(pts);const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(cv.getPoints(80)),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.85}));g.add(ln);const d=new THREE.Mesh(new THREE.SphereGeometry(.28,14,14),new THREE.MeshBasicMaterial({color:col}));g.add(d);return {cv,ln,d}};
-  const api=V(0,1,-.4),db=V(-4.6,1,-3.4),rd=V(4.6,1,-3.4),web=V(0,1,3),dn=V(-5.6,1.6,1.6);
-  const pQ=P([api,V(-2.6,2.2,.8),dn],0xEBF0F9),pR=P([dn,V(-2.6,2.6,.8),api],0x6EDC92),pDB=P([api,V(-2.4,1.6,-2),db],0x3FD5C2);
-  const pIn=P([V(0,1,8.6),V(0,.6,5),web,api,V(2.4,1.4,-2),rd],0xFFB547),pIn2=P([api,V(-2.4,1.3,-2.2),db],0xFFB547);
-  const pBad=P([V(8.8,1,-6),V(8.1,1,-5.3),V(7.6,1,-4.6)],0xFF6F8E);
-  const st={yaw:0};drag(c,st);cam.position.set(0,13.2,18.6);
+  mbox(g,22,.5,15,0x111827,{at:V(0,-.25,0),ec:0x3a4766,eo:.8,emi:.05});lab(g,'EC2 host','#C9D2E3',V(-8.6,0,7.6),.8,true);
+  const reg=new THREE.Group();g.add(reg);mbox(reg,15,.12,10,0x1f8f84,{at:V(0,.08,0),op:.3,ec:0x3FD5C2,eo:1,emi:.5});
+  const wallM=()=>new THREE.MeshBasicMaterial({color:0x3FD5C2,transparent:true,opacity:.13,side:THREE.DoubleSide});
+  const wall=(w,x,z,ry)=>{const geo=new THREE.PlaneGeometry(w,2.4);const m=new THREE.Mesh(geo,wallM());m.position.set(x,1.25,z);m.rotation.y=ry;const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x3FD5C2}));m.add(e);reg.add(m)};
+  wall(15,0,-5,0);wall(10,-7.5,0,Math.PI/2);wall(10,7.5,0,Math.PI/2);wall(6.2,-4.4,5,0);wall(6.2,4.4,5,0);
+  lab(reg,'Docker network · shop_default','#3FD5C2',V(0,3.5,-5),1.15);lab(reg,'inside the wall, everyone can call everyone by name','#7FE8DA',V(0,2.7,-5),.8,true);
+  const S={};[['frontend','frontend :80',0,2.4,0xFFB547],['backend','backend :8080',0,-1.2,0x3FD5C2],['postgres','postgres :5432',-4.6,-3.2,0x64A0FF],['kafka','kafka :9092',4.6,-3.2,0xFF9466]].forEach(([k,n,x,z,col])=>{
+    const b=new THREE.Group();b.position.set(x,.15,z);mbox(b,2.6,1.6,1.9,col,{at:V(0,.8,0),op:.88,emi:.35,ec:0xEBF0F9,eo:.5});const l=label(n,'#'+col.toString(16).padStart(6,'0'),1.05);l.position.set(0,2.4,0);b.add(l);b.scale.setScalar(.001);g.add(b);S[k]={b}});
+  const delay={postgres:0,kafka:.2,backend:1,frontend:1.9};
+  const door=new THREE.Mesh(new THREE.TorusGeometry(1.1,.14,12,40,Math.PI),std(0xFFB547,{emissive:0xFFB547,emissiveIntensity:.6}));door.position.set(0,.15,5);g.add(door);const dL=lab(g,'the only door · port 3000 → 80','#FFB547',V(2.6,3.1,5.3),.8);
+  const br=new THREE.Group();br.position.set(-4.6,1.3,7.6);g.add(br);mbox(br,3,1.8,.15,0x1a2236,{at:V(0,0,0),ec:0xEBF0F9,eo:.9,emi:.2});const bl=new THREE.Mesh(new THREE.PlaneGeometry(2.6,.3),new THREE.MeshBasicMaterial({color:0xFFB547}));bl.position.set(0,.55,.09);br.add(bl);
+  lab(g,'browser · localhost:3000','#EBF0F9',V(-4.6,2.8,7.6),.85);
+  const vols=[[-9.4,-5,'pgdata','postgres'],[9.4,-5,'kafkadata','kafka']].map(([x,z,n,svc])=>{const gr=new THREE.Group();g.add(gr);const cy=new THREE.Mesh(new THREE.CylinderGeometry(.85,.85,1.3,32),std(0xA193FF,{emissive:0xA193FF,emissiveIntensity:.4}));cy.position.set(x,.65,z);gr.add(cy);lab(gr,'volume '+n,'#A193FF',V(x,2,z),.6);
+    const sx=svc==='postgres'?-4.6:4.6;const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(x,.65,z),V(sx,.65,-3.2)]),new THREE.LineDashedMaterial({color:0xA193FF,dashSize:.25,gapSize:.18}));ln.computeLineDistances();g.add(ln);return {cy,ln}});
+  const P=(pts,col,txt,tpos)=>{const cv=new THREE.CatmullRomCurve3(pts);const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(cv.getPoints(80)),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.85}));g.add(ln);
+    const d=new THREE.Mesh(new THREE.SphereGeometry(.28,14,14),new THREE.MeshBasicMaterial({color:col}));g.add(d);const l=txt?lab(g,txt,'#'+col.toString(16).padStart(6,'0'),tpos,.88):null;return {cv,ln,d,l}};
+  const fe=V(0,1,2.4),be=V(0,1,-1.2),pq=V(-4.6,1,-3.2),kf=V(4.6,1,-3.2);
+  const pIn=P([V(-4.6,1.2,7.4),V(-1.6,.9,6.4),V(0,.8,5),fe],0xFFB547,'localhost:3000 → frontend:80',V(-3.4,2.1,6.1));
+  const pFB=P([fe,V(.4,1.4,.6),be],0x3FD5C2,'http://backend:8080/api/orders',V(3.8,1.9,.8));
+  const pBP=P([be,V(-2.4,1.5,-2.4),pq],0x64A0FF,'postgres:5432',V(-2.6,2.4,-1.6));
+  const pBK=P([be,V(2.4,1.5,-2.4),kf],0xFF9466,'kafka:9092 · order-created',V(3.4,2.6,-1.4));
+  const pX1=P([V(6.2,1,8.6),V(6.2,1,6.8),V(6.2,1,5.15)],0xFF6F8E,'backend:8080? no door',V(3.9,2.3,7.4));
+  const pX2=P([V(9.4,1,1.2),V(8.5,1,1.2),V(7.6,1,1.2)],0xFF6F8E,'postgres:5432? no door',V(5,2.7,2.4));
+  const st={yaw:0};drag(c,st);cam.position.set(0,12.8,18.4);
   function setStage(n){stage=n;t0=performance.now()}
-  const run=(p,k,on)=>{p.ln.visible=p.d.visible=on;if(on)p.d.position.copy(p.cv.getPoint(k))};
-  return {setStage,render(t){size(r,cam,c);const el=(performance.now()-t0)/1000;g.rotation.y=st.yaw*.6+(reduce?0:Math.sin(t*.0001)*.06);cam.lookAt(0,-.2,.6);
-    const netOn=stage>=1&&stage<5;netM.visible=netOn||stage===5&&el<.8;netM.children.forEach(m=>{if(m.material){m.material.opacity=m.isSprite?1:(stage===5?.35*c01(1-el/.8):.35)}});
-    Object.entries(S).forEach(([k,o])=>{let s=.001;if(stage>=1&&stage<5)s=stage===1?c01((el-.5-delay[k])/.4):1;if(stage===5)s=c01(1-el/.7);o.b.scale.setScalar(Math.max(.001,ease(s)));o.b.position.y=.15-(1-s)*1});
-    dns.visible=netOn;gate.visible=gL.visible=netOn;
-    const cyc=(el%3)/3;
-    run(pQ,c01(cyc/.4),stage===2&&cyc<.4);run(pR,c01((cyc-.4)/.3),stage===2&&cyc>=.4&&cyc<.7);run(pDB,c01((cyc-.7)/.3),stage===2&&cyc>=.7);
-    q1.visible=stage===2&&cyc<.4;if(q1.visible)q1.position.copy(pQ.d.position).add(V(0,.6,0));q2.visible=stage===2&&cyc>=.4&&cyc<.7;if(q2.visible)q2.position.copy(pR.d.position).add(V(0,.6,0));
-    const c3=(el%4)/4;run(pIn,c3,stage===3);run(pIn2,(c3*2)%1,stage===3);
-    run(pBad,c01(((el%2.4)/2.4)/.7),stage===4);bad.visible=badL.visible=xm.visible=stage===4;
-    cy.material.emissiveIntensity=stage===5?.5+.4*Math.sin(t*.008):.4;
+  const run=(p,k,on)=>{p.ln.visible=p.d.visible=on;if(p.l)p.l.visible=on;if(on)p.d.position.copy(p.cv.getPoint(k))};
+  return {setStage,render(t){size(r,cam,c);const el=(performance.now()-t0)/1000;g.rotation.y=st.yaw*.6+(reduce?0:Math.sin(t*.0001)*.05);cam.lookAt(0,.2,.6);
+    const regOn=stage>=1&&stage<5;const rs=stage===5?c01(1-el/.8):regOn?1:0;reg.visible=rs>0;reg.scale.set(1,Math.max(.01,rs),1);
+    Object.entries(S).forEach(([k,o])=>{let s=.001;if(regOn)s=stage===1?c01((el-.6-delay[k])/.4):1;if(stage===5)s=c01(1-el/.7);o.b.scale.setScalar(Math.max(.001,ease(s)));o.b.position.y=.15-(1-s)});
+    door.visible=dL.visible=regOn;
+    const c2=(el%2.6)/2.6;run(pIn,c2,stage===2);
+    const c3=(el%3.2)/3.2;run(pFB,c01(c3/.4),stage===3);run(pBP,c01((c3-.4)/.6),stage===3);run(pBK,c01((c3-.4)/.6),stage===3);if(stage===3){pFB.ln.visible=pBP.ln.visible=pBK.ln.visible=true}
+    const c4=c01(((el%2.2)/2.2)/.75);run(pX1,c4,stage===4);run(pX2,c4,stage===4);
+    vols.forEach(v=>{v.cy.material.emissiveIntensity=stage===5?.5+.4*Math.sin(t*.008):.4;v.ln.visible=regOn});
     r.render(sc,cam)}}}

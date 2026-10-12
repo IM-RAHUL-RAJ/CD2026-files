@@ -75,7 +75,7 @@ const dots=$('#stepDots');
 function applyStep(){
   const s=slides[cur], n=builds?step:s._max;
   $$('.f',s).forEach(f=>f.classList.toggle('on',parseInt(f.dataset.f,10)<=n));
-  for(let i=1;i<=6;i++)s.classList.toggle('st'+i,n>=i);
+  for(let i=1;i<=9;i++)s.classList.toggle('st'+i,n>=i);
   $$('.overlay .step-cap',s).forEach(c=>c.classList.toggle('cur',+c.dataset.s===n));
   dots.innerHTML=s._max?Array.from({length:s._max+1},(_,i)=>`<i class="${i<=n?'on':''}"></i>`).join(''):'';
   const h=hooks[s.dataset.hook];if(h&&h.step)h.step(s,n);
@@ -292,6 +292,10 @@ hooks.sim4={enter(){simRun()}};
   g.innerHTML=Q.map((q,i)=>`<div class="card" data-i="${i}"><p class="mono" style="font-size:18px;line-height:1.4;min-height:4.4em">${q[0]}</p><div style="display:flex;gap:10px"><button class="btn" data-a="sg" style="flex:1;color:var(--teal)">Security group</button><button class="btn" data-a="role" style="flex:1;color:var(--violet)">IAM role</button></div><p class="small sgr-why" style="min-height:2.8em">&nbsp;</p></div>`).join('');
   $$('.card',g).forEach(c=>{const q=Q[+c.dataset.i];$$('button',c).forEach(b=>b.onclick=()=>{const ok=b.dataset.a===q[1];c.style.setProperty('--c',ok?'var(--green)':'var(--rose)');c.style.borderColor=ok?'var(--green)':'var(--rose)';
     c.querySelector('.sgr-why').innerHTML=`<b class="${ok?'good':'bad'}">${ok?'Right':'No'}: ${q[1]==='sg'?'security group':'IAM role'}.</b> ${q[2]}`})})})();
+// Docker activity: orders-api vs users-api
+(function(){const svg=$('#dkaSvg');if(!svg)return;const pn=$('#dkaPanel');pn.dataset.r='1';
+  $$('#dkaTabs .btn').forEach(b=>b.onclick=()=>{const r=b.dataset.r;svg.dataset.r=r;pn.dataset.r=r;$$('#dkaTabs .btn').forEach(x=>x.classList.toggle('primary',x===b))});
+  $$('#dkaPanel .rv').forEach(b=>b.onclick=()=>b.closest('.rnd').classList.add('show'))})();
 // Activity 5: canary
 (function(){const p=$('#canPct'),b=$('#canBug');if(!p)return;let rb=null;
   function upd(){const pct=+p.value,bug=b.classList.contains('on');$('#canTxt').textContent=pct+'%';$('#canV1').style.width=(100-pct)+'%';$('#canV2').style.width=pct+'%';

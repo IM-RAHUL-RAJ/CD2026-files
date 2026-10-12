@@ -1,4 +1,3 @@
-
 <section class="slide" data-title="Virtualization vs containerization (3D)" data-phase="pic" data-ch="Containers" data-steps="3" style="padding:24px">
   <div class="three-wrap grow"><canvas class="three" id="vmc3d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
     <div class="overlay">
@@ -11,36 +10,29 @@
   <aside class="notes"><p>Step 0: point at the guest OS blocks: each VM has its own full OS, gigabytes each. Step 1: the boot race. Step 2: density. Step 3: isolation trade-off. In AWS you usually get both: containers running inside EC2 VMs, or on Fargate, which wraps each task in its own microVM.</p></aside>
 </section>
 
-
-<section class="slide" data-title="A container is a process with walls" data-phase="behind" data-ch="Containers" data-steps="3">
+<section class="slide" data-title="A container is a flat in a building" data-phase="behind" data-ch="Containers" data-steps="2">
   <div><span class="wowtag">Behind the scenes</span></div>
-  <h2 style="margin-top:6px">A container is just a process with walls</h2>
-  <div class="row grow" style="gap:20px">
-    <div class="vis">
-      <svg class="d" viewBox="0 0 1120 600" id="nsSvg">
-        <style>#nsSvg .nsw{opacity:0;transition:opacity .5s var(--d)}.st1 #nsSvg .nsw{opacity:1}#nsSvg .lab1{opacity:0;transition:opacity .6s .7s}.st1 #nsSvg .lab1{opacity:1}</style>
-        <circle cx="150" cy="90" r="9" class="fm" opacity=".35"/><circle cx="210" cy="160" r="9" class="fm" opacity=".35"/><circle cx="120" cy="250" r="9" class="fm" opacity=".35"/><circle cx="180" cy="420" r="9" class="fm" opacity=".35"/><circle cx="250" cy="500" r="9" class="fm" opacity=".35"/><circle cx="90" cy="520" r="9" class="fm" opacity=".35"/><circle cx="960" cy="90" r="9" class="fm" opacity=".35"/><circle cx="1000" cy="190" r="9" class="fm" opacity=".35"/><circle cx="950" cy="470" r="9" class="fm" opacity=".35"/><circle cx="1010" cy="520" r="9" class="fm" opacity=".35"/><circle cx="300" cy="60" r="9" class="fm" opacity=".35"/><circle cx="830" cy="60" r="9" class="fm" opacity=".35"/>
-        <text x="60" y="580" class="tmut" style="font-size:15px">grey dots: the host's other 400 processes. Inside the walls, they're invisible.</text>
-        <circle cx="540" cy="290" r="96" class="fa glow-a"/><text x="540" y="286" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">python</text><text x="540" y="310" text-anchor="middle" class="tink" style="font:600 16px var(--f-mono)">app.py</text>
-        <g class="nsw" style="--d:0.0s"><path d="M552.7 108.4 A182 182 0 0 1 690.9 188.2" style="fill:none;stroke:var(--amber);stroke-width:20;stroke-linecap:round"/><text x="653.0" y="100.3" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--amber)">PID</text></g><g class="nsw" style="--d:0.12s"><path d="M703.6 210.2 A182 182 0 0 1 703.6 369.8" style="fill:none;stroke:var(--teal);stroke-width:20;stroke-linecap:round"/><text x="766.0" y="296.0" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--teal)">NET</text></g><g class="nsw" style="--d:0.24s"><path d="M690.9 391.8 A182 182 0 0 1 552.7 471.6" style="fill:none;stroke:var(--blue);stroke-width:20;stroke-linecap:round"/><text x="653.0" y="491.7" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--blue)">MNT</text></g><g class="nsw" style="--d:0.36s"><path d="M527.3 471.6 A182 182 0 0 1 389.1 391.8" style="fill:none;stroke:var(--green);stroke-width:20;stroke-linecap:round"/><text x="427.0" y="491.7" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--green)">UTS</text></g><g class="nsw" style="--d:0.48s"><path d="M376.4 369.8 A182 182 0 0 1 376.4 210.2" style="fill:none;stroke:var(--violet);stroke-width:20;stroke-linecap:round"/><text x="314.0" y="296.0" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--violet)">IPC</text></g><g class="nsw" style="--d:0.6s"><path d="M389.1 188.2 A182 182 0 0 1 527.3 108.4" style="fill:none;stroke:var(--rose);stroke-width:20;stroke-linecap:round"/><text x="427.0" y="100.3" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--rose)">USER</text></g>
-        <g class="lab1"><text x="683.5" y="58.7" text-anchor="start" class="tmut" style="font-size:20px">its own process list: it is PID 1</text><text x="827.0" y="296.0" text-anchor="start" class="tmut" style="font-size:20px">its own IP, ports, routes</text><text x="683.5" y="533.3" text-anchor="start" class="tmut" style="font-size:20px">its own / filesystem</text><text x="396.5" y="533.3" text-anchor="end" class="tmut" style="font-size:20px">its own hostname</text><text x="253.0" y="296.0" text-anchor="end" class="tmut" style="font-size:20px">its own shared memory</text><text x="396.5" y="58.7" text-anchor="end" class="tmut" style="font-size:20px">root inside ≠ root on the host</text></g>
-      </svg>
-    </div>
-    <div style="width:430px;flex:none;display:flex;flex-direction:column;justify-content:center;gap:18px">
-      <div class="panel f" data-f="1"><b class="hl-t" style="font-size:22px">Namespaces</b><p class="small" style="margin-top:6px">decide what the process can <b style="color:var(--fg)">see</b>. Six walls, drawn by the Linux kernel.</p></div>
-      <div class="panel f" data-f="2"><b class="hl-a" style="font-size:22px">cgroups</b><p class="small" style="margin-top:6px">decide how much it can <b style="color:var(--fg)">use</b>.</p>
-        <div style="margin-top:12px;display:grid;gap:10px">
-          <div><div class="slider-lab"><span>memory</span><span>380 / 512 MB</span></div><div style="height:12px;border-radius:6px;background:var(--ink-3);overflow:hidden"><div style="width:74%;height:100%;background:var(--amber)"></div></div></div>
-          <div><div class="slider-lab"><span>cpu</span><span>0.3 / 0.5 core</span></div><div style="height:12px;border-radius:6px;background:var(--ink-3);overflow:hidden"><div style="width:60%;height:100%;background:var(--teal)"></div></div></div>
-        </div></div>
-      <p class="say f" data-f="3" style="font-size:24px">No guest OS. <em>Same kernel, different view.</em></p>
-    </div>
+  <h2 style="margin-top:6px">A container is a flat in an apartment building</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <path d="M40 60 L340 10 L640 60" class="w-l" style="stroke-width:3"/>
+      <g><rect x="60" y="70" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="78" y="122" width="34" height="56" rx="4" class="fl"/><rect x="140" y="94" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="178" y="166" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">worker</text></g><g><rect x="250" y="70" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="268" y="122" width="34" height="56" rx="4" class="fl"/><rect x="330" y="94" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="368" y="166" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">redis</text></g><g><rect x="440" y="70" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="458" y="122" width="34" height="56" rx="4" class="fl"/><rect x="520" y="94" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="558" y="166" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">search</text></g><g><rect x="60" y="200" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="78" y="252" width="34" height="56" rx="4" class="fl"/><rect x="140" y="224" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="178" y="296" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">kafka</text></g><g><rect x="250" y="200" width="180" height="120" rx="10" class="fa glow-a" style=""/><rect x="268" y="252" width="34" height="56" rx="4" class="fk"/><rect x="330" y="224" width="76" height="40" rx="6" class="fk" style="opacity:.8"/><text x="368" y="296" text-anchor="middle" class="tink" style="font:700 17px var(--f-mono)">orders-api</text></g><g><rect x="440" y="200" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="458" y="252" width="34" height="56" rx="4" class="fl"/><rect x="520" y="224" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="558" y="296" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">postgres</text></g><g><rect x="60" y="330" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="78" y="382" width="34" height="56" rx="4" class="fl"/><rect x="140" y="354" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="178" y="426" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">web</text></g><g><rect x="250" y="330" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="268" y="382" width="34" height="56" rx="4" class="fl"/><rect x="330" y="354" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="368" y="426" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">users-api</text></g><g><rect x="440" y="330" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="458" y="382" width="34" height="56" rx="4" class="fl"/><rect x="520" y="354" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="558" y="426" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">grafana</text></g>
+      <rect x="40" y="470" width="600" height="70" rx="12" class="bx-t" style="fill:rgba(63,213,194,.18)"/>
+      <text x="340" y="502" text-anchor="middle" class="tt" style="font:700 20px var(--f-body)">Linux kernel = the shared foundation</text>
+      <text x="340" y="526" text-anchor="middle" class="tmut" style="font-size:16px">one building, shared power and water</text>
+      <g class="f" data-f="1">
+        <path d="M430 200 L760 40 M430 320 L760 500" class="w-a dash" style="stroke-width:2"/>
+        <rect x="760" y="40" width="630" height="460" rx="22" class="bx-a" style="fill:rgba(12,18,32,.92)"/>
+        <text x="790" y="80" class="ta" style="font:700 22px var(--f-body)">Flat “orders-api” has its own…</text>
+        <g><circle cx="830" cy="118" r="22" style="fill:var(--amber);opacity:.9"/><text x="830" y="124" text-anchor="middle" class="tink" style="font:800 17px var(--f-body)">1</text><text x="870" y="114" style="font:700 21px var(--f-body);fill:var(--amber)">Door number</text><text x="870" y="140" class="tmut" style="font-size:17px">its own hostname</text><text x="1360" y="126" text-anchor="end" class="tm" style="font-size:16px">3f2a9c1b</text></g><g><circle cx="830" cy="192" r="22" style="fill:var(--teal);opacity:.9"/><text x="830" y="198" text-anchor="middle" class="tink" style="font:800 17px var(--f-body)">2</text><text x="870" y="188" style="font:700 21px var(--f-body);fill:var(--teal)">Postal address</text><text x="870" y="214" class="tmut" style="font-size:17px">its own IP and ports</text><text x="1360" y="200" text-anchor="end" class="tm" style="font-size:16px">172.18.0.3 : 8080</text></g><g><circle cx="830" cy="266" r="22" style="fill:var(--blue);opacity:.9"/><text x="830" y="272" text-anchor="middle" class="tink" style="font:800 17px var(--f-body)">3</text><text x="870" y="262" style="font:700 21px var(--f-body);fill:var(--blue)">Its own rooms</text><text x="870" y="288" class="tmut" style="font-size:17px">its own files, from the image</text><text x="1360" y="274" text-anchor="end" class="tm" style="font-size:16px">/app  /etc  /usr</text></g><g><circle cx="830" cy="340" r="22" style="fill:var(--violet);opacity:.9"/><text x="830" y="346" text-anchor="middle" class="tink" style="font:800 17px var(--f-body)">4</text><text x="870" y="336" style="font:700 21px var(--f-body);fill:var(--violet)">Curtains closed</text><text x="870" y="362" class="tmut" style="font-size:17px">can’t see the neighbours’ processes</text><text x="1360" y="348" text-anchor="end" class="tm" style="font-size:16px">sees only its own app</text></g><g><circle cx="830" cy="414" r="22" style="fill:var(--rose);opacity:.9"/><text x="830" y="420" text-anchor="middle" class="tink" style="font:800 17px var(--f-body)">5</text><text x="870" y="410" style="font:700 21px var(--f-body);fill:var(--rose)">Electricity meter</text><text x="870" y="436" class="tmut" style="font-size:17px">a limit on what it can use (cgroups)</text><text x="1360" y="422" text-anchor="end" class="tm" style="font-size:16px">512 MB RAM · 0.5 CPU</text></g>
+      </g>
+      <g class="f" data-f="2"><text x="1075" y="545" text-anchor="middle" style="font:600 20px var(--f-body)">A <tspan class="hl-v">VM</tspan> is a separate house with its own foundation.</text></g>
+    </svg>
   </div>
-  <aside class="notes"><p>Click 1: the six Linux namespaces. PID: the app sees itself as PID 1 and nothing else. NET: its own network interface and ports. MNT: its own root filesystem, built from the image. UTS: its own hostname. IPC: its own shared memory. USER: can map root inside to an unprivileged user outside.</p><p>Click 2: cgroups (control groups) limit memory and CPU. docker run --memory 512m --cpus 0.5 sets exactly these. Go over the memory limit and the kernel kills the process (OOMKilled).</p><p>Click 3: that's all a container is. Which is why it starts in milliseconds.</p></aside>
+  <aside class="notes"><p>The building's foundation and utilities are the Linux kernel: every flat shares them. Each flat (container) gets its own door number (hostname), postal address (IP and ports), rooms (filesystem from the image), closed curtains (it can't see other containers' processes) and an electricity meter (a CPU and memory limit).</p><p>The technical names, for those who ask: namespaces give the separate view; cgroups are the meter. A VM is a whole separate house with its own foundation (its own kernel): stronger separation, more cost.</p></aside>
 </section>
 
-
-<section class="slide" data-title="What happens on docker run" data-phase="behind" data-ch="Containers" data-steps="5">
+<section class="slide" data-title="What happens on docker run" data-phase="behind" data-ch="Containers" data-steps="4">
   <div><span class="wowtag">Behind the scenes</span></div>
   <h2 style="margin-top:6px">What really happens when you type <span class="mono hl-a">docker run</span></h2>
   <div class="vis">
@@ -55,12 +47,10 @@
         <text x="96" y="502" class="tt" style="font:700 18px var(--f-body)">Network:</text><text x="190" y="502" class="tmut" style="font-size:17px">a virtual cable (veth) plugs the container into the docker0 bridge and gets it an IP</text>
         <text x="96" y="532" class="ta" style="font:700 18px var(--f-body)">Port:</text><text x="190" y="532" class="tmut" style="font-size:17px">-p 8080:80 adds a NAT rule: host port 8080 → container port 80</text>
       </g>
-      <g class="f" data-f="5"><rect x="70" y="330" width="290" height="110" rx="18" class="bx-r" style="fill:var(--ink-2)"/><text x="215" y="376" text-anchor="middle" class="tr" style="font:700 20px var(--f-body)">containerd-shim</text><text x="215" y="408" text-anchor="middle" class="tmut" style="font-size:16px">stays as its parent</text><path d="M360 385 H380" class="w-r" style="stroke-width:3"/></g>
     </svg>
   </div>
-  <aside class="notes"><p>Click through the chain. The docker command is only a client: it sends a REST call to dockerd. dockerd asks containerd to run the container; containerd uses runc, which asks the kernel to create a process with new namespaces and cgroups, mounts the image layers with overlayfs, then exits.</p><p>Click 2: if the image isn't on this machine, dockerd pulls its layers from the registry first. Click 4: networking and port publishing. Click 5: a small containerd-shim stays as the container's parent, so you can restart dockerd without killing running containers.</p></aside>
+  <aside class="notes"><p>Click through the chain. The docker command is only a client: it sends a REST call to dockerd. dockerd asks containerd to run the container; containerd uses runc, which asks the kernel to create a process with new namespaces and cgroups, mounts the image layers with overlayfs, then exits.</p><p>Click 2: if the image isn't on this machine, dockerd pulls its layers from the registry first. Click 4: networking and port publishing.</p></aside>
 </section>
-
 
 <section class="slide" data-title="Dockerfile to container" data-phase="concept" data-ch="Containers" data-steps="3">
   <h2>Recipe → frozen meal → hot plate</h2>
@@ -92,6 +82,46 @@
   <aside class="notes"><p>Dockerfile = recipe. Image = the frozen, versioned result of following the recipe. Container = a running instance of the image. One image can run as many containers.</p><p>The RDS labs in the PDFs use exactly this: docker pull, then docker run with -p and -e flags.</p></aside>
 </section>
 
+<section class="slide" data-title="Dockerfile for Spring Boot, line by line" data-phase="prod" data-ch="Dockerfile" data-steps="7">
+  <h2>A Spring Boot Dockerfile, line by line</h2>
+  <div class="row grow" style="gap:26px">
+    <pre class="code sbcode" style="width:740px;flex:none;font-size:18.5px;line-height:1.6"><span class="ln g0"><span class=c># ── Stage 1: build the jar ──</span> </span><span class="ln g1"><span class="k">FROM</span> maven:3.9-eclipse-temurin-21 <span class="k">AS</span> <span class="s">build</span> </span><span class="ln g2"><span class="k">WORKDIR</span> /src </span><span class="ln g2"><span class="k">COPY</span> pom.xml . </span><span class="ln g2"><span class="k">RUN</span> mvn -q dependency:go-offline </span><span class="ln g3"><span class="k">COPY</span> src ./src </span><span class="ln g3"><span class="k">RUN</span> mvn -q package -DskipTests </span><span class="ln g0"> </span><span class="ln g0"><span class=c># ── Stage 2: run the jar ──</span> </span><span class="ln g4"><span class="k">FROM</span> eclipse-temurin:21-jre-alpine </span><span class="ln g4"><span class="k">WORKDIR</span> /app </span><span class="ln g5"><span class="k">RUN</span> addgroup -S app &amp;&amp; adduser -S app -G app </span><span class="ln g6"><span class="k">COPY</span> <span class="s">--from=build</span> /src/target/orders.jar app.jar </span><span class="ln g5"><span class="k">USER</span> app </span><span class="ln g7"><span class="k">EXPOSE</span> 8080 </span><span class="ln g7"><span class="k">HEALTHCHECK</span> CMD wget -qO- localhost:8080/actuator/health </span><span class="ln g7"><span class="k">ENTRYPOINT</span> [&quot;java&quot;,&quot;-jar&quot;,&quot;app.jar&quot;] </span></pre>
+    <div class="grow" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div class="panel dxwrap" style="min-height:250px"><div class="dx d0"><b class="k2">Line by line</b><h3>A real Dockerfile</h3><p>A multi-stage Dockerfile for a Spring Boot service. Two stages: a big one to <b>build</b> the jar, a small one to <b>run</b> it. Click through line by line.</p></div><div class="dx d1"><b class="k2">Step 1</b><h3>FROM … AS build</h3><p>Start a temporary build kitchen with Maven and JDK 21. Name it <span class="mono hl-a">build</span> so we can copy from it later. Versions are pinned: <span class="mono">3.9</span>, <span class="mono">21</span>, never <span class="mono">latest</span>.</p></div><div class="dx d2"><b class="k2">Step 2</b><h3>pom.xml first, then dependencies</h3><p>Copy only <span class="mono">pom.xml</span> and download every dependency. Docker caches this layer, so it only re-runs when pom.xml changes. Editing code no longer re-downloads the internet.</p></div><div class="dx d3"><b class="k2">Step 3</b><h3>Then the code</h3><p>Copy the source and build <span class="mono">orders.jar</span>. Tests already ran in CI, so we skip them here to keep the build fast.</p></div><div class="dx d4"><b class="k2">Step 4</b><h3>A fresh, small base</h3><p>Stage 2 starts clean from a small runtime: just the Java 21 JRE on Alpine Linux. Maven, the JDK and your source code are left behind in stage 1.</p></div><div class="dx d5"><b class="k2">Step 5</b><h3>Don’t run as root</h3><p>Create a normal user and switch to it. If someone breaks into the app, they are not root inside the container.</p></div><div class="dx d6"><b class="k2">Step 6</b><h3>Carry only the jar</h3><p><span class="mono">COPY --from=build</span> takes just the finished jar out of the build stage. That’s the whole trick of multi-stage builds.</p></div><div class="dx d7"><b class="k2">Step 7</b><h3>Port, health, start</h3><p><span class="mono">EXPOSE</span> documents the port. <span class="mono">HEALTHCHECK</span> lets Docker ask Spring’s <span class="mono">/actuator/health</span>. <span class="mono">ENTRYPOINT</span> starts Java as PID 1.</p></div></div>
+      <div class="vis" style="min-height:0">
+        <svg class="d" viewBox="0 0 600 230">
+          <g class="sbs1"><rect x="10" y="20" width="250" height="150" rx="16" class="bx-v"/><text x="135" y="56" text-anchor="middle" class="tv" style="font:700 18px var(--f-body)">Stage 1 · build</text><text x="135" y="86" text-anchor="middle" class="tmut" style="font-size:15px">Maven + JDK + source</text><text x="135" y="140" text-anchor="middle" class="tv" style="font:800 30px var(--f-display)">~800 MB</text><text x="135" y="200" text-anchor="middle" class="tmut" style="font-size:14px">thrown away</text></g>
+          <g class="sbjar"><path d="M262 95 H382" class="w-a" style="stroke-width:4"/><rect x="292" y="72" width="60" height="46" rx="8" class="fa"/><text x="322" y="101" text-anchor="middle" class="tink" style="font:800 13px var(--f-mono)">.jar</text></g>
+          <g class="sbs2"><rect x="384" y="45" width="200" height="110" rx="16" class="bx-g"/><text x="484" y="78" text-anchor="middle" class="tg" style="font:700 18px var(--f-body)">Final image</text><text x="484" y="102" text-anchor="middle" class="tmut" style="font-size:14px">JRE + jar only</text><text x="484" y="140" text-anchor="middle" class="tg" style="font:800 28px var(--f-display)">~220 MB</text><text x="484" y="200" text-anchor="middle" class="tmut" style="font-size:14px">what ships to ECR</text></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><p>Walk the seven steps. The two ideas that matter most: dependency caching (copy pom.xml before src, so the slow dependency download is a cached layer) and multi-stage builds (build with the big toolbox, ship only the jar on a small runtime).</p><p>Build it: docker build -t orders:1.4.2 . Run it: docker run -d -p 8080:8080 orders:1.4.2. Sizes are approximate.</p></aside>
+</section>
+
+<section class="slide" data-title="Image versions and tags" data-phase="pic" data-ch="Dockerfile" data-steps="3">
+  <h2>Tag every image like a release</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560" id="verSvg">
+      <style>#verSvg .lt{transition:transform .8s cubic-bezier(.4,0,.2,1)}.st1 #verSvg .lt{transform:translateX(400px)}.st2 #verSvg .lt{transform:translateX(800px)}</style>
+      <path d="M60 250 H1360" class="w-l dash" style="stroke-width:3"/>
+      <g><rect x="100" y="150" width="300" height="190" rx="18" class="bx-b"/><text x="250" y="196" text-anchor="middle" class="tb" style="font:700 20px var(--f-body)">build #41</text><text x="250" y="226" text-anchor="middle" class="tmut tm" style="font-size:15px">commit 3f9a2c1</text><rect x="175" y="262" width="150" height="40" rx="20" class="bx-a"/><text x="250" y="288" text-anchor="middle" class="ta tm" style="font-size:17px">orders:1.4.0</text></g>
+      <g class="f" data-f="1"><rect x="500" y="150" width="300" height="190" rx="18" class="bx-b"/><text x="650" y="196" text-anchor="middle" class="tb" style="font:700 20px var(--f-body)">build #42</text><text x="650" y="226" text-anchor="middle" class="tmut tm" style="font-size:15px">commit 8b1d4e0</text><rect x="575" y="262" width="150" height="40" rx="20" class="bx-a"/><text x="650" y="288" text-anchor="middle" class="ta tm" style="font-size:17px">orders:1.4.1</text></g>
+      <g class="f" data-f="2"><rect x="900" y="150" width="300" height="190" rx="18" class="bx-b"/><text x="1050" y="196" text-anchor="middle" class="tb" style="font:700 20px var(--f-body)">build #43</text><text x="1050" y="226" text-anchor="middle" class="tmut tm" style="font-size:15px">commit c71a9f3</text><rect x="975" y="262" width="150" height="40" rx="20" class="bx-a"/><text x="1050" y="288" text-anchor="middle" class="ta tm" style="font-size:17px">orders:1.4.2</text></g>
+      <g class="lt"><rect x="185" y="92" width="130" height="44" rx="8" style="fill:#FFD166"/><text x="250" y="121" text-anchor="middle" class="tink tm" style="font:700 17px var(--f-mono)">:latest</text><path d="M250 136 V150" style="stroke:#FFD166;stroke-width:3"/></g>
+      <text x="60" y="80" class="lbl">the “latest” sticker always jumps to the newest build</text>
+      <g class="f" data-f="3" style="font-size:18px">
+        <rect x="60" y="380" width="640" height="68" rx="14" class="bx"/><text x="84" y="410" class="tt" font-weight="700">Pin the base image</text><text x="84" y="434" class="tmut tm" style="font-size:15px">FROM eclipse-temurin:21-jre-alpine   (not java:latest)</text>
+        <rect x="720" y="380" width="640" height="68" rx="14" class="bx"/><text x="744" y="410" class="ta" font-weight="700">Tag with version and commit</text><text x="744" y="434" class="tmut tm" style="font-size:15px">docker build -t orders:1.4.2 -t orders:git-c71a9f3 .</text>
+        <rect x="60" y="462" width="640" height="68" rx="14" class="bx"/><text x="84" y="492" class="tg" font-weight="700">Production runs an exact version</text><text x="84" y="516" class="tmut tm" style="font-size:15px">image: orders:1.4.2   — never :latest</text>
+        <rect x="720" y="462" width="640" height="68" rx="14" class="bx"/><text x="744" y="492" class="tr" font-weight="700">Rollback = run the old tag</text><text x="744" y="516" class="tmut tm" style="font-size:15px">image: orders:1.4.1   → back in seconds</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>A tag is a name you give an image: repository:tag. Version every build (semantic version plus the git commit), and pin base images to a specific version so your build doesn't change under you.</p><p>Click 1 and 2: each new build gets its own version tag, and the latest tag jumps forward. Click 3: the four rules teams follow. We'll see in the ECR chapter why trusting latest in production bites.</p></aside>
+</section>
+
 <section class="slide" data-title="Image layers (3D)" data-phase="behind" data-ch="Containers" data-steps="3" style="padding:24px">
   <div class="three-wrap grow"><canvas class="three" id="layers3d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
     <div class="lpanel">
@@ -112,68 +142,188 @@
   <aside class="notes"><p>Step 0: layers build bottom-up, one per instruction that changes files. Order matters: put things that change rarely (base, dependencies) at the bottom, your code at the top, so rebuilds reuse cached layers.</p><p>Step 1: layers are compressed tarballs, stored by their sha256 digest. Step 2: pulls skip layers you already have, which is why the second pull of a new version takes seconds. Step 3: the image never changes. Writes go to each container's own thin layer (overlayfs copy-on-write) and vanish when the container is removed, unless you use a volume.</p><p>Sizes are illustrative but realistic for a Python app.</p></aside>
 </section>
 
-
-<section class="slide" data-title="Inside a container: docker exec (3D)" data-phase="behind" data-ch="Containers" data-steps="6" style="padding:24px">
+<section class="slide" data-title="Inside a container: docker exec (3D)" data-phase="behind" data-ch="Containers" data-steps="5" style="padding:24px">
   <div class="three-wrap grow"><canvas class="three" id="exec3d"></canvas><div class="drag-hint">→ to continue · drag to look around</div>
-    <div class="term" id="execTerm">
-      <div class="tbar"><i></i><i></i><i></i><span>rahul@laptop</span></div>
+    <div class="term" id="execTerm" style="width:520px;font-size:13.5px">
+      <div class="tbar"><i></i><i></i><i></i><span>ec2-user@ip-10-0-1-25</span></div>
       <div class="ln s0"><span class="p">$</span> docker ps --format "{{.Names}}"</div>
-      <div class="ln s0 o">web<br>api<br>db</div>
-      <div class="ln s1"><span class="p">$</span> docker exec -it api sh</div>
-      <div class="ln s2"><span class="p">/app #</span> ps</div>
-      <div class="ln s2 o">PID  CMD<br>  1  python app.py<br>  7  sh<br>  9  ps</div>
-      <div class="ln s3"><span class="p">/app #</span> ls /</div>
-      <div class="ln s3 o">app  bin  etc  lib  usr  var</div>
-      <div class="ln s4"><span class="p">/app #</span> hostname; ip -br addr</div>
-      <div class="ln s4 o">3f2a9c1b<br>eth0  UP  172.18.0.3/16</div>
-      <div class="ln s5"><span class="p">/app #</span> uname -r</div>
-      <div class="ln s5 o">6.1.0-aws   <span style="color:var(--teal)"># same as the host!</span></div>
-      <div class="ln s6"><span class="p">/app #</span> exit</div>
-      <div class="ln s6"><span class="p">$</span> <span class="cur">▌</span></div>
+      <div class="ln s0 o">backend   kafka   postgres</div>
+      <div class="ln s1"><span class="p">$</span> docker exec -it backend sh</div>
+      <div class="ln s2"><span class="p">/app $</span> tail -n 3 logs/app.log</div>
+      <div class="ln s2 o">10:42:01 INFO  Order 1042 created<br>10:42:01 INFO  Event sent to topic orders<br><span style="color:var(--rose)">10:42:07 ERROR Payment timeout for 1042</span></div>
+      <div class="ln s3"><span class="p">/app $</span> exit</div>
+      <div class="ln s3"><span class="p">$</span> docker exec -it kafka kafka-console-consumer.sh \<br>   --bootstrap-server localhost:9092 --topic orders --from-beginning</div>
+      <div class="ln s3 o">{"orderId":1041,"status":"PAID"}<br>{"orderId":1042,"status":"CREATED"}</div>
+      <div class="ln s4"><span class="p">$</span> docker exec -it postgres psql -U app -d shop \<br>   -c "select id, status from orders;"</div>
+      <div class="ln s4 o">  id  | status<br> 1041 | PAID<br> <span style="color:var(--amber)">1042 | PENDING</span></div>
+      <div class="ln s5"><span class="p">$</span> docker logs --tail 3 backend   <span style="color:var(--muted)"># stdout, from outside</span></div>
     </div>
     <div class="overlay">
-      <div class="step-cap cur" data-s="0"><b class="k2">Three containers, one kernel</b><p>From outside, they're just boxes sitting on the host's <b class="hl-t">Linux kernel</b>.</p></div>
-      <div class="step-cap" data-s="1"><b class="k2">docker exec -it api sh</b><p>Step through the walls. A whole new world spins up around you: its own processes, files, network and name.</p></div>
-      <div class="step-cap" data-s="2"><b class="k2">ps: only 3 processes</b><p>Your app is <b class="hl-a">PID 1</b>. The host's hundreds of processes are invisible. That's the PID namespace.</p></div>
-      <div class="step-cap" data-s="3"><b class="k2">ls /: a different root</b><p>This filesystem is the <b class="hl-b">image layers</b> plus a writable layer, not the host's disk.</p></div>
-      <div class="step-cap" data-s="4"><b class="k2">Its own name and IP</b><p>Hostname <span class="mono">3f2a9c1b</span>, its own <b class="hl-g">eth0</b>, cabled to a virtual bridge.</p></div>
-      <div class="step-cap" data-s="5"><b class="k2">Look down</b><p>The floor is glass. Underneath is the <b class="hl-t">same kernel</b> as the host. The walls are just namespaces.</p></div>
-      <div class="step-cap" data-s="6"><b class="k2">exit</b><p>Your shell ends. The container keeps running, because PID 1 (the app) is still alive.</p></div>
+      <div class="step-cap cur" data-s="0"><b class="k2">Something is wrong with order 1042</b><p>Three containers are running: <b class="hl-t">backend</b> (Spring Boot), <b class="hl-a">kafka</b> and <b class="hl-b">postgres</b>. Let's investigate from the inside.</p></div>
+      <div class="step-cap" data-s="1"><b class="k2">docker exec -it backend sh</b><p>Step inside the backend container. You get a shell in its world: its files, its network, its processes.</p></div>
+      <div class="step-cap" data-s="2"><b class="k2">Use case 1: read the log file</b><p>The app writes <span class="mono">logs/app.log</span> inside the container. Order 1042 was created and its event was sent, then a <b class="hl-r">payment timeout</b>.</p></div>
+      <div class="step-cap" data-s="3"><b class="k2">Use case 2: read Kafka messages</b><p>Kafka's command-line tools ship inside the kafka image. The consumer shows the event for 1042 did reach the <span class="mono">orders</span> topic.</p></div>
+      <div class="step-cap" data-s="4"><b class="k2">Use case 3: query the database</b><p><span class="mono">psql</span> lives inside the postgres image. Order 1042 is stuck in <b class="hl-a">PENDING</b>: the payment step never finished.</p></div>
+      <div class="step-cap" data-s="5"><b class="k2">Tip: logs without going in</b><p>Anything the app prints to the console, <span class="mono">docker logs</span> shows from outside. Use <span class="mono">exec</span> when you need the container's own files or tools.</p></div>
     </div>
   </div>
-  <aside class="notes"><p>This is the “aha” slide. docker exec starts a new process (sh) inside the existing container's namespaces, so you see exactly what the app sees.</p><p>Walk the steps: ps shows the app as PID 1; ls / shows the image's filesystem; hostname and eth0 come from the UTS and NET namespaces; uname -r shows the host kernel version because there is no guest OS. Exit ends sh only. If PID 1 dies, the whole container stops.</p></aside>
+  <aside class="notes"><p>docker exec runs a new command inside an already-running container. The three everyday reasons: read files the app writes (logs, config), use tools that only exist in that image (kafka scripts, psql, redis-cli), and test the network from the container's point of view (wget, nslookup).</p><p>The story: logs show a payment timeout; Kafka confirms the event was published; the database shows the order stuck in PENDING. Three containers, three tools, one root cause: payments. Typing exit leaves the shell; the container keeps running.</p></aside>
 </section>
-
 
 <section class="slide" data-title="Docker Compose network (3D)" data-phase="prod" data-ch="Docker Compose" data-steps="5" style="padding:62px 24px 24px">
   <div class="row grow" style="gap:18px">
-    <pre class="code cmp-yaml" style="width:420px;flex:none;font-size:16px;line-height:1.5;padding:16px 18px"><span class="c"># compose.yaml</span>
+    <pre class="code cmp-yaml" style="width:470px;flex:none;font-size:15px;line-height:1.5;padding:16px 18px"><span class="c"># compose.yaml</span>
 <span class="k">services</span>:
-<span class="y yw">  <span class="k">web</span>:
-    image: nginx
-    ports: [<span class="s">"8080:80"</span>]</span>
-<span class="y ya">  <span class="k">api</span>:
-    build: ./api
-    depends_on: [db, redis]</span>
-<span class="y yd">  <span class="k">db</span>:
+<span class="y yf">  <span class="k">frontend</span>:
+    image: shop/frontend:1.2.0
+    ports: [<span class="s">"3000:80"</span>]</span>
+<span class="y yb">  <span class="k">backend</span>:
+    image: shop/orders:1.4.2
+    environment:
+      DB_URL: jdbc:postgresql://<span class="s">postgres</span>:5432/shop
+      KAFKA: <span class="s">kafka</span>:9092</span>
+<span class="y yp">  <span class="k">postgres</span>:
     image: postgres:16
-    volumes: [db-data:/var/lib/…]</span>
-<span class="y yr">  <span class="k">redis</span>:
-    image: redis:7</span>
-<span class="y yv"><span class="k">volumes</span>:
-  db-data:</span>
+    volumes: [pgdata:/var/lib/postgresql/data]</span>
+<span class="y yk">  <span class="k">kafka</span>:
+    image: bitnami/kafka:3.7
+    volumes: [kafkadata:/bitnami/kafka]</span>
+<span class="y yv"><span class="k">volumes</span>: { pgdata: {}, kafkadata: {} }</span>
 
 <span class="c">$ docker compose up -d</span></pre>
     <div class="three-wrap grow"><canvas class="three" id="compose3d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
-      <div class="overlay" style="max-width:420px;left:auto;right:20px;bottom:46px">
-        <div class="step-cap cur" data-s="0"><b class="k2">One file, the whole stack</b><p>Four services, one volume. Nothing is running yet: just your laptop.</p></div>
-        <div class="step-cap" data-s="1"><b class="k2">docker compose up</b><p>Compose creates a private network <span class="mono hl-t">ticketwave_default</span>, then starts containers in <b>depends_on</b> order: db and redis, then api, then web.</p></div>
-        <div class="step-cap" data-s="2"><b class="k2">Names are addresses</b><p>api asks the network's built-in DNS: <span class="mono">“where is db?”</span> → <span class="mono hl-g">172.18.0.4</span>. Code just says <span class="mono">db:5432</span>.</p></div>
-        <div class="step-cap" data-s="3"><b class="k2">You come in through one door</b><p>Browser → <span class="mono hl-a">localhost:8080</span> → web:80 → api → redis and db. Only <b>web</b> has a published port.</p></div>
-        <div class="step-cap" data-s="4"><b class="k2">Outsiders can't reach db</b><p>db has no published port, so from outside the network <b class="hl-r">it doesn't exist</b>.</p></div>
-        <div class="step-cap" data-s="5"><b class="k2">docker compose down</b><p>Containers and network are removed. The <b class="hl-v">db-data volume</b> stays, so your data survives the next up.</p></div>
+      <div class="overlay" style="max-width:430px;left:auto;right:20px;bottom:46px">
+        <div class="step-cap cur" data-s="0"><b class="k2">The plan</b><p>Four services in one file. Nothing is running yet: just the EC2 host.</p></div>
+        <div class="step-cap" data-s="1"><b class="k2">docker compose up</b><p>Compose builds a walled <b class="hl-t">network region</b> and starts every service inside it. Inside the wall, every service can reach every other <b>by its name</b>.</p></div>
+        <div class="step-cap" data-s="2"><b class="k2">From outside: one door</b><p>Your browser opens <span class="mono hl-a">localhost:3000</span>. The published port <span class="mono">3000:80</span> is the only door in the wall. It leads to frontend on port 80.</p></div>
+        <div class="step-cap" data-s="3"><b class="k2">Inside: service to service</b><p>frontend → <span class="mono hl-t">backend:8080</span> → <span class="mono">postgres:5432</span> and <span class="mono">kafka:9092</span>. Names, not IPs, and no published ports needed.</p></div>
+        <div class="step-cap" data-s="4"><b class="k2">Doors you didn't open</b><p>backend, postgres and kafka publish no ports, so from outside the wall <b class="hl-r">they can't be reached</b>.</p></div>
+        <div class="step-cap" data-s="5"><b class="k2">docker compose down</b><p>Containers and the network disappear. The <b class="hl-v">pgdata</b> and <b class="hl-v">kafkadata</b> volumes stay on the host's disk.</p></div>
       </div>
     </div>
   </div>
-  <aside class="notes"><p>Left panel highlights the part of compose.yaml that matters at each step.</p><p>Step 1: one command creates a network and starts services in dependency order. Step 2: every service name becomes a DNS name on that network (Docker's embedded DNS at 127.0.0.11), which is why config says db:5432 instead of an IP. Step 3: only ports you publish (8080:80) are reachable from your laptop. Step 4: everything else stays private to the network. Step 5: down removes containers and the network but keeps named volumes (unless you add -v).</p></aside>
+  <aside class="notes"><p>Step 1: compose up creates one network for the project (named shop_default) and attaches every service to it. Step 2: the outside world only gets in through published ports; here only frontend publishes 3000:80. Step 3: inside the network, Docker's built-in DNS turns service names into container IPs, which is why config says postgres:5432. Step 4: everything else stays private. Step 5: down removes containers and the network; named volumes survive unless you add -v.</p></aside>
+</section>
+
+<section class="slide" data-title="Volumes: data that outlives containers" data-phase="pic" data-ch="Docker Compose" data-steps="5">
+  <h2>Volumes: where postgres and kafka keep their data</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <text x="40" y="30" class="tr" style="font:700 22px var(--f-body)">Without a volume</text>
+      <text x="740" y="30" class="tg" style="font:700 22px var(--f-body)">With a volume</text>
+      <line x1="704" y1="10" x2="704" y2="440" class="w-l"/>
+      <g class="hide-on-2"><rect x="60" y="70" width="560" height="300" rx="20" class="bx-b" style="fill:rgba(100,160,255,.06)"/><text x="84" y="106" class="tb tm" style="font-size:17px">container · postgres:16</text>
+        <rect x="120" y="170" width="300" height="160" rx="12" class="bx" style="stroke-dasharray:6 6"/><text x="135" y="160" class="lbl">writable layer</text></g>
+      <g class="f" data-f="1"><g class="hide-on-2"><rect x="150" y="200" width="240" height="22" rx="5" class="fb"/><rect x="150" y="234" width="240" height="22" rx="5" class="fb"/><rect x="150" y="268" width="240" height="22" rx="5" class="fb"/><text x="460" y="250" class="tmut" style="font-size:17px">orders saved</text><text x="460" y="274" class="tmut" style="font-size:17px">inside the container</text></g></g>
+      <g class="show-on-2"><rect x="60" y="70" width="560" height="300" rx="20" class="w-r" style="stroke-dasharray:10 8"/><text x="340" y="200" text-anchor="middle" class="tr" style="font:800 26px var(--f-display)">container deleted</text><text x="340" y="240" text-anchor="middle" class="tr" style="font:700 22px var(--f-body)">✗ every order is gone</text><text x="340" y="276" text-anchor="middle" class="tmut tm" style="font-size:16px">docker compose down</text></g>
+      <g class="f" data-f="3">
+        <rect x="760" y="70" width="330" height="300" rx="20" class="bx-b" style="fill:rgba(100,160,255,.06)"/>
+        <text x="784" y="106" class="tb tm hide-on-4" style="font-size:16px">container · postgres:16</text>
+        <text x="784" y="106" class="tg tm show-on-4" style="font-size:16px">NEW container · postgres:16.4</text>
+        <rect x="790" y="170" width="270" height="70" rx="12" class="bx"/><text x="925" y="200" text-anchor="middle" class="tm" style="font-size:14px">/var/lib/postgresql/data</text><text x="925" y="222" text-anchor="middle" class="tmut" style="font-size:13px">mount point</text>
+        <path id="volp" d="M1060 205 H1180" class="w-v" style="stroke-width:6"/>
+        <rect width="16" height="12" rx="3" class="fv" x="-8" y="-6"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#volp"/></animateMotion></rect>
+        <g transform="translate(1180,120)"><rect y="18" width="190" height="190" class="fv" opacity=".75"/><ellipse cx="95" cy="208" rx="95" ry="18" class="fv" opacity=".75"/><ellipse cx="95" cy="18" rx="95" ry="18" class="fv"/>
+          <rect x="30" y="70" width="130" height="18" rx="4" class="fk" opacity=".6"/><rect x="30" y="100" width="130" height="18" rx="4" class="fk" opacity=".6"/><rect x="30" y="130" width="130" height="18" rx="4" class="fk" opacity=".6"/>
+          <text x="95" y="250" text-anchor="middle" class="tv" style="font:700 19px var(--f-body)">volume pgdata</text><text x="95" y="274" text-anchor="middle" class="tmut" style="font-size:14px">on the host's disk</text></g>
+        <text x="760" y="410" class="tmut tm" style="font-size:15px">volumes: [pgdata:/var/lib/postgresql/data]</text>
+      </g>
+      <g class="show-on-4"><text x="925" y="300" text-anchor="middle" class="tg" style="font:700 22px var(--f-body)">✓ all orders still here</text><text x="925" y="330" text-anchor="middle" class="tmut" style="font-size:16px">new container, same volume</text></g>
+      <g class="f" data-f="5">
+        <rect x="40" y="460" width="1330" height="86" rx="16" class="bx" style="fill:var(--ink-3)"/>
+        <text x="64" y="494" class="ta" style="font:700 18px var(--f-body)">Kafka, same idea:</text><text x="240" y="494" class="tmut" style="font-size:17px">kafkadata:/bitnami/kafka keeps every topic and message across restarts and upgrades.</text>
+        <text x="64" y="528" class="tt tm" style="font-size:15px">docker volume ls   ·   docker volume inspect pgdata   ·   <tspan class="tr">docker compose down -v  ← also deletes volumes!</tspan></text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Click 1: without a volume, postgres writes into the container's own writable layer. Click 2: docker compose down (or replacing the container to upgrade) deletes that layer and the data with it.</p><p>Click 3: with a volume, the folder postgres writes to (/var/lib/postgresql/data) is really a folder Docker keeps on the host disk. Click 4: delete the container, start a newer postgres image, mount the same volume: everything is still there. Click 5: Kafka works the same way. Careful with down -v, which deletes named volumes too.</p></aside>
+</section>
+
+<section class="slide" data-title="Activity: orders-api can't reach users-api" data-phase="prod" data-ch="Activity" data-hook="dka">
+  <div style="display:flex;align-items:center;gap:14px"><span class="act-badge">Activity · debug it</span><span class="small">Two Node.js containers on one EC2. orders-api calls users-api every 3 seconds.</span></div>
+  <h2 style="margin-top:2px">orders-api can't reach users-api. Why?</h2>
+  <div class="row grow" style="gap:22px">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 820 520" id="dkaSvg" data-r="1">
+        <rect x="10" y="10" width="800" height="500" rx="22" class="bx-s" style="fill:rgba(201,210,227,.03)"/><text x="34" y="44" class="lbl">EC2 host · Docker</text>
+        <g class="nw-def"><ellipse cx="410" cy="270" rx="380" ry="170" class="w-l" style="stroke-dasharray:10 8;stroke-width:3"/><text x="410" y="125" text-anchor="middle" class="tmut tm" style="font-size:15px">default bridge network · no name lookup</text></g>
+        <g class="nw-shop"><ellipse cx="410" cy="270" rx="380" ry="170" class="bx-t" style="fill:rgba(63,213,194,.06);stroke-width:3"/><text x="410" y="125" text-anchor="middle" class="tt tm" style="font-size:15px">shop-net · names work here</text></g>
+        <rect x="70" y="200" width="230" height="140" rx="18" class="bx-a" style="fill:var(--ink-2)"/><text x="185" y="248" text-anchor="middle" class="ta" style="font:700 21px var(--f-body)">orders-api</text><text x="185" y="276" text-anchor="middle" class="tmut tm" style="font-size:14px">node:20-alpine</text><text x="185" y="300" text-anchor="middle" class="tmut tm" style="font-size:14px">calls USERS_URL</text>
+        <rect x="520" y="200" width="230" height="140" rx="18" class="bx-b" style="fill:var(--ink-2)"/><text x="635" y="248" text-anchor="middle" class="tb" style="font:700 21px var(--f-body)">users-api</text><text x="635" y="276" text-anchor="middle" class="tmut tm" style="font-size:14px">node:20-alpine</text><text x="635" y="300" text-anchor="middle" class="tmut tm" style="font-size:14px">listens on :3000</text>
+        <rect x="750" y="244" width="58" height="52" rx="8" class="bx-a" style="fill:var(--ink-3)"/><text x="779" y="266" text-anchor="middle" class="ta tm" style="font-size:12px">host</text><text x="779" y="284" text-anchor="middle" class="ta tm" style="font-size:13px">3001</text>
+        <text x="635" y="380" text-anchor="middle" class="tmut tm" style="font-size:14px">docker run -p 3001:3000</text>
+        <g class="pk pk1"><path id="dk1" d="M300 250 C 380 150 380 390 300 300" class="w-r dash"/><circle r="10" class="fr glow-r"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#dk1"/></animateMotion></circle><text x="400" y="460" text-anchor="middle" class="tr" style="font:700 18px var(--f-body)">localhost = orders-api itself</text></g>
+        <g class="pk pk2"><path id="dk2" d="M300 270 H410" class="w-r dash"/><circle r="10" class="fr glow-r"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dk2"/></animateMotion></circle><rect x="370" y="180" width="90" height="56" rx="10" class="bx-r" style="fill:var(--ink-2)"/><text x="415" y="206" text-anchor="middle" class="tr" style="font:700 15px var(--f-mono)">users-api</text><text x="415" y="226" text-anchor="middle" class="tr" style="font:800 16px var(--f-body)">= ?</text><text x="410" y="460" text-anchor="middle" class="tr" style="font:700 18px var(--f-body)">no one can turn the name into an IP</text></g>
+        <g class="pk pk3"><path id="dk3" d="M300 270 H510" class="w-r dash"/><circle r="10" class="fr glow-r"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dk3"/></animateMotion></circle><rect x="500" y="250" width="40" height="40" rx="6" class="bx-r" style="fill:var(--ink-3)"/><text x="520" y="276" text-anchor="middle" class="tr tm" style="font-size:12px">3001</text><text x="410" y="460" text-anchor="middle" class="tr" style="font:700 18px var(--f-body)">found the container, knocked on the wrong door</text></g>
+        <g class="pk pk4"><path id="dk4" d="M300 260 H520" class="w-g" style="stroke-width:3"/><path id="dk4b" d="M520 285 H300" class="w-t"/><circle r="10" class="fg glow-g"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dk4"/></animateMotion></circle><circle r="8" class="ft"><animateMotion dur="1.4s" begin=".7s" repeatCount="indefinite"><mpath href="#dk4b"/></animateMotion></circle><text x="410" y="460" text-anchor="middle" class="tg" style="font:700 18px var(--f-body)">users-api:3000 on shop-net ✓</text></g>
+      </svg>
+    </div>
+    <div style="width:560px;flex:none;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px" id="dkaTabs"><button class="btn primary" data-r="1">Round 1</button><button class="btn" data-r="2">Round 2</button><button class="btn" data-r="3">Round 3</button><button class="btn" data-r="4">Fixed</button></div>
+      <div id="dkaPanel"><div class="rnd r1"><p class="small">They ran orders-api with:</p><pre class="code" style="font-size:14px;padding:10px 12px;white-space:pre-wrap">-e USERS_URL=http://localhost:3001</pre>
+      <p class="small" style="margin-top:10px">$ docker logs orders-api</p><pre class="code" style="font-size:15px;padding:10px 12px;color:var(--rose)">ERROR connect ECONNREFUSED 127.0.0.1:3001</pre>
+      <p style="margin-top:12px;font:600 20px var(--f-body)">What is wrong? <button class="btn rv" style="margin-left:8px">Reveal</button></p>
+      <div class="ans" ><p style="font-size:18px;line-height:1.45;margin-top:10px">Inside a container, <b>localhost means the container itself</b>. orders-api is calling its own port 3001, where nothing is listening.</p><pre class="code" style="font-size:14px;padding:10px 12px;margin-top:8px;color:var(--green)">USERS_URL=http://users-api:3001</pre></div></div><div class="rnd r2"><p class="small">They ran orders-api with:</p><pre class="code" style="font-size:14px;padding:10px 12px;white-space:pre-wrap">-e USERS_URL=http://users-api:3001</pre>
+      <p class="small" style="margin-top:10px">$ docker logs orders-api</p><pre class="code" style="font-size:15px;padding:10px 12px;color:var(--rose)">ERROR getaddrinfo ENOTFOUND users-api</pre>
+      <p style="margin-top:12px;font:600 20px var(--f-body)">What is wrong? <button class="btn rv" style="margin-left:8px">Reveal</button></p>
+      <div class="ans" ><p style="font-size:18px;line-height:1.45;margin-top:10px">The <b>default bridge network has no name lookup</b>. Containers find each other by name only on a network you create.</p><pre class="code" style="font-size:14px;padding:10px 12px;margin-top:8px;color:var(--green)">docker network create shop-net
+docker network connect shop-net users-api
+docker run … --network shop-net …</pre></div></div><div class="rnd r3"><p class="small">They ran orders-api with:</p><pre class="code" style="font-size:14px;padding:10px 12px;white-space:pre-wrap">--network shop-net -e USERS_URL=http://users-api:3001</pre>
+      <p class="small" style="margin-top:10px">$ docker logs orders-api</p><pre class="code" style="font-size:15px;padding:10px 12px;color:var(--rose)">ERROR connect ECONNREFUSED 172.18.0.2:3001</pre>
+      <p style="margin-top:12px;font:600 20px var(--f-body)">What is wrong? <button class="btn rv" style="margin-left:8px">Reveal</button></p>
+      <div class="ans" ><p style="font-size:18px;line-height:1.45;margin-top:10px">The name works now (it found 172.18.0.2), but <b>3001 is the host’s port</b>. Inside the network, use the container’s own port: 3000.</p><pre class="code" style="font-size:14px;padding:10px 12px;margin-top:8px;color:var(--green)">USERS_URL=http://users-api:3000</pre></div></div><div class="rnd r4"><p class="small">They ran orders-api with:</p><pre class="code" style="font-size:14px;padding:10px 12px;white-space:pre-wrap">--network shop-net -e USERS_URL=http://users-api:3000</pre>
+      <p class="small" style="margin-top:10px">$ docker logs orders-api</p><pre class="code" style="font-size:15px;padding:10px 12px;color:var(--green)">OK users: [rahul, ramya]</pre>
+      
+      <div class="ans" style="display:block"><p style="font-size:18px;line-height:1.45;margin-top:10px">Same network, container name, container port. We found every bug with <span class="mono">docker logs orders-api</span>, and tested by hand with <span class="mono">docker exec -it orders-api sh</span> → <span class="mono">wget -qO- http://users-api:3000</span>.</p></div></div></div>
+    </div>
+  </div>
+  <aside class="notes"><p>Run it as a guessing game: show the command and the log line, let the room shout the cause, then Reveal. Each round is a real mistake people make in their first week with Docker.</p><p>Round 1: localhost inside a container is the container. Round 2: the default bridge has no DNS for container names; user-defined networks (and Compose) do. Round 3: published host ports (-p 3001:3000) are for the outside world; container-to-container traffic uses the container port. The next slide is the hands-on version for their EC2 machines.</p></aside>
+</section>
+
+<section class="slide" data-title="Lab: two Node containers on EC2" data-phase="prod" data-ch="Activity">
+  <div style="display:flex;align-items:center;gap:14px"><span class="act-badge">Hands-on lab · on your EC2</span><span class="small">Reproduce all three bugs, find each one in the logs, then fix it.</span></div>
+  <h2 style="margin-top:2px">Lab: make orders-api talk to users-api</h2>
+  <div class="grid g2 grow" style="gap:18px;align-items:start">
+<pre class="code labc"><span class="c"># 0 · install Docker (Amazon Linux 2023)</span>
+sudo dnf install -y docker
+sudo systemctl enable --now docker
+sudo usermod -aG docker ec2-user  <span class="c"># re-login</span>
+
+<span class="c"># 1 · users-api answers on port 3000</span>
+docker run -d --name users-api -p 3001:3000 \
+  node:20-alpine node -e 'require("http")
+  .createServer((q,s)=>s.end("users: [rahul, ramya]"))
+  .listen(3000)'
+curl localhost:3001     <span class="c"># works from the host</span>
+
+<span class="c"># 2 · orders-api calls USERS_URL every 3 s</span>
+docker run -d --name orders-api \
+  -e USERS_URL=<span class="s">http://localhost:3001</span> \
+  node:20-alpine node -e 'setInterval(()=>
+  require("http").get(process.env.USERS_URL,r=>{
+  let d="";r.on("data",c=>d+=c);r.on("end",
+  ()=>console.log("OK",d))}).on("error",
+  e=>console.log("ERROR",e.message)),3000)'</pre>
+<pre class="code labc"><span class="c"># 3 · investigate</span>
+docker ps                       <span class="c"># both running?</span>
+docker logs -f orders-api       <span class="c"># read the error</span>
+docker exec -it orders-api sh   <span class="c"># step inside</span>
+  wget -qO- http://users-api:3000   <span class="c"># test by hand</span>
+  exit
+
+<span class="c"># 4 · fix it, one round at a time</span>
+docker network ls
+docker network create shop-net
+docker network connect shop-net users-api
+docker rm -f orders-api         <span class="c"># recreate with:</span>
+<span class="c">#   round 2: USERS_URL=http://users-api:3001</span>
+<span class="c">#   round 3: add --network shop-net</span>
+<span class="c">#   round 4: USERS_URL=http://users-api:3000</span>
+docker network inspect shop-net <span class="c"># who is on it?</span>
+
+<span class="c"># 5 · clean up</span>
+docker rm -f orders-api users-api
+docker network rm shop-net</pre>
+  </div>
+  <aside class="notes"><p>Everything runs on one EC2 instance; no security group changes are needed because all traffic stays on the host. node:20-alpine includes wget (not curl) inside the container.</p><p>Commands they practise: run, ps, logs -f, exec -it, rm -f, network ls/create/connect/inspect/rm. Expected log lines per round: ECONNREFUSED 127.0.0.1:3001, ENOTFOUND users-api, ECONNREFUSED 172.18.0.x:3001, then OK users: [rahul, ramya].</p></aside>
 </section>

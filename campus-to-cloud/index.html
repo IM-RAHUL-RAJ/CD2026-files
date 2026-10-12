@@ -153,6 +153,15 @@ svg .ta{fill:var(--amber)} svg .tt{fill:var(--teal)} svg .tr{fill:var(--rose)} s
 .hide-on-1,.hide-on-2,.hide-on-3{transition:opacity .6s}
 .st1 .hide-on-1,.st2 .hide-on-2,.st3 .hide-on-3{opacity:0}
 
+.show-on-5{opacity:0;transition:opacity .6s}.st5 .show-on-5{opacity:1}
+.show-on-6{opacity:0;transition:opacity .6s}.st6 .show-on-6{opacity:1}
+.show-on-7{opacity:0;transition:opacity .6s}.st7 .show-on-7{opacity:1}
+.show-on-8{opacity:0;transition:opacity .6s}.st8 .show-on-8{opacity:1}
+.hide-on-4{transition:opacity .6s}.st4 .hide-on-4{opacity:0}
+.hide-on-5{transition:opacity .6s}.st5 .hide-on-5{opacity:0}
+.hide-on-6{transition:opacity .6s}.st6 .hide-on-6{opacity:0}
+.hide-on-7{transition:opacity .6s}.st7 .hide-on-7{opacity:0}
+.hide-on-8{transition:opacity .6s}.st8 .hide-on-8{opacity:0}
 /* misc components */
 .chip{display:flex;align-items:center;gap:12px;background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:19px;min-width:0}
 .pill{display:inline-block;font:600 15px/1 var(--f-mono);padding:7px 12px;border-radius:999px;border:1px solid currentColor}
@@ -365,11 +374,39 @@ body.nobuild .tp .bar{width:var(--w)}
 @keyframes typ{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 .cmp-yaml .y{display:inline;transition:background .3s,color .3s;border-radius:4px}
 .st1:not(.st2) .cmp-yaml .y:not(.yv){background:rgba(63,213,194,.12)}
-.st1:not(.st2) .cmp-yaml .ya{background:rgba(255,181,71,.2)}
-.st2:not(.st3) .cmp-yaml .ya,.st2:not(.st3) .cmp-yaml .yd{background:rgba(110,220,146,.16)}
-.st3:not(.st4) .cmp-yaml .yw{background:rgba(255,181,71,.22)}
-.st4:not(.st5) .cmp-yaml .yd{background:rgba(255,111,142,.18)}
-.st5 .cmp-yaml .yv{background:rgba(161,147,255,.22)}
+.st2:not(.st3) .cmp-yaml .yf{background:rgba(255,181,71,.22)}
+.st3:not(.st4) .cmp-yaml .yb{background:rgba(63,213,194,.2)}
+.st4:not(.st5) .cmp-yaml .yp,.st4:not(.st5) .cmp-yaml .yk{background:rgba(255,111,142,.18)}
+.st5 .cmp-yaml .yv,.st5 .cmp-yaml .yp,.st5 .cmp-yaml .yk{background:rgba(161,147,255,.2)}
+
+/* spring boot dockerfile */
+.sbcode .ln{display:block;border-radius:6px;padding:0 6px;transition:background .3s,opacity .3s}
+.st1 .sbcode .ln{opacity:.38}
+.st1:not(.st2) .sbcode .g1{background:rgba(255,181,71,.18);opacity:1}
+.st2:not(.st3) .sbcode .g2{background:rgba(255,181,71,.18);opacity:1}
+.st3:not(.st4) .sbcode .g3{background:rgba(255,181,71,.18);opacity:1}
+.st4:not(.st5) .sbcode .g4{background:rgba(255,181,71,.18);opacity:1}
+.st5:not(.st6) .sbcode .g5{background:rgba(255,181,71,.18);opacity:1}
+.st6:not(.st7) .sbcode .g6{background:rgba(255,181,71,.18);opacity:1}
+.st7:not(.st8) .sbcode .g7{background:rgba(255,181,71,.18);opacity:1}
+.dx{display:none}.dx.d0{display:block}.st1 .dx.d0{display:none}
+.st1:not(.st2) .dx.d1{display:block}
+.st2:not(.st3) .dx.d2{display:block}
+.st3:not(.st4) .dx.d3{display:block}
+.st4:not(.st5) .dx.d4{display:block}
+.st5:not(.st6) .dx.d5{display:block}
+.st6:not(.st7) .dx.d6{display:block}
+.st7:not(.st8) .dx.d7{display:block}
+.dx h3{font-size:28px;margin:6px 0 10px}.dx p{font-size:20px;line-height:1.5;color:var(--fg)}
+.sbs1,.sbs2,.sbjar{transition:opacity .5s}
+.sbs2{opacity:.3}.st4 .sbs2{opacity:1}.st4 .sbs1{opacity:.45}.sbjar{opacity:.15}.st6 .sbjar{opacity:1}
+/* docker activity */
+#dkaSvg .pk{display:none}
+#dkaSvg[data-r="1"] .pk1,#dkaSvg[data-r="2"] .pk2,#dkaSvg[data-r="3"] .pk3,#dkaSvg[data-r="4"] .pk4{display:inline}
+#dkaSvg .nw-shop{display:none}#dkaSvg[data-r="3"] .nw-shop,#dkaSvg[data-r="4"] .nw-shop{display:inline}#dkaSvg[data-r="3"] .nw-def,#dkaSvg[data-r="4"] .nw-def{display:none}
+#dkaPanel .rnd{display:none}#dkaPanel[data-r="1"] .r1,#dkaPanel[data-r="2"] .r2,#dkaPanel[data-r="3"] .r3,#dkaPanel[data-r="4"] .r4{display:block}
+.rnd .ans{display:none}.rnd.show .ans{display:block}
+pre.labc{font-size:16.5px;line-height:1.45;padding:16px 18px}
 </style>
 <div id="viewport"><div id="stage">
 
@@ -2397,7 +2434,6 @@ echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
   <aside class="notes"><p>Click: the container packages the code with its runtime, libraries and OS files. The same box runs the same way on any machine with a container runtime. That's the whole idea behind Docker.</p></aside>
 </section>
 
-
 <section class="slide" data-title="Virtualization vs containerization (3D)" data-phase="pic" data-ch="Containers" data-steps="3" style="padding:24px">
   <div class="three-wrap grow"><canvas class="three" id="vmc3d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
     <div class="overlay">
@@ -2410,36 +2446,29 @@ echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
   <aside class="notes"><p>Step 0: point at the guest OS blocks: each VM has its own full OS, gigabytes each. Step 1: the boot race. Step 2: density. Step 3: isolation trade-off. In AWS you usually get both: containers running inside EC2 VMs, or on Fargate, which wraps each task in its own microVM.</p></aside>
 </section>
 
-
-<section class="slide" data-title="A container is a process with walls" data-phase="behind" data-ch="Containers" data-steps="3">
+<section class="slide" data-title="A container is a flat in a building" data-phase="behind" data-ch="Containers" data-steps="2">
   <div><span class="wowtag">Behind the scenes</span></div>
-  <h2 style="margin-top:6px">A container is just a process with walls</h2>
-  <div class="row grow" style="gap:20px">
-    <div class="vis">
-      <svg class="d" viewBox="0 0 1120 600" id="nsSvg">
-        <style>#nsSvg .nsw{opacity:0;transition:opacity .5s var(--d)}.st1 #nsSvg .nsw{opacity:1}#nsSvg .lab1{opacity:0;transition:opacity .6s .7s}.st1 #nsSvg .lab1{opacity:1}</style>
-        <circle cx="150" cy="90" r="9" class="fm" opacity=".35"/><circle cx="210" cy="160" r="9" class="fm" opacity=".35"/><circle cx="120" cy="250" r="9" class="fm" opacity=".35"/><circle cx="180" cy="420" r="9" class="fm" opacity=".35"/><circle cx="250" cy="500" r="9" class="fm" opacity=".35"/><circle cx="90" cy="520" r="9" class="fm" opacity=".35"/><circle cx="960" cy="90" r="9" class="fm" opacity=".35"/><circle cx="1000" cy="190" r="9" class="fm" opacity=".35"/><circle cx="950" cy="470" r="9" class="fm" opacity=".35"/><circle cx="1010" cy="520" r="9" class="fm" opacity=".35"/><circle cx="300" cy="60" r="9" class="fm" opacity=".35"/><circle cx="830" cy="60" r="9" class="fm" opacity=".35"/>
-        <text x="60" y="580" class="tmut" style="font-size:15px">grey dots: the host's other 400 processes. Inside the walls, they're invisible.</text>
-        <circle cx="540" cy="290" r="96" class="fa glow-a"/><text x="540" y="286" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">python</text><text x="540" y="310" text-anchor="middle" class="tink" style="font:600 16px var(--f-mono)">app.py</text>
-        <g class="nsw" style="--d:0.0s"><path d="M552.7 108.4 A182 182 0 0 1 690.9 188.2" style="fill:none;stroke:var(--amber);stroke-width:20;stroke-linecap:round"/><text x="653.0" y="100.3" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--amber)">PID</text></g><g class="nsw" style="--d:0.12s"><path d="M703.6 210.2 A182 182 0 0 1 703.6 369.8" style="fill:none;stroke:var(--teal);stroke-width:20;stroke-linecap:round"/><text x="766.0" y="296.0" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--teal)">NET</text></g><g class="nsw" style="--d:0.24s"><path d="M690.9 391.8 A182 182 0 0 1 552.7 471.6" style="fill:none;stroke:var(--blue);stroke-width:20;stroke-linecap:round"/><text x="653.0" y="491.7" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--blue)">MNT</text></g><g class="nsw" style="--d:0.36s"><path d="M527.3 471.6 A182 182 0 0 1 389.1 391.8" style="fill:none;stroke:var(--green);stroke-width:20;stroke-linecap:round"/><text x="427.0" y="491.7" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--green)">UTS</text></g><g class="nsw" style="--d:0.48s"><path d="M376.4 369.8 A182 182 0 0 1 376.4 210.2" style="fill:none;stroke:var(--violet);stroke-width:20;stroke-linecap:round"/><text x="314.0" y="296.0" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--violet)">IPC</text></g><g class="nsw" style="--d:0.6s"><path d="M389.1 188.2 A182 182 0 0 1 527.3 108.4" style="fill:none;stroke:var(--rose);stroke-width:20;stroke-linecap:round"/><text x="427.0" y="100.3" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--rose)">USER</text></g>
-        <g class="lab1"><text x="683.5" y="58.7" text-anchor="start" class="tmut" style="font-size:20px">its own process list: it is PID 1</text><text x="827.0" y="296.0" text-anchor="start" class="tmut" style="font-size:20px">its own IP, ports, routes</text><text x="683.5" y="533.3" text-anchor="start" class="tmut" style="font-size:20px">its own / filesystem</text><text x="396.5" y="533.3" text-anchor="end" class="tmut" style="font-size:20px">its own hostname</text><text x="253.0" y="296.0" text-anchor="end" class="tmut" style="font-size:20px">its own shared memory</text><text x="396.5" y="58.7" text-anchor="end" class="tmut" style="font-size:20px">root inside ≠ root on the host</text></g>
-      </svg>
-    </div>
-    <div style="width:430px;flex:none;display:flex;flex-direction:column;justify-content:center;gap:18px">
-      <div class="panel f" data-f="1"><b class="hl-t" style="font-size:22px">Namespaces</b><p class="small" style="margin-top:6px">decide what the process can <b style="color:var(--fg)">see</b>. Six walls, drawn by the Linux kernel.</p></div>
-      <div class="panel f" data-f="2"><b class="hl-a" style="font-size:22px">cgroups</b><p class="small" style="margin-top:6px">decide how much it can <b style="color:var(--fg)">use</b>.</p>
-        <div style="margin-top:12px;display:grid;gap:10px">
-          <div><div class="slider-lab"><span>memory</span><span>380 / 512 MB</span></div><div style="height:12px;border-radius:6px;background:var(--ink-3);overflow:hidden"><div style="width:74%;height:100%;background:var(--amber)"></div></div></div>
-          <div><div class="slider-lab"><span>cpu</span><span>0.3 / 0.5 core</span></div><div style="height:12px;border-radius:6px;background:var(--ink-3);overflow:hidden"><div style="width:60%;height:100%;background:var(--teal)"></div></div></div>
-        </div></div>
-      <p class="say f" data-f="3" style="font-size:24px">No guest OS. <em>Same kernel, different view.</em></p>
-    </div>
+  <h2 style="margin-top:6px">A container is a flat in an apartment building</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <path d="M40 60 L340 10 L640 60" class="w-l" style="stroke-width:3"/>
+      <g><rect x="60" y="70" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="78" y="122" width="34" height="56" rx="4" class="fl"/><rect x="140" y="94" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="178" y="166" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">worker</text></g><g><rect x="250" y="70" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="268" y="122" width="34" height="56" rx="4" class="fl"/><rect x="330" y="94" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="368" y="166" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">redis</text></g><g><rect x="440" y="70" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="458" y="122" width="34" height="56" rx="4" class="fl"/><rect x="520" y="94" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="558" y="166" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">search</text></g><g><rect x="60" y="200" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="78" y="252" width="34" height="56" rx="4" class="fl"/><rect x="140" y="224" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="178" y="296" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">kafka</text></g><g><rect x="250" y="200" width="180" height="120" rx="10" class="fa glow-a" style=""/><rect x="268" y="252" width="34" height="56" rx="4" class="fk"/><rect x="330" y="224" width="76" height="40" rx="6" class="fk" style="opacity:.8"/><text x="368" y="296" text-anchor="middle" class="tink" style="font:700 17px var(--f-mono)">orders-api</text></g><g><rect x="440" y="200" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="458" y="252" width="34" height="56" rx="4" class="fl"/><rect x="520" y="224" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="558" y="296" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">postgres</text></g><g><rect x="60" y="330" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="78" y="382" width="34" height="56" rx="4" class="fl"/><rect x="140" y="354" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="178" y="426" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">web</text></g><g><rect x="250" y="330" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="268" y="382" width="34" height="56" rx="4" class="fl"/><rect x="330" y="354" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="368" y="426" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">users-api</text></g><g><rect x="440" y="330" width="180" height="120" rx="10" class="bx-a" style="fill:rgba(255,181,71,.10)"/><rect x="458" y="382" width="34" height="56" rx="4" class="fl"/><rect x="520" y="354" width="76" height="40" rx="6" class="bx" style="opacity:.8"/><text x="558" y="426" text-anchor="middle" class="ta" style="font:700 17px var(--f-mono)">grafana</text></g>
+      <rect x="40" y="470" width="600" height="70" rx="12" class="bx-t" style="fill:rgba(63,213,194,.18)"/>
+      <text x="340" y="502" text-anchor="middle" class="tt" style="font:700 20px var(--f-body)">Linux kernel = the shared foundation</text>
+      <text x="340" y="526" text-anchor="middle" class="tmut" style="font-size:16px">one building, shared power and water</text>
+      <g class="f" data-f="1">
+        <path d="M430 200 L760 40 M430 320 L760 500" class="w-a dash" style="stroke-width:2"/>
+        <rect x="760" y="40" width="630" height="460" rx="22" class="bx-a" style="fill:rgba(12,18,32,.92)"/>
+        <text x="790" y="80" class="ta" style="font:700 22px var(--f-body)">Flat “orders-api” has its own…</text>
+        <g><circle cx="830" cy="118" r="22" style="fill:var(--amber);opacity:.9"/><text x="830" y="124" text-anchor="middle" class="tink" style="font:800 17px var(--f-body)">1</text><text x="870" y="114" style="font:700 21px var(--f-body);fill:var(--amber)">Door number</text><text x="870" y="140" class="tmut" style="font-size:17px">its own hostname</text><text x="1360" y="126" text-anchor="end" class="tm" style="font-size:16px">3f2a9c1b</text></g><g><circle cx="830" cy="192" r="22" style="fill:var(--teal);opacity:.9"/><text x="830" y="198" text-anchor="middle" class="tink" style="font:800 17px var(--f-body)">2</text><text x="870" y="188" style="font:700 21px var(--f-body);fill:var(--teal)">Postal address</text><text x="870" y="214" class="tmut" style="font-size:17px">its own IP and ports</text><text x="1360" y="200" text-anchor="end" class="tm" style="font-size:16px">172.18.0.3 : 8080</text></g><g><circle cx="830" cy="266" r="22" style="fill:var(--blue);opacity:.9"/><text x="830" y="272" text-anchor="middle" class="tink" style="font:800 17px var(--f-body)">3</text><text x="870" y="262" style="font:700 21px var(--f-body);fill:var(--blue)">Its own rooms</text><text x="870" y="288" class="tmut" style="font-size:17px">its own files, from the image</text><text x="1360" y="274" text-anchor="end" class="tm" style="font-size:16px">/app  /etc  /usr</text></g><g><circle cx="830" cy="340" r="22" style="fill:var(--violet);opacity:.9"/><text x="830" y="346" text-anchor="middle" class="tink" style="font:800 17px var(--f-body)">4</text><text x="870" y="336" style="font:700 21px var(--f-body);fill:var(--violet)">Curtains closed</text><text x="870" y="362" class="tmut" style="font-size:17px">can’t see the neighbours’ processes</text><text x="1360" y="348" text-anchor="end" class="tm" style="font-size:16px">sees only its own app</text></g><g><circle cx="830" cy="414" r="22" style="fill:var(--rose);opacity:.9"/><text x="830" y="420" text-anchor="middle" class="tink" style="font:800 17px var(--f-body)">5</text><text x="870" y="410" style="font:700 21px var(--f-body);fill:var(--rose)">Electricity meter</text><text x="870" y="436" class="tmut" style="font-size:17px">a limit on what it can use (cgroups)</text><text x="1360" y="422" text-anchor="end" class="tm" style="font-size:16px">512 MB RAM · 0.5 CPU</text></g>
+      </g>
+      <g class="f" data-f="2"><text x="1075" y="545" text-anchor="middle" style="font:600 20px var(--f-body)">A <tspan class="hl-v">VM</tspan> is a separate house with its own foundation.</text></g>
+    </svg>
   </div>
-  <aside class="notes"><p>Click 1: the six Linux namespaces. PID: the app sees itself as PID 1 and nothing else. NET: its own network interface and ports. MNT: its own root filesystem, built from the image. UTS: its own hostname. IPC: its own shared memory. USER: can map root inside to an unprivileged user outside.</p><p>Click 2: cgroups (control groups) limit memory and CPU. docker run --memory 512m --cpus 0.5 sets exactly these. Go over the memory limit and the kernel kills the process (OOMKilled).</p><p>Click 3: that's all a container is. Which is why it starts in milliseconds.</p></aside>
+  <aside class="notes"><p>The building's foundation and utilities are the Linux kernel: every flat shares them. Each flat (container) gets its own door number (hostname), postal address (IP and ports), rooms (filesystem from the image), closed curtains (it can't see other containers' processes) and an electricity meter (a CPU and memory limit).</p><p>The technical names, for those who ask: namespaces give the separate view; cgroups are the meter. A VM is a whole separate house with its own foundation (its own kernel): stronger separation, more cost.</p></aside>
 </section>
 
-
-<section class="slide" data-title="What happens on docker run" data-phase="behind" data-ch="Containers" data-steps="5">
+<section class="slide" data-title="What happens on docker run" data-phase="behind" data-ch="Containers" data-steps="4">
   <div><span class="wowtag">Behind the scenes</span></div>
   <h2 style="margin-top:6px">What really happens when you type <span class="mono hl-a">docker run</span></h2>
   <div class="vis">
@@ -2454,12 +2483,10 @@ echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
         <text x="96" y="502" class="tt" style="font:700 18px var(--f-body)">Network:</text><text x="190" y="502" class="tmut" style="font-size:17px">a virtual cable (veth) plugs the container into the docker0 bridge and gets it an IP</text>
         <text x="96" y="532" class="ta" style="font:700 18px var(--f-body)">Port:</text><text x="190" y="532" class="tmut" style="font-size:17px">-p 8080:80 adds a NAT rule: host port 8080 → container port 80</text>
       </g>
-      <g class="f" data-f="5"><rect x="70" y="330" width="290" height="110" rx="18" class="bx-r" style="fill:var(--ink-2)"/><text x="215" y="376" text-anchor="middle" class="tr" style="font:700 20px var(--f-body)">containerd-shim</text><text x="215" y="408" text-anchor="middle" class="tmut" style="font-size:16px">stays as its parent</text><path d="M360 385 H380" class="w-r" style="stroke-width:3"/></g>
     </svg>
   </div>
-  <aside class="notes"><p>Click through the chain. The docker command is only a client: it sends a REST call to dockerd. dockerd asks containerd to run the container; containerd uses runc, which asks the kernel to create a process with new namespaces and cgroups, mounts the image layers with overlayfs, then exits.</p><p>Click 2: if the image isn't on this machine, dockerd pulls its layers from the registry first. Click 4: networking and port publishing. Click 5: a small containerd-shim stays as the container's parent, so you can restart dockerd without killing running containers.</p></aside>
+  <aside class="notes"><p>Click through the chain. The docker command is only a client: it sends a REST call to dockerd. dockerd asks containerd to run the container; containerd uses runc, which asks the kernel to create a process with new namespaces and cgroups, mounts the image layers with overlayfs, then exits.</p><p>Click 2: if the image isn't on this machine, dockerd pulls its layers from the registry first. Click 4: networking and port publishing.</p></aside>
 </section>
-
 
 <section class="slide" data-title="Dockerfile to container" data-phase="concept" data-ch="Containers" data-steps="3">
   <h2>Recipe → frozen meal → hot plate</h2>
@@ -2491,6 +2518,46 @@ echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
   <aside class="notes"><p>Dockerfile = recipe. Image = the frozen, versioned result of following the recipe. Container = a running instance of the image. One image can run as many containers.</p><p>The RDS labs in the PDFs use exactly this: docker pull, then docker run with -p and -e flags.</p></aside>
 </section>
 
+<section class="slide" data-title="Dockerfile for Spring Boot, line by line" data-phase="prod" data-ch="Dockerfile" data-steps="7">
+  <h2>A Spring Boot Dockerfile, line by line</h2>
+  <div class="row grow" style="gap:26px">
+    <pre class="code sbcode" style="width:740px;flex:none;font-size:18.5px;line-height:1.6"><span class="ln g0"><span class=c># ── Stage 1: build the jar ──</span> </span><span class="ln g1"><span class="k">FROM</span> maven:3.9-eclipse-temurin-21 <span class="k">AS</span> <span class="s">build</span> </span><span class="ln g2"><span class="k">WORKDIR</span> /src </span><span class="ln g2"><span class="k">COPY</span> pom.xml . </span><span class="ln g2"><span class="k">RUN</span> mvn -q dependency:go-offline </span><span class="ln g3"><span class="k">COPY</span> src ./src </span><span class="ln g3"><span class="k">RUN</span> mvn -q package -DskipTests </span><span class="ln g0"> </span><span class="ln g0"><span class=c># ── Stage 2: run the jar ──</span> </span><span class="ln g4"><span class="k">FROM</span> eclipse-temurin:21-jre-alpine </span><span class="ln g4"><span class="k">WORKDIR</span> /app </span><span class="ln g5"><span class="k">RUN</span> addgroup -S app &amp;&amp; adduser -S app -G app </span><span class="ln g6"><span class="k">COPY</span> <span class="s">--from=build</span> /src/target/orders.jar app.jar </span><span class="ln g5"><span class="k">USER</span> app </span><span class="ln g7"><span class="k">EXPOSE</span> 8080 </span><span class="ln g7"><span class="k">HEALTHCHECK</span> CMD wget -qO- localhost:8080/actuator/health </span><span class="ln g7"><span class="k">ENTRYPOINT</span> [&quot;java&quot;,&quot;-jar&quot;,&quot;app.jar&quot;] </span></pre>
+    <div class="grow" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div class="panel dxwrap" style="min-height:250px"><div class="dx d0"><b class="k2">Line by line</b><h3>A real Dockerfile</h3><p>A multi-stage Dockerfile for a Spring Boot service. Two stages: a big one to <b>build</b> the jar, a small one to <b>run</b> it. Click through line by line.</p></div><div class="dx d1"><b class="k2">Step 1</b><h3>FROM … AS build</h3><p>Start a temporary build kitchen with Maven and JDK 21. Name it <span class="mono hl-a">build</span> so we can copy from it later. Versions are pinned: <span class="mono">3.9</span>, <span class="mono">21</span>, never <span class="mono">latest</span>.</p></div><div class="dx d2"><b class="k2">Step 2</b><h3>pom.xml first, then dependencies</h3><p>Copy only <span class="mono">pom.xml</span> and download every dependency. Docker caches this layer, so it only re-runs when pom.xml changes. Editing code no longer re-downloads the internet.</p></div><div class="dx d3"><b class="k2">Step 3</b><h3>Then the code</h3><p>Copy the source and build <span class="mono">orders.jar</span>. Tests already ran in CI, so we skip them here to keep the build fast.</p></div><div class="dx d4"><b class="k2">Step 4</b><h3>A fresh, small base</h3><p>Stage 2 starts clean from a small runtime: just the Java 21 JRE on Alpine Linux. Maven, the JDK and your source code are left behind in stage 1.</p></div><div class="dx d5"><b class="k2">Step 5</b><h3>Don’t run as root</h3><p>Create a normal user and switch to it. If someone breaks into the app, they are not root inside the container.</p></div><div class="dx d6"><b class="k2">Step 6</b><h3>Carry only the jar</h3><p><span class="mono">COPY --from=build</span> takes just the finished jar out of the build stage. That’s the whole trick of multi-stage builds.</p></div><div class="dx d7"><b class="k2">Step 7</b><h3>Port, health, start</h3><p><span class="mono">EXPOSE</span> documents the port. <span class="mono">HEALTHCHECK</span> lets Docker ask Spring’s <span class="mono">/actuator/health</span>. <span class="mono">ENTRYPOINT</span> starts Java as PID 1.</p></div></div>
+      <div class="vis" style="min-height:0">
+        <svg class="d" viewBox="0 0 600 230">
+          <g class="sbs1"><rect x="10" y="20" width="250" height="150" rx="16" class="bx-v"/><text x="135" y="56" text-anchor="middle" class="tv" style="font:700 18px var(--f-body)">Stage 1 · build</text><text x="135" y="86" text-anchor="middle" class="tmut" style="font-size:15px">Maven + JDK + source</text><text x="135" y="140" text-anchor="middle" class="tv" style="font:800 30px var(--f-display)">~800 MB</text><text x="135" y="200" text-anchor="middle" class="tmut" style="font-size:14px">thrown away</text></g>
+          <g class="sbjar"><path d="M262 95 H382" class="w-a" style="stroke-width:4"/><rect x="292" y="72" width="60" height="46" rx="8" class="fa"/><text x="322" y="101" text-anchor="middle" class="tink" style="font:800 13px var(--f-mono)">.jar</text></g>
+          <g class="sbs2"><rect x="384" y="45" width="200" height="110" rx="16" class="bx-g"/><text x="484" y="78" text-anchor="middle" class="tg" style="font:700 18px var(--f-body)">Final image</text><text x="484" y="102" text-anchor="middle" class="tmut" style="font-size:14px">JRE + jar only</text><text x="484" y="140" text-anchor="middle" class="tg" style="font:800 28px var(--f-display)">~220 MB</text><text x="484" y="200" text-anchor="middle" class="tmut" style="font-size:14px">what ships to ECR</text></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><p>Walk the seven steps. The two ideas that matter most: dependency caching (copy pom.xml before src, so the slow dependency download is a cached layer) and multi-stage builds (build with the big toolbox, ship only the jar on a small runtime).</p><p>Build it: docker build -t orders:1.4.2 . Run it: docker run -d -p 8080:8080 orders:1.4.2. Sizes are approximate.</p></aside>
+</section>
+
+<section class="slide" data-title="Image versions and tags" data-phase="pic" data-ch="Dockerfile" data-steps="3">
+  <h2>Tag every image like a release</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560" id="verSvg">
+      <style>#verSvg .lt{transition:transform .8s cubic-bezier(.4,0,.2,1)}.st1 #verSvg .lt{transform:translateX(400px)}.st2 #verSvg .lt{transform:translateX(800px)}</style>
+      <path d="M60 250 H1360" class="w-l dash" style="stroke-width:3"/>
+      <g><rect x="100" y="150" width="300" height="190" rx="18" class="bx-b"/><text x="250" y="196" text-anchor="middle" class="tb" style="font:700 20px var(--f-body)">build #41</text><text x="250" y="226" text-anchor="middle" class="tmut tm" style="font-size:15px">commit 3f9a2c1</text><rect x="175" y="262" width="150" height="40" rx="20" class="bx-a"/><text x="250" y="288" text-anchor="middle" class="ta tm" style="font-size:17px">orders:1.4.0</text></g>
+      <g class="f" data-f="1"><rect x="500" y="150" width="300" height="190" rx="18" class="bx-b"/><text x="650" y="196" text-anchor="middle" class="tb" style="font:700 20px var(--f-body)">build #42</text><text x="650" y="226" text-anchor="middle" class="tmut tm" style="font-size:15px">commit 8b1d4e0</text><rect x="575" y="262" width="150" height="40" rx="20" class="bx-a"/><text x="650" y="288" text-anchor="middle" class="ta tm" style="font-size:17px">orders:1.4.1</text></g>
+      <g class="f" data-f="2"><rect x="900" y="150" width="300" height="190" rx="18" class="bx-b"/><text x="1050" y="196" text-anchor="middle" class="tb" style="font:700 20px var(--f-body)">build #43</text><text x="1050" y="226" text-anchor="middle" class="tmut tm" style="font-size:15px">commit c71a9f3</text><rect x="975" y="262" width="150" height="40" rx="20" class="bx-a"/><text x="1050" y="288" text-anchor="middle" class="ta tm" style="font-size:17px">orders:1.4.2</text></g>
+      <g class="lt"><rect x="185" y="92" width="130" height="44" rx="8" style="fill:#FFD166"/><text x="250" y="121" text-anchor="middle" class="tink tm" style="font:700 17px var(--f-mono)">:latest</text><path d="M250 136 V150" style="stroke:#FFD166;stroke-width:3"/></g>
+      <text x="60" y="80" class="lbl">the “latest” sticker always jumps to the newest build</text>
+      <g class="f" data-f="3" style="font-size:18px">
+        <rect x="60" y="380" width="640" height="68" rx="14" class="bx"/><text x="84" y="410" class="tt" font-weight="700">Pin the base image</text><text x="84" y="434" class="tmut tm" style="font-size:15px">FROM eclipse-temurin:21-jre-alpine   (not java:latest)</text>
+        <rect x="720" y="380" width="640" height="68" rx="14" class="bx"/><text x="744" y="410" class="ta" font-weight="700">Tag with version and commit</text><text x="744" y="434" class="tmut tm" style="font-size:15px">docker build -t orders:1.4.2 -t orders:git-c71a9f3 .</text>
+        <rect x="60" y="462" width="640" height="68" rx="14" class="bx"/><text x="84" y="492" class="tg" font-weight="700">Production runs an exact version</text><text x="84" y="516" class="tmut tm" style="font-size:15px">image: orders:1.4.2   — never :latest</text>
+        <rect x="720" y="462" width="640" height="68" rx="14" class="bx"/><text x="744" y="492" class="tr" font-weight="700">Rollback = run the old tag</text><text x="744" y="516" class="tmut tm" style="font-size:15px">image: orders:1.4.1   → back in seconds</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>A tag is a name you give an image: repository:tag. Version every build (semantic version plus the git commit), and pin base images to a specific version so your build doesn't change under you.</p><p>Click 1 and 2: each new build gets its own version tag, and the latest tag jumps forward. Click 3: the four rules teams follow. We'll see in the ECR chapter why trusting latest in production bites.</p></aside>
+</section>
+
 <section class="slide" data-title="Image layers (3D)" data-phase="behind" data-ch="Containers" data-steps="3" style="padding:24px">
   <div class="three-wrap grow"><canvas class="three" id="layers3d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
     <div class="lpanel">
@@ -2511,70 +2578,190 @@ echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
   <aside class="notes"><p>Step 0: layers build bottom-up, one per instruction that changes files. Order matters: put things that change rarely (base, dependencies) at the bottom, your code at the top, so rebuilds reuse cached layers.</p><p>Step 1: layers are compressed tarballs, stored by their sha256 digest. Step 2: pulls skip layers you already have, which is why the second pull of a new version takes seconds. Step 3: the image never changes. Writes go to each container's own thin layer (overlayfs copy-on-write) and vanish when the container is removed, unless you use a volume.</p><p>Sizes are illustrative but realistic for a Python app.</p></aside>
 </section>
 
-
-<section class="slide" data-title="Inside a container: docker exec (3D)" data-phase="behind" data-ch="Containers" data-steps="6" style="padding:24px">
+<section class="slide" data-title="Inside a container: docker exec (3D)" data-phase="behind" data-ch="Containers" data-steps="5" style="padding:24px">
   <div class="three-wrap grow"><canvas class="three" id="exec3d"></canvas><div class="drag-hint">→ to continue · drag to look around</div>
-    <div class="term" id="execTerm">
-      <div class="tbar"><i></i><i></i><i></i><span>rahul@laptop</span></div>
+    <div class="term" id="execTerm" style="width:520px;font-size:13.5px">
+      <div class="tbar"><i></i><i></i><i></i><span>ec2-user@ip-10-0-1-25</span></div>
       <div class="ln s0"><span class="p">$</span> docker ps --format "{{.Names}}"</div>
-      <div class="ln s0 o">web<br>api<br>db</div>
-      <div class="ln s1"><span class="p">$</span> docker exec -it api sh</div>
-      <div class="ln s2"><span class="p">/app #</span> ps</div>
-      <div class="ln s2 o">PID  CMD<br>  1  python app.py<br>  7  sh<br>  9  ps</div>
-      <div class="ln s3"><span class="p">/app #</span> ls /</div>
-      <div class="ln s3 o">app  bin  etc  lib  usr  var</div>
-      <div class="ln s4"><span class="p">/app #</span> hostname; ip -br addr</div>
-      <div class="ln s4 o">3f2a9c1b<br>eth0  UP  172.18.0.3/16</div>
-      <div class="ln s5"><span class="p">/app #</span> uname -r</div>
-      <div class="ln s5 o">6.1.0-aws   <span style="color:var(--teal)"># same as the host!</span></div>
-      <div class="ln s6"><span class="p">/app #</span> exit</div>
-      <div class="ln s6"><span class="p">$</span> <span class="cur">▌</span></div>
+      <div class="ln s0 o">backend   kafka   postgres</div>
+      <div class="ln s1"><span class="p">$</span> docker exec -it backend sh</div>
+      <div class="ln s2"><span class="p">/app $</span> tail -n 3 logs/app.log</div>
+      <div class="ln s2 o">10:42:01 INFO  Order 1042 created<br>10:42:01 INFO  Event sent to topic orders<br><span style="color:var(--rose)">10:42:07 ERROR Payment timeout for 1042</span></div>
+      <div class="ln s3"><span class="p">/app $</span> exit</div>
+      <div class="ln s3"><span class="p">$</span> docker exec -it kafka kafka-console-consumer.sh \<br>   --bootstrap-server localhost:9092 --topic orders --from-beginning</div>
+      <div class="ln s3 o">{"orderId":1041,"status":"PAID"}<br>{"orderId":1042,"status":"CREATED"}</div>
+      <div class="ln s4"><span class="p">$</span> docker exec -it postgres psql -U app -d shop \<br>   -c "select id, status from orders;"</div>
+      <div class="ln s4 o">  id  | status<br> 1041 | PAID<br> <span style="color:var(--amber)">1042 | PENDING</span></div>
+      <div class="ln s5"><span class="p">$</span> docker logs --tail 3 backend   <span style="color:var(--muted)"># stdout, from outside</span></div>
     </div>
     <div class="overlay">
-      <div class="step-cap cur" data-s="0"><b class="k2">Three containers, one kernel</b><p>From outside, they're just boxes sitting on the host's <b class="hl-t">Linux kernel</b>.</p></div>
-      <div class="step-cap" data-s="1"><b class="k2">docker exec -it api sh</b><p>Step through the walls. A whole new world spins up around you: its own processes, files, network and name.</p></div>
-      <div class="step-cap" data-s="2"><b class="k2">ps: only 3 processes</b><p>Your app is <b class="hl-a">PID 1</b>. The host's hundreds of processes are invisible. That's the PID namespace.</p></div>
-      <div class="step-cap" data-s="3"><b class="k2">ls /: a different root</b><p>This filesystem is the <b class="hl-b">image layers</b> plus a writable layer, not the host's disk.</p></div>
-      <div class="step-cap" data-s="4"><b class="k2">Its own name and IP</b><p>Hostname <span class="mono">3f2a9c1b</span>, its own <b class="hl-g">eth0</b>, cabled to a virtual bridge.</p></div>
-      <div class="step-cap" data-s="5"><b class="k2">Look down</b><p>The floor is glass. Underneath is the <b class="hl-t">same kernel</b> as the host. The walls are just namespaces.</p></div>
-      <div class="step-cap" data-s="6"><b class="k2">exit</b><p>Your shell ends. The container keeps running, because PID 1 (the app) is still alive.</p></div>
+      <div class="step-cap cur" data-s="0"><b class="k2">Something is wrong with order 1042</b><p>Three containers are running: <b class="hl-t">backend</b> (Spring Boot), <b class="hl-a">kafka</b> and <b class="hl-b">postgres</b>. Let's investigate from the inside.</p></div>
+      <div class="step-cap" data-s="1"><b class="k2">docker exec -it backend sh</b><p>Step inside the backend container. You get a shell in its world: its files, its network, its processes.</p></div>
+      <div class="step-cap" data-s="2"><b class="k2">Use case 1: read the log file</b><p>The app writes <span class="mono">logs/app.log</span> inside the container. Order 1042 was created and its event was sent, then a <b class="hl-r">payment timeout</b>.</p></div>
+      <div class="step-cap" data-s="3"><b class="k2">Use case 2: read Kafka messages</b><p>Kafka's command-line tools ship inside the kafka image. The consumer shows the event for 1042 did reach the <span class="mono">orders</span> topic.</p></div>
+      <div class="step-cap" data-s="4"><b class="k2">Use case 3: query the database</b><p><span class="mono">psql</span> lives inside the postgres image. Order 1042 is stuck in <b class="hl-a">PENDING</b>: the payment step never finished.</p></div>
+      <div class="step-cap" data-s="5"><b class="k2">Tip: logs without going in</b><p>Anything the app prints to the console, <span class="mono">docker logs</span> shows from outside. Use <span class="mono">exec</span> when you need the container's own files or tools.</p></div>
     </div>
   </div>
-  <aside class="notes"><p>This is the “aha” slide. docker exec starts a new process (sh) inside the existing container's namespaces, so you see exactly what the app sees.</p><p>Walk the steps: ps shows the app as PID 1; ls / shows the image's filesystem; hostname and eth0 come from the UTS and NET namespaces; uname -r shows the host kernel version because there is no guest OS. Exit ends sh only. If PID 1 dies, the whole container stops.</p></aside>
+  <aside class="notes"><p>docker exec runs a new command inside an already-running container. The three everyday reasons: read files the app writes (logs, config), use tools that only exist in that image (kafka scripts, psql, redis-cli), and test the network from the container's point of view (wget, nslookup).</p><p>The story: logs show a payment timeout; Kafka confirms the event was published; the database shows the order stuck in PENDING. Three containers, three tools, one root cause: payments. Typing exit leaves the shell; the container keeps running.</p></aside>
 </section>
-
 
 <section class="slide" data-title="Docker Compose network (3D)" data-phase="prod" data-ch="Docker Compose" data-steps="5" style="padding:62px 24px 24px">
   <div class="row grow" style="gap:18px">
-    <pre class="code cmp-yaml" style="width:420px;flex:none;font-size:16px;line-height:1.5;padding:16px 18px"><span class="c"># compose.yaml</span>
+    <pre class="code cmp-yaml" style="width:470px;flex:none;font-size:15px;line-height:1.5;padding:16px 18px"><span class="c"># compose.yaml</span>
 <span class="k">services</span>:
-<span class="y yw">  <span class="k">web</span>:
-    image: nginx
-    ports: [<span class="s">"8080:80"</span>]</span>
-<span class="y ya">  <span class="k">api</span>:
-    build: ./api
-    depends_on: [db, redis]</span>
-<span class="y yd">  <span class="k">db</span>:
+<span class="y yf">  <span class="k">frontend</span>:
+    image: shop/frontend:1.2.0
+    ports: [<span class="s">"3000:80"</span>]</span>
+<span class="y yb">  <span class="k">backend</span>:
+    image: shop/orders:1.4.2
+    environment:
+      DB_URL: jdbc:postgresql://<span class="s">postgres</span>:5432/shop
+      KAFKA: <span class="s">kafka</span>:9092</span>
+<span class="y yp">  <span class="k">postgres</span>:
     image: postgres:16
-    volumes: [db-data:/var/lib/…]</span>
-<span class="y yr">  <span class="k">redis</span>:
-    image: redis:7</span>
-<span class="y yv"><span class="k">volumes</span>:
-  db-data:</span>
+    volumes: [pgdata:/var/lib/postgresql/data]</span>
+<span class="y yk">  <span class="k">kafka</span>:
+    image: bitnami/kafka:3.7
+    volumes: [kafkadata:/bitnami/kafka]</span>
+<span class="y yv"><span class="k">volumes</span>: { pgdata: {}, kafkadata: {} }</span>
 
 <span class="c">$ docker compose up -d</span></pre>
     <div class="three-wrap grow"><canvas class="three" id="compose3d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
-      <div class="overlay" style="max-width:420px;left:auto;right:20px;bottom:46px">
-        <div class="step-cap cur" data-s="0"><b class="k2">One file, the whole stack</b><p>Four services, one volume. Nothing is running yet: just your laptop.</p></div>
-        <div class="step-cap" data-s="1"><b class="k2">docker compose up</b><p>Compose creates a private network <span class="mono hl-t">ticketwave_default</span>, then starts containers in <b>depends_on</b> order: db and redis, then api, then web.</p></div>
-        <div class="step-cap" data-s="2"><b class="k2">Names are addresses</b><p>api asks the network's built-in DNS: <span class="mono">“where is db?”</span> → <span class="mono hl-g">172.18.0.4</span>. Code just says <span class="mono">db:5432</span>.</p></div>
-        <div class="step-cap" data-s="3"><b class="k2">You come in through one door</b><p>Browser → <span class="mono hl-a">localhost:8080</span> → web:80 → api → redis and db. Only <b>web</b> has a published port.</p></div>
-        <div class="step-cap" data-s="4"><b class="k2">Outsiders can't reach db</b><p>db has no published port, so from outside the network <b class="hl-r">it doesn't exist</b>.</p></div>
-        <div class="step-cap" data-s="5"><b class="k2">docker compose down</b><p>Containers and network are removed. The <b class="hl-v">db-data volume</b> stays, so your data survives the next up.</p></div>
+      <div class="overlay" style="max-width:430px;left:auto;right:20px;bottom:46px">
+        <div class="step-cap cur" data-s="0"><b class="k2">The plan</b><p>Four services in one file. Nothing is running yet: just the EC2 host.</p></div>
+        <div class="step-cap" data-s="1"><b class="k2">docker compose up</b><p>Compose builds a walled <b class="hl-t">network region</b> and starts every service inside it. Inside the wall, every service can reach every other <b>by its name</b>.</p></div>
+        <div class="step-cap" data-s="2"><b class="k2">From outside: one door</b><p>Your browser opens <span class="mono hl-a">localhost:3000</span>. The published port <span class="mono">3000:80</span> is the only door in the wall. It leads to frontend on port 80.</p></div>
+        <div class="step-cap" data-s="3"><b class="k2">Inside: service to service</b><p>frontend → <span class="mono hl-t">backend:8080</span> → <span class="mono">postgres:5432</span> and <span class="mono">kafka:9092</span>. Names, not IPs, and no published ports needed.</p></div>
+        <div class="step-cap" data-s="4"><b class="k2">Doors you didn't open</b><p>backend, postgres and kafka publish no ports, so from outside the wall <b class="hl-r">they can't be reached</b>.</p></div>
+        <div class="step-cap" data-s="5"><b class="k2">docker compose down</b><p>Containers and the network disappear. The <b class="hl-v">pgdata</b> and <b class="hl-v">kafkadata</b> volumes stay on the host's disk.</p></div>
       </div>
     </div>
   </div>
-  <aside class="notes"><p>Left panel highlights the part of compose.yaml that matters at each step.</p><p>Step 1: one command creates a network and starts services in dependency order. Step 2: every service name becomes a DNS name on that network (Docker's embedded DNS at 127.0.0.11), which is why config says db:5432 instead of an IP. Step 3: only ports you publish (8080:80) are reachable from your laptop. Step 4: everything else stays private to the network. Step 5: down removes containers and the network but keeps named volumes (unless you add -v).</p></aside>
+  <aside class="notes"><p>Step 1: compose up creates one network for the project (named shop_default) and attaches every service to it. Step 2: the outside world only gets in through published ports; here only frontend publishes 3000:80. Step 3: inside the network, Docker's built-in DNS turns service names into container IPs, which is why config says postgres:5432. Step 4: everything else stays private. Step 5: down removes containers and the network; named volumes survive unless you add -v.</p></aside>
+</section>
+
+<section class="slide" data-title="Volumes: data that outlives containers" data-phase="pic" data-ch="Docker Compose" data-steps="5">
+  <h2>Volumes: where postgres and kafka keep their data</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <text x="40" y="30" class="tr" style="font:700 22px var(--f-body)">Without a volume</text>
+      <text x="740" y="30" class="tg" style="font:700 22px var(--f-body)">With a volume</text>
+      <line x1="704" y1="10" x2="704" y2="440" class="w-l"/>
+      <g class="hide-on-2"><rect x="60" y="70" width="560" height="300" rx="20" class="bx-b" style="fill:rgba(100,160,255,.06)"/><text x="84" y="106" class="tb tm" style="font-size:17px">container · postgres:16</text>
+        <rect x="120" y="170" width="300" height="160" rx="12" class="bx" style="stroke-dasharray:6 6"/><text x="135" y="160" class="lbl">writable layer</text></g>
+      <g class="f" data-f="1"><g class="hide-on-2"><rect x="150" y="200" width="240" height="22" rx="5" class="fb"/><rect x="150" y="234" width="240" height="22" rx="5" class="fb"/><rect x="150" y="268" width="240" height="22" rx="5" class="fb"/><text x="460" y="250" class="tmut" style="font-size:17px">orders saved</text><text x="460" y="274" class="tmut" style="font-size:17px">inside the container</text></g></g>
+      <g class="show-on-2"><rect x="60" y="70" width="560" height="300" rx="20" class="w-r" style="stroke-dasharray:10 8"/><text x="340" y="200" text-anchor="middle" class="tr" style="font:800 26px var(--f-display)">container deleted</text><text x="340" y="240" text-anchor="middle" class="tr" style="font:700 22px var(--f-body)">✗ every order is gone</text><text x="340" y="276" text-anchor="middle" class="tmut tm" style="font-size:16px">docker compose down</text></g>
+      <g class="f" data-f="3">
+        <rect x="760" y="70" width="330" height="300" rx="20" class="bx-b" style="fill:rgba(100,160,255,.06)"/>
+        <text x="784" y="106" class="tb tm hide-on-4" style="font-size:16px">container · postgres:16</text>
+        <text x="784" y="106" class="tg tm show-on-4" style="font-size:16px">NEW container · postgres:16.4</text>
+        <rect x="790" y="170" width="270" height="70" rx="12" class="bx"/><text x="925" y="200" text-anchor="middle" class="tm" style="font-size:14px">/var/lib/postgresql/data</text><text x="925" y="222" text-anchor="middle" class="tmut" style="font-size:13px">mount point</text>
+        <path id="volp" d="M1060 205 H1180" class="w-v" style="stroke-width:6"/>
+        <rect width="16" height="12" rx="3" class="fv" x="-8" y="-6"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#volp"/></animateMotion></rect>
+        <g transform="translate(1180,120)"><rect y="18" width="190" height="190" class="fv" opacity=".75"/><ellipse cx="95" cy="208" rx="95" ry="18" class="fv" opacity=".75"/><ellipse cx="95" cy="18" rx="95" ry="18" class="fv"/>
+          <rect x="30" y="70" width="130" height="18" rx="4" class="fk" opacity=".6"/><rect x="30" y="100" width="130" height="18" rx="4" class="fk" opacity=".6"/><rect x="30" y="130" width="130" height="18" rx="4" class="fk" opacity=".6"/>
+          <text x="95" y="250" text-anchor="middle" class="tv" style="font:700 19px var(--f-body)">volume pgdata</text><text x="95" y="274" text-anchor="middle" class="tmut" style="font-size:14px">on the host's disk</text></g>
+        <text x="760" y="410" class="tmut tm" style="font-size:15px">volumes: [pgdata:/var/lib/postgresql/data]</text>
+      </g>
+      <g class="show-on-4"><text x="925" y="300" text-anchor="middle" class="tg" style="font:700 22px var(--f-body)">✓ all orders still here</text><text x="925" y="330" text-anchor="middle" class="tmut" style="font-size:16px">new container, same volume</text></g>
+      <g class="f" data-f="5">
+        <rect x="40" y="460" width="1330" height="86" rx="16" class="bx" style="fill:var(--ink-3)"/>
+        <text x="64" y="494" class="ta" style="font:700 18px var(--f-body)">Kafka, same idea:</text><text x="240" y="494" class="tmut" style="font-size:17px">kafkadata:/bitnami/kafka keeps every topic and message across restarts and upgrades.</text>
+        <text x="64" y="528" class="tt tm" style="font-size:15px">docker volume ls   ·   docker volume inspect pgdata   ·   <tspan class="tr">docker compose down -v  ← also deletes volumes!</tspan></text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Click 1: without a volume, postgres writes into the container's own writable layer. Click 2: docker compose down (or replacing the container to upgrade) deletes that layer and the data with it.</p><p>Click 3: with a volume, the folder postgres writes to (/var/lib/postgresql/data) is really a folder Docker keeps on the host disk. Click 4: delete the container, start a newer postgres image, mount the same volume: everything is still there. Click 5: Kafka works the same way. Careful with down -v, which deletes named volumes too.</p></aside>
+</section>
+
+<section class="slide" data-title="Activity: orders-api can't reach users-api" data-phase="prod" data-ch="Activity" data-hook="dka">
+  <div style="display:flex;align-items:center;gap:14px"><span class="act-badge">Activity · debug it</span><span class="small">Two Node.js containers on one EC2. orders-api calls users-api every 3 seconds.</span></div>
+  <h2 style="margin-top:2px">orders-api can't reach users-api. Why?</h2>
+  <div class="row grow" style="gap:22px">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 820 520" id="dkaSvg" data-r="1">
+        <rect x="10" y="10" width="800" height="500" rx="22" class="bx-s" style="fill:rgba(201,210,227,.03)"/><text x="34" y="44" class="lbl">EC2 host · Docker</text>
+        <g class="nw-def"><ellipse cx="410" cy="270" rx="380" ry="170" class="w-l" style="stroke-dasharray:10 8;stroke-width:3"/><text x="410" y="125" text-anchor="middle" class="tmut tm" style="font-size:15px">default bridge network · no name lookup</text></g>
+        <g class="nw-shop"><ellipse cx="410" cy="270" rx="380" ry="170" class="bx-t" style="fill:rgba(63,213,194,.06);stroke-width:3"/><text x="410" y="125" text-anchor="middle" class="tt tm" style="font-size:15px">shop-net · names work here</text></g>
+        <rect x="70" y="200" width="230" height="140" rx="18" class="bx-a" style="fill:var(--ink-2)"/><text x="185" y="248" text-anchor="middle" class="ta" style="font:700 21px var(--f-body)">orders-api</text><text x="185" y="276" text-anchor="middle" class="tmut tm" style="font-size:14px">node:20-alpine</text><text x="185" y="300" text-anchor="middle" class="tmut tm" style="font-size:14px">calls USERS_URL</text>
+        <rect x="520" y="200" width="230" height="140" rx="18" class="bx-b" style="fill:var(--ink-2)"/><text x="635" y="248" text-anchor="middle" class="tb" style="font:700 21px var(--f-body)">users-api</text><text x="635" y="276" text-anchor="middle" class="tmut tm" style="font-size:14px">node:20-alpine</text><text x="635" y="300" text-anchor="middle" class="tmut tm" style="font-size:14px">listens on :3000</text>
+        <rect x="750" y="244" width="58" height="52" rx="8" class="bx-a" style="fill:var(--ink-3)"/><text x="779" y="266" text-anchor="middle" class="ta tm" style="font-size:12px">host</text><text x="779" y="284" text-anchor="middle" class="ta tm" style="font-size:13px">3001</text>
+        <text x="635" y="380" text-anchor="middle" class="tmut tm" style="font-size:14px">docker run -p 3001:3000</text>
+        <g class="pk pk1"><path id="dk1" d="M300 250 C 380 150 380 390 300 300" class="w-r dash"/><circle r="10" class="fr glow-r"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#dk1"/></animateMotion></circle><text x="400" y="460" text-anchor="middle" class="tr" style="font:700 18px var(--f-body)">localhost = orders-api itself</text></g>
+        <g class="pk pk2"><path id="dk2" d="M300 270 H410" class="w-r dash"/><circle r="10" class="fr glow-r"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dk2"/></animateMotion></circle><rect x="370" y="180" width="90" height="56" rx="10" class="bx-r" style="fill:var(--ink-2)"/><text x="415" y="206" text-anchor="middle" class="tr" style="font:700 15px var(--f-mono)">users-api</text><text x="415" y="226" text-anchor="middle" class="tr" style="font:800 16px var(--f-body)">= ?</text><text x="410" y="460" text-anchor="middle" class="tr" style="font:700 18px var(--f-body)">no one can turn the name into an IP</text></g>
+        <g class="pk pk3"><path id="dk3" d="M300 270 H510" class="w-r dash"/><circle r="10" class="fr glow-r"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dk3"/></animateMotion></circle><rect x="500" y="250" width="40" height="40" rx="6" class="bx-r" style="fill:var(--ink-3)"/><text x="520" y="276" text-anchor="middle" class="tr tm" style="font-size:12px">3001</text><text x="410" y="460" text-anchor="middle" class="tr" style="font:700 18px var(--f-body)">found the container, knocked on the wrong door</text></g>
+        <g class="pk pk4"><path id="dk4" d="M300 260 H520" class="w-g" style="stroke-width:3"/><path id="dk4b" d="M520 285 H300" class="w-t"/><circle r="10" class="fg glow-g"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dk4"/></animateMotion></circle><circle r="8" class="ft"><animateMotion dur="1.4s" begin=".7s" repeatCount="indefinite"><mpath href="#dk4b"/></animateMotion></circle><text x="410" y="460" text-anchor="middle" class="tg" style="font:700 18px var(--f-body)">users-api:3000 on shop-net ✓</text></g>
+      </svg>
+    </div>
+    <div style="width:560px;flex:none;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px" id="dkaTabs"><button class="btn primary" data-r="1">Round 1</button><button class="btn" data-r="2">Round 2</button><button class="btn" data-r="3">Round 3</button><button class="btn" data-r="4">Fixed</button></div>
+      <div id="dkaPanel"><div class="rnd r1"><p class="small">They ran orders-api with:</p><pre class="code" style="font-size:14px;padding:10px 12px;white-space:pre-wrap">-e USERS_URL=http://localhost:3001</pre>
+      <p class="small" style="margin-top:10px">$ docker logs orders-api</p><pre class="code" style="font-size:15px;padding:10px 12px;color:var(--rose)">ERROR connect ECONNREFUSED 127.0.0.1:3001</pre>
+      <p style="margin-top:12px;font:600 20px var(--f-body)">What is wrong? <button class="btn rv" style="margin-left:8px">Reveal</button></p>
+      <div class="ans" ><p style="font-size:18px;line-height:1.45;margin-top:10px">Inside a container, <b>localhost means the container itself</b>. orders-api is calling its own port 3001, where nothing is listening.</p><pre class="code" style="font-size:14px;padding:10px 12px;margin-top:8px;color:var(--green)">USERS_URL=http://users-api:3001</pre></div></div><div class="rnd r2"><p class="small">They ran orders-api with:</p><pre class="code" style="font-size:14px;padding:10px 12px;white-space:pre-wrap">-e USERS_URL=http://users-api:3001</pre>
+      <p class="small" style="margin-top:10px">$ docker logs orders-api</p><pre class="code" style="font-size:15px;padding:10px 12px;color:var(--rose)">ERROR getaddrinfo ENOTFOUND users-api</pre>
+      <p style="margin-top:12px;font:600 20px var(--f-body)">What is wrong? <button class="btn rv" style="margin-left:8px">Reveal</button></p>
+      <div class="ans" ><p style="font-size:18px;line-height:1.45;margin-top:10px">The <b>default bridge network has no name lookup</b>. Containers find each other by name only on a network you create.</p><pre class="code" style="font-size:14px;padding:10px 12px;margin-top:8px;color:var(--green)">docker network create shop-net
+docker network connect shop-net users-api
+docker run … --network shop-net …</pre></div></div><div class="rnd r3"><p class="small">They ran orders-api with:</p><pre class="code" style="font-size:14px;padding:10px 12px;white-space:pre-wrap">--network shop-net -e USERS_URL=http://users-api:3001</pre>
+      <p class="small" style="margin-top:10px">$ docker logs orders-api</p><pre class="code" style="font-size:15px;padding:10px 12px;color:var(--rose)">ERROR connect ECONNREFUSED 172.18.0.2:3001</pre>
+      <p style="margin-top:12px;font:600 20px var(--f-body)">What is wrong? <button class="btn rv" style="margin-left:8px">Reveal</button></p>
+      <div class="ans" ><p style="font-size:18px;line-height:1.45;margin-top:10px">The name works now (it found 172.18.0.2), but <b>3001 is the host’s port</b>. Inside the network, use the container’s own port: 3000.</p><pre class="code" style="font-size:14px;padding:10px 12px;margin-top:8px;color:var(--green)">USERS_URL=http://users-api:3000</pre></div></div><div class="rnd r4"><p class="small">They ran orders-api with:</p><pre class="code" style="font-size:14px;padding:10px 12px;white-space:pre-wrap">--network shop-net -e USERS_URL=http://users-api:3000</pre>
+      <p class="small" style="margin-top:10px">$ docker logs orders-api</p><pre class="code" style="font-size:15px;padding:10px 12px;color:var(--green)">OK users: [rahul, ramya]</pre>
+      
+      <div class="ans" style="display:block"><p style="font-size:18px;line-height:1.45;margin-top:10px">Same network, container name, container port. We found every bug with <span class="mono">docker logs orders-api</span>, and tested by hand with <span class="mono">docker exec -it orders-api sh</span> → <span class="mono">wget -qO- http://users-api:3000</span>.</p></div></div></div>
+    </div>
+  </div>
+  <aside class="notes"><p>Run it as a guessing game: show the command and the log line, let the room shout the cause, then Reveal. Each round is a real mistake people make in their first week with Docker.</p><p>Round 1: localhost inside a container is the container. Round 2: the default bridge has no DNS for container names; user-defined networks (and Compose) do. Round 3: published host ports (-p 3001:3000) are for the outside world; container-to-container traffic uses the container port. The next slide is the hands-on version for their EC2 machines.</p></aside>
+</section>
+
+<section class="slide" data-title="Lab: two Node containers on EC2" data-phase="prod" data-ch="Activity">
+  <div style="display:flex;align-items:center;gap:14px"><span class="act-badge">Hands-on lab · on your EC2</span><span class="small">Reproduce all three bugs, find each one in the logs, then fix it.</span></div>
+  <h2 style="margin-top:2px">Lab: make orders-api talk to users-api</h2>
+  <div class="grid g2 grow" style="gap:18px;align-items:start">
+<pre class="code labc"><span class="c"># 0 · install Docker (Amazon Linux 2023)</span>
+sudo dnf install -y docker
+sudo systemctl enable --now docker
+sudo usermod -aG docker ec2-user  <span class="c"># re-login</span>
+
+<span class="c"># 1 · users-api answers on port 3000</span>
+docker run -d --name users-api -p 3001:3000 \
+  node:20-alpine node -e 'require("http")
+  .createServer((q,s)=>s.end("users: [rahul, ramya]"))
+  .listen(3000)'
+curl localhost:3001     <span class="c"># works from the host</span>
+
+<span class="c"># 2 · orders-api calls USERS_URL every 3 s</span>
+docker run -d --name orders-api \
+  -e USERS_URL=<span class="s">http://localhost:3001</span> \
+  node:20-alpine node -e 'setInterval(()=>
+  require("http").get(process.env.USERS_URL,r=>{
+  let d="";r.on("data",c=>d+=c);r.on("end",
+  ()=>console.log("OK",d))}).on("error",
+  e=>console.log("ERROR",e.message)),3000)'</pre>
+<pre class="code labc"><span class="c"># 3 · investigate</span>
+docker ps                       <span class="c"># both running?</span>
+docker logs -f orders-api       <span class="c"># read the error</span>
+docker exec -it orders-api sh   <span class="c"># step inside</span>
+  wget -qO- http://users-api:3000   <span class="c"># test by hand</span>
+  exit
+
+<span class="c"># 4 · fix it, one round at a time</span>
+docker network ls
+docker network create shop-net
+docker network connect shop-net users-api
+docker rm -f orders-api         <span class="c"># recreate with:</span>
+<span class="c">#   round 2: USERS_URL=http://users-api:3001</span>
+<span class="c">#   round 3: add --network shop-net</span>
+<span class="c">#   round 4: USERS_URL=http://users-api:3000</span>
+docker network inspect shop-net <span class="c"># who is on it?</span>
+
+<span class="c"># 5 · clean up</span>
+docker rm -f orders-api users-api
+docker network rm shop-net</pre>
+  </div>
+  <aside class="notes"><p>Everything runs on one EC2 instance; no security group changes are needed because all traffic stays on the host. node:20-alpine includes wget (not curl) inside the container.</p><p>Commands they practise: run, ps, logs -f, exec -it, rm -f, network ls/create/connect/inspect/rm. Expected log lines per round: ECONNREFUSED 127.0.0.1:3001, ENOTFOUND users-api, ECONNREFUSED 172.18.0.x:3001, then OK users: [rahul, ramya].</p></aside>
 </section>
 
 
@@ -2586,23 +2773,70 @@ echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
   <div class="tiles"><span class="tile sm" style="--c:var(--teal)">ECR</span><span class="tile sm" style="--c:var(--green)">JFROG</span><span class="tile sm" style="--c:var(--blue)">HUB</span></div>
 </section>
 
-<section class="slide" data-title="Inside ECR" data-phase="behind" data-ch="ECR">
+<section class="slide" data-title="ECR stores each layer once" data-phase="behind" data-ch="ECR" data-steps="3">
   <div><span class="wowtag">Behind the scenes</span></div>
-  <h2 style="margin-top:6px">Tags move. Digests never do.</h2>
+  <h2 style="margin-top:6px">Three versions, but shared layers are stored once</h2>
   <div class="vis">
     <svg class="d" viewBox="0 0 1408 560">
-      <g transform="translate(40,60)"><rect width="500" height="420" rx="22" class="bx-t" style="fill:rgba(63,213,194,.04)"/><text x="24" y="40" class="tt tm">registry · 4821…dkr.ecr.ap-south-1</text>
-        <g transform="translate(24,70)"><rect width="452" height="320" rx="16" class="bx"/><text x="20" y="36" class="lbl">repository · ticketwave-api</text>
-          <g style="font:600 17px var(--f-mono)"><rect x="20" y="60" width="130" height="44" rx="10" class="fa"/><text x="85" y="88" text-anchor="middle" class="tink">:latest</text><rect x="20" y="130" width="130" height="44" rx="10" class="bx-a"/><text x="85" y="158" text-anchor="middle" class="ta">:v3</text><rect x="20" y="200" width="130" height="44" rx="10" class="bx-a"/><text x="85" y="228" text-anchor="middle" class="ta">:v2</text></g>
-          <g style="font:600 15px var(--f-mono)"><rect x="230" y="96" width="200" height="50" rx="10" class="bx-v"/><text x="330" y="127" text-anchor="middle" class="tv">sha256:9f2c…</text><rect x="230" y="196" width="200" height="50" rx="10" class="bx-v"/><text x="330" y="227" text-anchor="middle" class="tv">sha256:41ab…</text></g>
-          <path d="M150 82 C 190 82, 200 121, 230 121 M150 152 C 190 152, 200 121, 230 121 M150 222 H230" class="w-a"/>
-        </g></g>
-      <g class="f" data-f="1"><path d="M540 270 H700" class="w dash"/><g transform="translate(700,130)"><path d="M0 0 h240 l-24 280 h-192z" class="bx-g"/><text x="120" y="130" text-anchor="middle" class="tg" style="font:700 30px var(--f-mono)">S3</text><text x="120" y="170" text-anchor="middle" class="tmut tm" style="font-size:15px">layer blobs</text></g>
-        <text x="980" y="200" style="font:600 24px var(--f-body)">Layers are stored in S3,</text><text x="980" y="236" style="font:600 24px var(--f-body)">named by their hash.</text></g>
-      <g class="f" data-f="2"><text x="980" y="320" class="ta" style="font-size:21px">:latest can point anywhere tomorrow.</text><text x="980" y="356" class="tv" style="font-size:21px">sha256:9f2c… is always this exact image.</text><text x="980" y="410" class="tmut" style="font-size:19px">Production deploys pin the digest,</text><text x="980" y="438" class="tmut" style="font-size:19px">or turn on tag immutability.</text></g>
+      <g transform="translate(40,80)"><text x="90" y="-14" text-anchor="middle" class="ta tm" style="font-size:16px">orders:1.4.0</text>
+      <rect y="0" width="180" height="34" rx="6" class="fa" style="fill:#FFB547"/><text x="90" y="23" text-anchor="middle" class="tink tm" style="font-size:13px">orders.jar · 5 MB</text>
+      <rect y="40" width="180" height="40" rx="6" class="fv"/><text x="90" y="66" text-anchor="middle" class="tink tm" style="font-size:13px">dependencies · 25 MB</text>
+      <rect y="86" width="180" height="70" rx="6" class="fb"/><text x="90" y="126" text-anchor="middle" class="tink tm" style="font-size:13px">JRE base · 180 MB</text></g><g transform="translate(250,80)"><text x="90" y="-14" text-anchor="middle" class="ta tm" style="font-size:16px">orders:1.4.1</text>
+      <rect y="0" width="180" height="34" rx="6" class="fa" style="fill:#FF9466"/><text x="90" y="23" text-anchor="middle" class="tink tm" style="font-size:13px">orders.jar · 5 MB</text>
+      <rect y="40" width="180" height="40" rx="6" class="fv"/><text x="90" y="66" text-anchor="middle" class="tink tm" style="font-size:13px">dependencies · 25 MB</text>
+      <rect y="86" width="180" height="70" rx="6" class="fb"/><text x="90" y="126" text-anchor="middle" class="tink tm" style="font-size:13px">JRE base · 180 MB</text></g><g transform="translate(460,80)"><text x="90" y="-14" text-anchor="middle" class="ta tm" style="font-size:16px">orders:1.4.2</text>
+      <rect y="0" width="180" height="34" rx="6" class="fa" style="fill:#FFD166"/><text x="90" y="23" text-anchor="middle" class="tink tm" style="font-size:13px">orders.jar · 5 MB</text>
+      <rect y="40" width="180" height="40" rx="6" class="fv"/><text x="90" y="66" text-anchor="middle" class="tink tm" style="font-size:13px">dependencies · 25 MB</text>
+      <rect y="86" width="180" height="70" rx="6" class="fb"/><text x="90" y="126" text-anchor="middle" class="tink tm" style="font-size:13px">JRE base · 180 MB</text></g>
+      <text x="340" y="300" text-anchor="middle" class="tmut" style="font-size:17px">what you pushed: 3 images</text>
+      <g class="f" data-f="1">
+        <path d="M670 160 H760" class="w-a" style="stroke-width:4"/><path d="M748 148 L762 160 L748 172" class="w-a" style="stroke-width:4"/>
+        <rect x="780" y="40" width="590" height="290" rx="22" class="bx-t" style="fill:rgba(63,213,194,.05)"/><text x="806" y="76" class="tt tm" style="font-size:16px">ECR storage (S3, by sha256)</text>
+        <rect x="806" y="100" width="250" height="150" rx="10" class="fb"/><text x="931" y="168" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">JRE base</text><text x="931" y="192" text-anchor="middle" class="tink tm" style="font-size:13px">stored once · 180 MB</text>
+        <rect x="1070" y="100" width="280" height="64" rx="10" class="fv"/><text x="1210" y="138" text-anchor="middle" class="tink" style="font:700 16px var(--f-body)">dependencies · once · 25 MB</text>
+        <rect x="1070" y="176" width="88" height="74" rx="10" style="fill:#FFB547"/><rect x="1166" y="176" width="88" height="74" rx="10" style="fill:#FF9466"/><rect x="1262" y="176" width="88" height="74" rx="10" style="fill:#FFD166"/>
+        <text x="1114" y="218" text-anchor="middle" class="tink tm" style="font-size:12px">jar 1.4.0</text><text x="1210" y="218" text-anchor="middle" class="tink tm" style="font-size:12px">jar 1.4.1</text><text x="1306" y="218" text-anchor="middle" class="tink tm" style="font-size:12px">jar 1.4.2</text>
+        <text x="1075" y="300" text-anchor="middle" class="tmut" style="font-size:17px">what ECR keeps: 5 unique layers</text>
+      </g>
+      <g class="f" data-f="2">
+        <rect x="40" y="370" width="640" height="90" rx="16" class="bx-r" style="fill:rgba(255,111,142,.06)"/><text x="64" y="406" class="tr" style="font:700 19px var(--f-body)">If every image were a separate file</text><text x="64" y="440" class="tm" style="font-size:18px">3 × 210 MB = <tspan class="tr" font-weight="700">630 MB</tspan></text>
+        <rect x="728" y="370" width="642" height="90" rx="16" class="bx-g" style="fill:rgba(110,220,146,.06)"/><text x="752" y="406" class="tg" style="font:700 19px var(--f-body)">What ECR actually stores</text><text x="752" y="440" class="tm" style="font-size:18px">180 + 25 + 3 × 5 = <tspan class="tg" font-weight="700">220 MB</tspan></text>
+      </g>
+      <g class="f" data-f="3"><text x="704" y="510" text-anchor="middle" style="font:600 20px var(--f-body)">Pushing 1.4.2 uploads only <tspan class="hl-a">5 MB</tspan>. Docker prints <tspan class="hl-g" style="font-family:var(--f-mono)">Layer already exists</tspan> for the rest.</text>
+        <text x="704" y="542" text-anchor="middle" class="tmut" style="font-size:17px">Same on servers: pulling a new version downloads only the changed layer.</text></g>
     </svg>
   </div>
-  <aside class="notes"><p>ECR stores image layers in S3 behind the scenes, which is where its durability comes from. A tag is a movable label; the digest is a content hash.</p><p>Extra features worth naming: image scanning for known vulnerabilities, lifecycle policies to delete old images, cross-Region replication.</p></aside>
+  <aside class="notes"><p>Each layer is stored by its content hash (sha256), so identical layers are stored once, no matter how many images use them. Only the top layer (your jar) changes between releases. That's why pushes and pulls of a new version take seconds, and why storage stays small.</p><p>This works best when your Dockerfile puts rarely-changing things (base, dependencies) at the bottom, as in the Spring Boot example.</p></aside>
+</section>
+
+<section class="slide" data-title="Tags are sticky notes, digests are fingerprints" data-phase="pic" data-ch="ECR" data-steps="3">
+  <h2>A tag is a sticky note. A digest is a fingerprint.</h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560" id="tdSvg">
+      <style>#tdSvg .lat{transition:transform 1s cubic-bezier(.4,0,.2,1)}.st1 #tdSvg .lat{transform:translate(400px,0)}</style>
+      <g><rect x="160" y="150" width="300" height="200" rx="18" class="bx-b"/><text x="310" y="200" text-anchor="middle" class="tb" style="font:700 22px var(--f-body)">image A</text><text x="310" y="232" text-anchor="middle" class="tmut" style="font-size:16px">tested on Monday</text>
+        <g transform="translate(205,262)"><circle cx="16" cy="18" r="16" class="w-v" style="stroke-width:3"/><circle cx="16" cy="18" r="9" class="w-v" style="stroke-width:3"/><text x="44" y="24" class="tv tm" style="font-size:16px">sha256:a1b2…</text></g>
+        <rect x="200" y="92" width="110" height="44" rx="6" style="fill:#C9D2E3"/><text x="255" y="121" text-anchor="middle" class="tink tm" style="font:700 16px var(--f-mono)">1.4.1</text></g>
+      <g class="f" data-f="1"><rect x="560" y="150" width="300" height="200" rx="18" class="bx-r"/><text x="710" y="200" text-anchor="middle" class="tr" style="font:700 22px var(--f-body)">image B</text><text x="710" y="232" text-anchor="middle" class="tmut" style="font-size:16px">pushed Tuesday, untested</text>
+        <g transform="translate(605,262)"><circle cx="16" cy="18" r="16" class="w-v" style="stroke-width:3"/><circle cx="16" cy="18" r="9" class="w-v" style="stroke-width:3"/><text x="44" y="24" class="tv tm" style="font-size:16px">sha256:c3d4…</text></g>
+        <rect x="600" y="92" width="110" height="44" rx="6" style="fill:#C9D2E3"/><text x="655" y="121" text-anchor="middle" class="tink tm" style="font:700 16px var(--f-mono)">1.4.2</text></g>
+      <g class="lat"><rect x="330" y="92" width="120" height="44" rx="6" style="fill:#FFD166"/><text x="390" y="121" text-anchor="middle" class="tink tm" style="font:700 16px var(--f-mono)">latest</text></g>
+      <g transform="translate(1000,150)"><rect width="340" height="200" rx="18" class="bx-a"/><text x="170" y="48" text-anchor="middle" class="ta" style="font:700 22px var(--f-body)">prod server</text><text x="170" y="84" text-anchor="middle" class="tm" style="font-size:17px">image: orders:latest</text>
+        <g class="hide-on-2"><text x="170" y="136" text-anchor="middle" class="tg" style="font:700 20px var(--f-body)">running image A ✓</text></g>
+        <g class="show-on-2"><text x="170" y="136" text-anchor="middle" class="tr" style="font:700 20px var(--f-body)">restarted → pulled image B ✗</text><text x="170" y="166" text-anchor="middle" class="tmut" style="font-size:16px">nobody deployed anything</text></g></g>
+      <g style="font:600 21px var(--f-body)">
+        <text x="704" y="420" text-anchor="middle" class="hide-on-1"><tspan class="hl-a">Monday:</tspan> “latest” is stuck on image A. Prod runs A.</text>
+        <text x="704" y="420" text-anchor="middle" class="show-on-1 hide-on-2"><tspan class="hl-a">Tuesday:</tspan> someone pushes B. The “latest” note peels off and sticks to B.</text>
+        <text x="704" y="420" text-anchor="middle" class="show-on-2 hide-on-3"><tspan class="hl-r">Wednesday:</tspan> the server restarts, asks for “latest”, gets untested B.</text>
+        <text x="704" y="420" text-anchor="middle" class="show-on-3 tg">Fix: deploy an exact version, and lock tags so they can't move.</text>
+      </g>
+      <g class="f" data-f="3" style="font-size:17px">
+        <rect x="150" y="450" width="530" height="90" rx="14" class="bx"/><text x="174" y="482" class="tg" font-weight="700">Deploy by version or digest</text><text x="174" y="512" class="tmut tm" style="font-size:15px">orders:1.4.1   or   orders@sha256:a1b2…</text>
+        <rect x="728" y="450" width="530" height="90" rx="14" class="bx"/><text x="752" y="482" class="tv" font-weight="700">ECR tag immutability: ON</text><text x="752" y="512" class="tmut tm" style="font-size:15px">a pushed tag can never be overwritten</text>
+      </g>
+    </svg>
+  </div>
+  <aside class="notes"><p>A tag is a sticky note: a name you can peel off and stick somewhere else. A digest (sha256) is a fingerprint of the image's exact contents: it can never point at anything else.</p><p>Click through Monday, Tuesday, Wednesday. This exact surprise (a restart pulling a new latest) causes real outages. Fix: deploy exact version tags or digests, and switch on ECR tag immutability so 1.4.1 can never be overwritten.</p></aside>
 </section>
 
 <section class="slide" data-title="ECR architecture" data-phase="prod" data-ch="ECR">
@@ -2627,6 +2861,36 @@ echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
     </svg>
   </div>
   <aside class="notes"><p>The pipeline pushes, ECR scans, lifecycle rules delete old images, tag immutability stops someone overwriting v3, and runtimes pull using IAM roles. Interface VPC endpoints let private subnets pull without a NAT gateway.</p></aside>
+</section>
+
+<section class="slide" data-title="GitHub vs ECR" data-phase="pic" data-ch="ECR">
+  <h2>GitHub keeps the recipe. ECR keeps the meal.</h2>
+  <div class="vis" style="flex:none;height:250px">
+    <svg class="d" viewBox="0 0 1408 250">
+      <g transform="translate(20,40)"><rect width="280" height="170" rx="18" class="bx-s"/><text x="140" y="40" text-anchor="middle" style="font:700 22px var(--f-body)">GitHub</text>
+        <g class="fm" opacity=".8"><rect x="30" y="60" width="90" height="10" rx="4"/><rect x="30" y="78" width="150" height="10" rx="4"/><rect x="50" y="96" width="120" height="10" rx="4"/><rect x="50" y="114" width="170" height="10" rx="4"/></g>
+        <text x="250" y="150" text-anchor="end" class="tmut tm" style="font-size:13px">.java · pom.xml · Dockerfile</text></g>
+      <path id="gh1" d="M300 125 H420 M640 125 H760 M1040 125 H1130" class="w-l" style="stroke-width:3"/>
+      <path id="gh2" d="M300 125 H1130" style="fill:none"/>
+      <circle r="9" class="fa glow-a"><animateMotion dur="3.4s" repeatCount="indefinite"><mpath href="#gh2"/></animateMotion></circle>
+      <g transform="translate(420,60)"><rect width="220" height="130" rx="18" class="bx-r"/><text x="110" y="56" text-anchor="middle" class="tr" style="font:700 20px var(--f-body)">CI pipeline</text><text x="110" y="88" text-anchor="middle" class="tmut tm" style="font-size:14px">docker build + push</text></g>
+      <g transform="translate(760,40)"><rect width="280" height="170" rx="18" class="bx-t"/><text x="140" y="40" text-anchor="middle" class="tt" style="font:700 22px var(--f-body)">Amazon ECR</text>
+        <g transform="translate(40,60)"><rect width="56" height="16" rx="3" class="fa"/><rect y="20" width="56" height="18" rx="3" class="fv"/><rect y="42" width="56" height="34" rx="3" class="fb"/></g>
+        <g transform="translate(112,60)"><rect width="56" height="16" rx="3" style="fill:#FF9466"/><rect y="20" width="56" height="18" rx="3" class="fv"/><rect y="42" width="56" height="34" rx="3" class="fb"/></g>
+        <g transform="translate(184,60)"><rect width="56" height="16" rx="3" style="fill:#FFD166"/><rect y="20" width="56" height="18" rx="3" class="fv"/><rect y="42" width="56" height="34" rx="3" class="fb"/></g>
+        <text x="140" y="158" text-anchor="middle" class="tmut tm" style="font-size:13px">orders:1.4.0 · 1.4.1 · 1.4.2</text></g>
+      <g transform="translate(1130,60)"><rect width="258" height="130" rx="18" class="bx-v"/><text x="129" y="56" text-anchor="middle" class="tv" style="font:700 20px var(--f-body)">ECS / EKS</text><text x="129" y="88" text-anchor="middle" class="tmut tm" style="font-size:14px">pulls and runs</text></g>
+    </svg>
+  </div>
+  <table class="t" style="font-size:19px">
+    <tr><th></th><th>GitHub</th><th>Amazon ECR</th></tr>
+    <tr class="f" data-f="1"><td class="hl-m">Stores</td><td>Source code: text files you read and edit</td><td>Built images: compressed layers, ready to run</td></tr>
+    <tr class="f" data-f="2"><td class="hl-m">Used by</td><td>People: review, pull requests, history</td><td>Machines: servers pull and start containers</td></tr>
+    <tr class="f" data-f="3"><td class="hl-m">Versions</td><td>Commits and branches</td><td>Tags (1.4.2) and digests (sha256:…)</td></tr>
+    <tr class="f" data-f="4"><td class="hl-m">Saves space by</td><td>Storing changes between commits</td><td>Storing each layer once, shared by images</td></tr>
+    <tr class="f" data-f="5"><td class="hl-m">Security</td><td>Secret scanning, branch protection</td><td>Vulnerability scanning, IAM pull access</td></tr>
+  </table>
+  <aside class="notes"><p>GitHub is where humans keep and review the recipe (code and Dockerfile). The pipeline cooks it into an image and pushes it to ECR, where machines collect the ready meal. You never deploy from GitHub directly, and you never edit code in ECR.</p></aside>
 </section>
 
 <section class="slide" data-title="Compare: ECR, JFrog, Docker Hub" data-phase="compare" data-ch="ECR">
@@ -3466,7 +3730,7 @@ const dots=$('#stepDots');
 function applyStep(){
   const s=slides[cur], n=builds?step:s._max;
   $$('.f',s).forEach(f=>f.classList.toggle('on',parseInt(f.dataset.f,10)<=n));
-  for(let i=1;i<=6;i++)s.classList.toggle('st'+i,n>=i);
+  for(let i=1;i<=9;i++)s.classList.toggle('st'+i,n>=i);
   $$('.overlay .step-cap',s).forEach(c=>c.classList.toggle('cur',+c.dataset.s===n));
   dots.innerHTML=s._max?Array.from({length:s._max+1},(_,i)=>`<i class="${i<=n?'on':''}"></i>`).join(''):'';
   const h=hooks[s.dataset.hook];if(h&&h.step)h.step(s,n);
@@ -3683,6 +3947,10 @@ hooks.sim4={enter(){simRun()}};
   g.innerHTML=Q.map((q,i)=>`<div class="card" data-i="${i}"><p class="mono" style="font-size:18px;line-height:1.4;min-height:4.4em">${q[0]}</p><div style="display:flex;gap:10px"><button class="btn" data-a="sg" style="flex:1;color:var(--teal)">Security group</button><button class="btn" data-a="role" style="flex:1;color:var(--violet)">IAM role</button></div><p class="small sgr-why" style="min-height:2.8em">&nbsp;</p></div>`).join('');
   $$('.card',g).forEach(c=>{const q=Q[+c.dataset.i];$$('button',c).forEach(b=>b.onclick=()=>{const ok=b.dataset.a===q[1];c.style.setProperty('--c',ok?'var(--green)':'var(--rose)');c.style.borderColor=ok?'var(--green)':'var(--rose)';
     c.querySelector('.sgr-why').innerHTML=`<b class="${ok?'good':'bad'}">${ok?'Right':'No'}: ${q[1]==='sg'?'security group':'IAM role'}.</b> ${q[2]}`})})})();
+// Docker activity: orders-api vs users-api
+(function(){const svg=$('#dkaSvg');if(!svg)return;const pn=$('#dkaPanel');pn.dataset.r='1';
+  $$('#dkaTabs .btn').forEach(b=>b.onclick=()=>{const r=b.dataset.r;svg.dataset.r=r;pn.dataset.r=r;$$('#dkaTabs .btn').forEach(x=>x.classList.toggle('primary',x===b))});
+  $$('#dkaPanel .rv').forEach(b=>b.onclick=()=>b.closest('.rnd').classList.add('show'))})();
 // Activity 5: canary
 (function(){const p=$('#canPct'),b=$('#canBug');if(!p)return;let rb=null;
   function upd(){const pct=+p.value,bug=b.classList.contains('on');$('#canTxt').textContent=pct+'%';$('#canV1').style.width=(100-pct)+'%';$('#canV2').style.width=pct+'%';
@@ -4082,84 +4350,97 @@ function initLayers(){const c=$('#layers3d'),{r,sc,cam,g}=dk(c);g.add(new THREE.
     const cp=((el-1)%3)/2.2;cow.visible=cowL.visible=stage>=3&&el>1;if(cow.visible){const a=V(SX-1.75,ly(4),.6),b=V(SX-1.75,ly(5)+.35,.6);cow.position.copy(a).lerp(b,ease(c01(cp)));cow.material.color.setHex(cp>.9?0xFF6F8E:0xFFB547);cowL.position.copy(cow.position).add(V(-2.2,.2,.8))}
     r.render(sc,cam)}}}
 
-/* C · docker exec: inside the container */
+/* C · docker exec: real use cases */
+function makeScreen(w,h){const cv=document.createElement('canvas');cv.width=1400;cv.height=Math.round(1400*h/w);const ctx=cv.getContext('2d');const tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tex,transparent:true}));let key='';
+  function draw(title,col,lines,n){const k=title+n;if(k===key)return;key=k;ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle='rgba(6,9,16,.94)';ctx.fillRect(0,0,cv.width,cv.height);ctx.strokeStyle=col;ctx.lineWidth=8;ctx.strokeRect(4,4,cv.width-8,cv.height-8);
+    ctx.fillStyle=col;ctx.font='700 50px "JetBrains Mono",monospace';ctx.fillText(title,44,80);ctx.font='500 44px "JetBrains Mono",monospace';
+    lines.slice(0,n).forEach((l,i)=>{ctx.fillStyle=l[1]||'#D4DCEC';ctx.fillText(l[0],44,170+i*68)});tex.needsUpdate=true}
+  return {m,draw}}
 function initExec(){const c=$('#exec3d'),{r,sc,cam,g}=dk(c);let stage=0,t0=0;
-  const kern=mbox(g,24,.6,15,0x0d3d3a,{at:V(0,-.32,0),ec:0x3FD5C2,eo:.9,emi:.25});const kg=new THREE.GridHelper(24,24,0x3FD5C2,0x1a5c56);kg.position.y=.0;kg.scale.z=15/24;g.add(kg);
-  const kL=lab(g,'Linux kernel · shared by every container','#3FD5C2',V(0,0,7.8),.8);
+  const kern=mbox(g,24,.6,15,0x0d3d3a,{at:V(0,-.32,0),ec:0x3FD5C2,eo:.9,emi:.25});const kg=new THREE.GridHelper(24,24,0x3FD5C2,0x1a5c56);kg.scale.z=15/24;g.add(kg);
+  const kL=lab(g,'one EC2 host · one Linux kernel','#3FD5C2',V(0,0,7.8),.8);
   const O=new THREE.Group();g.add(O);const boxes={};
-  [['web',-5.5,0xFFB547],['api',0,0x3FD5C2],['db',5.5,0x64A0FF]].forEach(([n,x,col])=>{const b=new THREE.Group();b.position.set(x,0,0);
-    const m=mbox(b,3,2.6,3,col,{at:V(0,1.3,0),op:.16,ec:col,eo:1,emi:.4});const core=new THREE.Mesh(new THREE.IcosahedronGeometry(.45,0),new THREE.MeshBasicMaterial({color:col,wireframe:true}));core.position.y=1.3;b.add(core);b.userData.core=core;
-    const l=label(n,'#'+col.toString(16).padStart(6,'0'),.7);l.position.set(0,3.4,0);b.add(l);O.add(b);boxes[n]=b});
-  // host processes (dim specks on the kernel, invisible from inside)
-  const hp=[];for(let i=0;i<70;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.07,6,6),new THREE.MeshBasicMaterial({color:0x97A3BE,transparent:true,opacity:.5}));s.position.set((Math.random()-.5)*22,.08,(Math.random()-.5)*13);if(Math.abs(s.position.z)<2.2&&Math.abs(s.position.x)<8)s.position.z+=4;O.add(s);hp.push(s)}
-  // inside world
+  [['kafka',-5.5,0xFF9466],['backend',0,0x3FD5C2],['postgres',5.5,0x64A0FF]].forEach(([n,x,col])=>{const b=new THREE.Group();b.position.set(x,0,0);
+    const m=mbox(b,3,2.6,3,col,{at:V(0,1.3,0),op:.16,ec:col,eo:1,emi:.4});b.userData.m=m;const core=new THREE.Mesh(new THREE.IcosahedronGeometry(.45,0),new THREE.MeshBasicMaterial({color:col,wireframe:true}));core.position.y=1.3;b.add(core);b.userData.core=core;
+    const l=label(n,'#'+col.toString(16).padStart(6,'0'),.8);l.position.set(0,3.4,0);b.add(l);O.add(b);boxes[n]=b});
   const I=new THREE.Group();g.add(I);I.visible=false;
-  const room=new THREE.BoxGeometry(16,8,14);room.translate(0,4,0);I.add(new THREE.LineSegments(new THREE.EdgesGeometry(room),new THREE.LineBasicMaterial({color:0x3FD5C2})));
-  I.add(new THREE.Mesh(room,new THREE.MeshBasicMaterial({color:0x3FD5C2,transparent:true,opacity:.05,side:THREE.BackSide})));
-  const floorM=new THREE.MeshBasicMaterial({color:0x0C1220,transparent:true,opacity:.85});const floor=new THREE.Mesh(new THREE.PlaneGeometry(16,14),floorM);floor.rotation.x=-Math.PI/2;floor.position.y=.02;I.add(floor);
+  const room=new THREE.BoxGeometry(16,8,14);room.translate(0,4,0);const roomE=new THREE.LineSegments(new THREE.EdgesGeometry(room),new THREE.LineBasicMaterial({color:0x3FD5C2}));I.add(roomE);
+  const roomW=new THREE.Mesh(room,new THREE.MeshBasicMaterial({color:0x3FD5C2,transparent:true,opacity:.05,side:THREE.BackSide}));I.add(roomW);
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(16,14),new THREE.MeshBasicMaterial({color:0x0C1220,transparent:true,opacity:.85}));floor.rotation.x=-Math.PI/2;floor.position.y=.02;I.add(floor);
   const fgrid=new THREE.GridHelper(14,14,0x3FD5C2,0x1d3b4a);fgrid.position.y=.04;fgrid.scale.set(16/14,1,1);I.add(fgrid);
-  const N=1100,pp=new Float32Array(N*3),pd=[];for(let i=0;i<N;i++){const a=Math.random()*Math.PI*2,rr=4+Math.random()*3.5,y=1+Math.random()*6.5;pd.push([a,rr,y]);pp[i*3]=Math.cos(a)*rr;pp[i*3+1]=y;pp[i*3+2]=Math.sin(a)*rr}
-  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pp,3));const swirl=new THREE.Points(pg,new THREE.PointsMaterial({color:0x7FE8DA,size:.07,transparent:true,opacity:.8}));I.add(swirl);
-  const nsL=['PID','NET','MNT','UTS','IPC','USER'].map(n=>{const l=plainLabel(n,'#3FD5C2',.6,800);I.add(l);return l});
-  const pid=new THREE.Group();I.add(pid);const o1=new THREE.Mesh(new THREE.SphereGeometry(.85,32,32),std(0xFFB547,{emissive:0xFFB547,emissiveIntensity:.6}));o1.position.set(-4.6,3.3,-3);pid.add(o1);
-  const o2=new THREE.Mesh(new THREE.SphereGeometry(.45,24,24),std(0x6EDC92,{emissive:0x6EDC92,emissiveIntensity:.6}));o2.position.set(-2.4,2.1,-1.6);pid.add(o2);
-  pid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([o1.position,o2.position]),new THREE.LineBasicMaterial({color:0xEBF0F9,transparent:true,opacity:.5})));
-  lab(pid,'PID 1 · python app.py','#FFB547',V(-4.6,4.6,-3),.55);lab(pid,'PID 7 · sh (you)','#6EDC92',V(-2.4,2.95,-1.6),.45);
-  const fs=new THREE.Group();I.add(fs);['/var','/usr','/etc','/bin','/app'].forEach((n,i)=>{mbox(fs,2.8,.38,1.7,0x64A0FF,{at:V(2.9,.9+i*.6,-5),op:.6,ec:0x9CC2FF,eo:.9,emi:.4});const l=plainLabel(n,'#EBF0F9',.34,700);l.position.set(2.9,.9+i*.6,-4);fs.add(l)});
-  lab(fs,'root filesystem = image layers','#64A0FF',V(2.9,4.3,-5),.55);
-  const net=new THREE.Group();I.add(net);const ring=new THREE.Mesh(new THREE.TorusGeometry(1.1,.12,12,48),std(0x6EDC92,{emissive:0x6EDC92,emissiveIntensity:.7}));ring.position.set(0,5.6,-6.2);net.add(ring);
-  net.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(0,5.6,-6.2),V(0,5.6,-7),V(0,5.6,-12)]),new THREE.LineBasicMaterial({color:0x6EDC92})));
-  lab(net,'eth0 · 172.18.0.3','#6EDC92',V(0,4.1,-6.2),.5);lab(net,'hostname: 3f2a9c1b','#EBF0F9',V(0,7.1,-6.2),.5);
-  const here=lab(I,'you are inside api · 3f2a9c1b','#EBF0F9',V(0,4.6,-6.4),.75);const kIn=lab(I,'same kernel as the host · 6.1.0-aws','#3FD5C2',V(0,-.1,2.5),.6);
-  const out=lab(g,'sh ended · app (PID 1) still running','#6EDC92',V(0,4.3,0),.55);
-  const st={yaw:0,pitch:0};drag(c,st);const OUT={p:V(0,9,17),l:V(0,1.4,0)},IN={p:V(0,3.5,6.4),l:V(0,3.1,-3)},DOWN={p:V(0,6.4,4.6),l:V(0,-.6,-1.5)};
-  cam.position.copy(OUT.p);const look=OUT.l.clone();let sc_=0.19,spin=0;
-  let spinT=-1e9;function setStage(n){const was=stage;stage=n;t0=performance.now();if(n===1&&was<1)spinT=performance.now()}
-  return {setStage,render(t){size(r,cam,c);const el=(performance.now()-t0)/1000,inside=stage>=1&&stage<=5;
-    const tgt=stage===5?DOWN:inside?IN:OUT;cam.position.lerp(tgt.p,.045);look.lerp(tgt.l,.06);cam.lookAt(look);g.rotation.y=st.yaw*.5;
-    sc_+=((inside?1:.19)-sc_)*.06;I.visible=sc_>.2;I.scale.setScalar(sc_);spin=Math.exp(-(performance.now()-spinT)/700);I.rotation.y=-spin*Math.PI*1.4;
-    O.visible=sc_<.6;['web','db'].forEach(n=>boxes[n].visible=!inside||sc_<.3);boxes.api.visible=sc_<.25;
-    Object.values(boxes).forEach(b=>{b.userData.core.rotation.y=t*.002;b.userData.core.rotation.x=t*.0013});
-    const sp=.0004+spin*.01;for(let i=0;i<N;i++){const d=pd[i];d[0]+=sp*(1+(i%5)*.2);pp[i*3]=Math.cos(d[0])*d[1];pp[i*3+2]=Math.sin(d[0])*d[1]}pg.attributes.position.needsUpdate=true;
-    nsL.forEach((l,i)=>{l.position.set(-6.2+i*2.48,7.25+.12*Math.sin(t*.002+i),-6.6)});
-    pid.visible=stage>=2&&stage<5&&inside;fs.visible=stage>=3&&stage<5&&inside;net.visible=stage===4&&inside;
-    floorM.opacity+=((stage===5?.06:.85)-floorM.opacity)*.08;fgrid.visible=stage!==5;kIn.visible=stage===5;kL.visible=!inside;
-    kern.material.emissiveIntensity=stage===5?.35+.3*Math.sin(t*.006):.25;o1.scale.setScalar(1+.06*Math.sin(t*.005));
-    out.visible=stage===6;here.visible=stage===1;r.render(sc,cam)}}}
+  const N=900,pp=new Float32Array(N*3),pd=[];for(let i=0;i<N;i++){const a=Math.random()*Math.PI*2,rr=4+Math.random()*3.5,y=1+Math.random()*6.5;pd.push([a,rr,y]);pp[i*3]=Math.cos(a)*rr;pp[i*3+1]=y;pp[i*3+2]=Math.sin(a)*rr}
+  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pp,3));const swirlM=new THREE.PointsMaterial({color:0x7FE8DA,size:.07,transparent:true,opacity:.75});I.add(new THREE.Points(pg,swirlM));
+  const scr=makeScreen(8.6,4.6);scr.m.position.set(-2.6,4,-6.85);I.add(scr.m);
+  const where={backend:lab(I,'you are inside: backend','#3FD5C2',V(-2.6,7.1,-6.6),.75),kafka:lab(I,'you are inside: kafka','#FF9466',V(-2.6,7.1,-6.6),.75),postgres:lab(I,'you are inside: postgres','#64A0FF',V(-2.6,7.1,-6.6),.75)};
+  // kafka conveyor
+  const kz=new THREE.Group();I.add(kz);mbox(kz,13,.3,1.2,0x3a2a1a,{at:V(0,.9,-3.6),ec:0xFF9466,eo:.9});lab(kz,'topic: orders','#FF9466',V(-5.2,1.9,-3.6),.55);
+  const evs=[];for(let i=0;i<6;i++){const e=new THREE.Mesh(new THREE.BoxGeometry(.7,.7,.7),std(0xFF9466,{emissive:0xFF9466,emissiveIntensity:.5}));kz.add(e);evs.push(e)}
+  // postgres rows
+  const pzg=new THREE.Group();I.add(pzg);const cyl=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,2.6,40),std(0x64A0FF,{emissive:0x64A0FF,emissiveIntensity:.35,transparent:true,opacity:.8}));cyl.position.set(4.6,1.4,-4.6);pzg.add(cyl);
+  const rings=[0,1,2].map(k=>{const rg=new THREE.Mesh(new THREE.TorusGeometry(1.15,.06,8,48),new THREE.MeshBasicMaterial({color:k===2?0xFFB547:0xEBF0F9}));rg.rotation.x=Math.PI/2;rg.position.set(4.6,.7+k*.7,-4.6);pzg.add(rg);return rg});
+  lab(pzg,'table: orders','#64A0FF',V(4.6,3.3,-4.6),.55);
+  // log sheets
+  const lgz=new THREE.Group();I.add(lgz);const sheets=[];for(let i=0;i<5;i++){const sh=new THREE.Mesh(new THREE.PlaneGeometry(1.6,.34),new THREE.MeshBasicMaterial({color:i===4?0xFF6F8E:0x97A3BE,transparent:true,opacity:.85,side:THREE.DoubleSide}));lgz.add(sh);sheets.push(sh)}
+  lab(lgz,'logs/app.log','#EBF0F9',V(4.6,5.6,-3.4),.55);
+  const stdout=lab(g,'docker logs = what the app printed','#EBF0F9',V(0,4.4,0),.6);const strm=[];for(let i=0;i<8;i++){const d=new THREE.Mesh(new THREE.SphereGeometry(.12,8,8),new THREE.MeshBasicMaterial({color:0x3FD5C2}));g.add(d);strm.push(d)}
+  const CONTENT={1:['backend : /app','#3FD5C2',[['$ ls'],['app.jar   logs/   config/','#97A3BE'],['$ whoami'],['app','#97A3BE']]],
+    2:['backend : logs/app.log','#3FD5C2',[['10:42:01 INFO  Order 1042 created'],['10:42:01 INFO  Event sent to orders'],['10:42:05 WARN  Payment slow (4s)','#FFB547'],['10:42:07 ERROR Payment timeout 1042','#FF6F8E']]],
+    3:['kafka : topic orders','#FF9466',[['{"orderId":1040,"status":"PAID"}'],['{"orderId":1041,"status":"PAID"}'],['{"orderId":1042,"status":"CREATED"}','#FFB547'],['^C  Processed 3 messages','#97A3BE']]],
+    4:['postgres : shop','#64A0FF',[['  id  | status'],[' ------+---------','#97A3BE'],[' 1041 | PAID'],[' 1042 | PENDING','#FFB547']]]};
+  const ROOMC={1:0x3FD5C2,2:0x3FD5C2,3:0xFF9466,4:0x64A0FF},WHO={1:'backend',2:'backend',3:'kafka',4:'postgres'};
+  const st={yaw:0};drag(c,st);const OUT={p:V(0,9,17),l:V(0,1.4,0)},IN={p:V(0,3.6,6.6),l:V(0,3.4,-3)};
+  cam.position.copy(OUT.p);const look=OUT.l.clone();let sc_=.19,spinT=-1e9;
+  function setStage(n){const was=stage;stage=n;t0=performance.now();const inN=n>=1&&n<=4;if(inN&&(was<1||was>4||WHO[n]!==WHO[was]))spinT=performance.now()}
+  return {setStage,render(t){size(r,cam,c);const el=(performance.now()-t0)/1000,inside=stage>=1&&stage<=4;
+    const tgt=inside?IN:OUT;cam.position.lerp(tgt.p,.045);look.lerp(tgt.l,.06);cam.lookAt(look);g.rotation.y=st.yaw*.5;
+    const spin=Math.exp(-(performance.now()-spinT)/700);const tgS=inside?Math.max(.19,1-spin*.8):.19;sc_+=(tgS-sc_)*.08;I.visible=sc_>.2;I.scale.setScalar(sc_);I.rotation.y=-spin*Math.PI*1.2;
+    O.visible=sc_<.6;Object.entries(boxes).forEach(([n,b])=>{b.visible=!inside||sc_<.3;b.userData.core.rotation.y=t*.002;b.userData.core.rotation.x=t*.0013;b.userData.m.material.emissiveIntensity=(stage===5&&n==='backend')?.9:.4});
+    if(inside){const col=ROOMC[stage];roomE.material.color.setHex(col);roomW.material.color.setHex(col);swirlM.color.setHex(col);const [ti,tc,ls]=CONTENT[stage];scr.draw(ti,tc,ls,Math.min(ls.length,Math.floor(el/.55)+1))}
+    Object.entries(where).forEach(([n,l])=>l.visible=inside&&WHO[stage]===n);
+    const sp=.0004+spin*.012;for(let i=0;i<N;i++){const d=pd[i];d[0]+=sp*(1+(i%5)*.2);pp[i*3]=Math.cos(d[0])*d[1];pp[i*3+2]=Math.sin(d[0])*d[1]}pg.attributes.position.needsUpdate=true;
+    kz.visible=inside&&stage===3;evs.forEach((e,i)=>{const k=((t*.00012)+i/6)%1;e.position.set(-6+k*12,1.45,-3.6);e.rotation.y=t*.002});
+    pzg.visible=inside&&stage===4;rings[2].material.color.setHex(Math.sin(t*.008)>0?0xFFB547:0x6b5320);
+    lgz.visible=inside&&stage===2;sheets.forEach((sh,i)=>{const k=((t*.0002)+i/5)%1;sh.position.set(4.6,1+k*4,-3.4);sh.material.opacity=.9*(1-Math.abs(k-.5)*1.6)});
+    kL.visible=!inside;stdout.visible=stage===5;strm.forEach((d,i)=>{d.visible=stage===5;const k=((t*.0006)+i/8)%1;d.position.set(k*6,1.5+k*3,0)});
+    r.render(sc,cam)}}}
 
-/* D · docker compose network */
+/* D · docker compose: a walled network region */
 function initCompose(){const c=$('#compose3d'),{r,sc,cam,g}=dk(c);let stage=0,t0=0;
-  mbox(g,21,.5,14,0x111827,{at:V(0,-.25,0),ec:0x3a4766,eo:.8,emi:.05});lab(g,"Rahul's laptop · Docker host",'#C9D2E3',V(-3.6,0,7.3),.8,true);
-  const netM=new THREE.Group();g.add(netM);mbox(netM,15,.12,10,0x1f8f84,{at:V(0,.08,0),op:.35,ec:0x3FD5C2,eo:1,emi:.5});lab(netM,'network: ticketwave_default','#3FD5C2',V(-4.4,.5,5.4),.8);
-  const S={};[['web','web · nginx :80',0,3,0xFFB547],['api','api :3000',0,-.4,0x3FD5C2],['db','db · postgres :5432',-4.6,-3.4,0x64A0FF],['redis','redis :6379',4.6,-3.4,0xFF6F8E]].forEach(([k,n,x,z,col])=>{
-    const b=new THREE.Group();b.position.set(x,.15,z);mbox(b,2.6,1.7,2.1,col,{at:V(0,.85,0),op:.85,emi:.35,ec:0xEBF0F9,eo:.5});const l=label(n,'#'+col.toString(16).padStart(6,'0'),.95);l.position.set(0,2.6,0);b.add(l);b.scale.setScalar(.001);g.add(b);S[k]={b,home:V(x,.15,z),col}});
-  const delay={db:0,redis:.15,api:1,web:2};
-  const dns=new THREE.Group();g.add(dns);const tw=new THREE.Mesh(new THREE.CylinderGeometry(.35,.55,2.2,16),std(0x6EDC92,{emissive:0x6EDC92,emissiveIntensity:.4}));tw.position.set(-5.6,1.2,1.6);dns.add(tw);lab(dns,'DNS 127.0.0.11','#6EDC92',V(-5.6,2.9,1.6),.7);
-  const vol=new THREE.Group();g.add(vol);const cy=new THREE.Mesh(new THREE.CylinderGeometry(.85,.85,1.3,32),std(0xA193FF,{emissive:0xA193FF,emissiveIntensity:.4}));cy.position.set(-8.9,.65,-3.4);vol.add(cy);lab(vol,'volume db-data','#A193FF',V(-8.9,2.1,-3.4),.7);
-  const vline=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(-8,.65,-3.4),V(-5.9,.65,-3.4)]),new THREE.LineDashedMaterial({color:0xA193FF,dashSize:.2,gapSize:.15}));vline.computeLineDistances();g.add(vline);
-  const gate=new THREE.Mesh(new THREE.TorusGeometry(.75,.12,12,40,Math.PI),std(0xFFB547,{emissive:0xFFB547,emissiveIntensity:.5}));gate.position.set(0,.15,5);g.add(gate);const gL=lab(g,'8080 → 80','#FFB547',V(2.2,1,5.2),.7);
-  const you=new THREE.Mesh(new THREE.SphereGeometry(.55,24,24),std(0xEBF0F9,{emissive:0x555c6c,emissiveIntensity:.5}));you.position.set(0,1,8.6);g.add(you);lab(g,'you · localhost:8080','#EBF0F9',V(0,2.1,8.6),.7);
-  const bad=new THREE.Mesh(new THREE.SphereGeometry(.45,20,20),std(0xFF6F8E,{emissive:0xFF6F8E,emissiveIntensity:.5}));bad.position.set(8.8,1,-6);g.add(bad);const badL=lab(g,'outsider → db:5432','#FF6F8E',V(8.6,2.2,-6),.8);
-  const xm=lab(g,'✗ no published port','#FF6F8E',V(7,1.8,-3.6),.8);
-  const q1=lab(g,'“db?”','#EBF0F9',V(0,0,0),.65),q2=lab(g,'172.18.0.4','#6EDC92',V(0,0,0),.65);
-  const P=(pts,col)=>{const cv=new THREE.CatmullRomCurve3(pts);const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(cv.getPoints(80)),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.85}));g.add(ln);const d=new THREE.Mesh(new THREE.SphereGeometry(.28,14,14),new THREE.MeshBasicMaterial({color:col}));g.add(d);return {cv,ln,d}};
-  const api=V(0,1,-.4),db=V(-4.6,1,-3.4),rd=V(4.6,1,-3.4),web=V(0,1,3),dn=V(-5.6,1.6,1.6);
-  const pQ=P([api,V(-2.6,2.2,.8),dn],0xEBF0F9),pR=P([dn,V(-2.6,2.6,.8),api],0x6EDC92),pDB=P([api,V(-2.4,1.6,-2),db],0x3FD5C2);
-  const pIn=P([V(0,1,8.6),V(0,.6,5),web,api,V(2.4,1.4,-2),rd],0xFFB547),pIn2=P([api,V(-2.4,1.3,-2.2),db],0xFFB547);
-  const pBad=P([V(8.8,1,-6),V(8.1,1,-5.3),V(7.6,1,-4.6)],0xFF6F8E);
-  const st={yaw:0};drag(c,st);cam.position.set(0,13.2,18.6);
+  mbox(g,22,.5,15,0x111827,{at:V(0,-.25,0),ec:0x3a4766,eo:.8,emi:.05});lab(g,'EC2 host','#C9D2E3',V(-8.6,0,7.6),.8,true);
+  const reg=new THREE.Group();g.add(reg);mbox(reg,15,.12,10,0x1f8f84,{at:V(0,.08,0),op:.3,ec:0x3FD5C2,eo:1,emi:.5});
+  const wallM=()=>new THREE.MeshBasicMaterial({color:0x3FD5C2,transparent:true,opacity:.13,side:THREE.DoubleSide});
+  const wall=(w,x,z,ry)=>{const geo=new THREE.PlaneGeometry(w,2.4);const m=new THREE.Mesh(geo,wallM());m.position.set(x,1.25,z);m.rotation.y=ry;const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x3FD5C2}));m.add(e);reg.add(m)};
+  wall(15,0,-5,0);wall(10,-7.5,0,Math.PI/2);wall(10,7.5,0,Math.PI/2);wall(6.2,-4.4,5,0);wall(6.2,4.4,5,0);
+  lab(reg,'Docker network · shop_default','#3FD5C2',V(0,3.5,-5),1.15);lab(reg,'inside the wall, everyone can call everyone by name','#7FE8DA',V(0,2.7,-5),.8,true);
+  const S={};[['frontend','frontend :80',0,2.4,0xFFB547],['backend','backend :8080',0,-1.2,0x3FD5C2],['postgres','postgres :5432',-4.6,-3.2,0x64A0FF],['kafka','kafka :9092',4.6,-3.2,0xFF9466]].forEach(([k,n,x,z,col])=>{
+    const b=new THREE.Group();b.position.set(x,.15,z);mbox(b,2.6,1.6,1.9,col,{at:V(0,.8,0),op:.88,emi:.35,ec:0xEBF0F9,eo:.5});const l=label(n,'#'+col.toString(16).padStart(6,'0'),1.05);l.position.set(0,2.4,0);b.add(l);b.scale.setScalar(.001);g.add(b);S[k]={b}});
+  const delay={postgres:0,kafka:.2,backend:1,frontend:1.9};
+  const door=new THREE.Mesh(new THREE.TorusGeometry(1.1,.14,12,40,Math.PI),std(0xFFB547,{emissive:0xFFB547,emissiveIntensity:.6}));door.position.set(0,.15,5);g.add(door);const dL=lab(g,'the only door · port 3000 → 80','#FFB547',V(2.6,3.1,5.3),.8);
+  const br=new THREE.Group();br.position.set(-4.6,1.3,7.6);g.add(br);mbox(br,3,1.8,.15,0x1a2236,{at:V(0,0,0),ec:0xEBF0F9,eo:.9,emi:.2});const bl=new THREE.Mesh(new THREE.PlaneGeometry(2.6,.3),new THREE.MeshBasicMaterial({color:0xFFB547}));bl.position.set(0,.55,.09);br.add(bl);
+  lab(g,'browser · localhost:3000','#EBF0F9',V(-4.6,2.8,7.6),.85);
+  const vols=[[-9.4,-5,'pgdata','postgres'],[9.4,-5,'kafkadata','kafka']].map(([x,z,n,svc])=>{const gr=new THREE.Group();g.add(gr);const cy=new THREE.Mesh(new THREE.CylinderGeometry(.85,.85,1.3,32),std(0xA193FF,{emissive:0xA193FF,emissiveIntensity:.4}));cy.position.set(x,.65,z);gr.add(cy);lab(gr,'volume '+n,'#A193FF',V(x,2,z),.6);
+    const sx=svc==='postgres'?-4.6:4.6;const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(x,.65,z),V(sx,.65,-3.2)]),new THREE.LineDashedMaterial({color:0xA193FF,dashSize:.25,gapSize:.18}));ln.computeLineDistances();g.add(ln);return {cy,ln}});
+  const P=(pts,col,txt,tpos)=>{const cv=new THREE.CatmullRomCurve3(pts);const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(cv.getPoints(80)),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.85}));g.add(ln);
+    const d=new THREE.Mesh(new THREE.SphereGeometry(.28,14,14),new THREE.MeshBasicMaterial({color:col}));g.add(d);const l=txt?lab(g,txt,'#'+col.toString(16).padStart(6,'0'),tpos,.88):null;return {cv,ln,d,l}};
+  const fe=V(0,1,2.4),be=V(0,1,-1.2),pq=V(-4.6,1,-3.2),kf=V(4.6,1,-3.2);
+  const pIn=P([V(-4.6,1.2,7.4),V(-1.6,.9,6.4),V(0,.8,5),fe],0xFFB547,'localhost:3000 → frontend:80',V(-3.4,2.1,6.1));
+  const pFB=P([fe,V(.4,1.4,.6),be],0x3FD5C2,'http://backend:8080/api/orders',V(3.8,1.9,.8));
+  const pBP=P([be,V(-2.4,1.5,-2.4),pq],0x64A0FF,'postgres:5432',V(-2.6,2.4,-1.6));
+  const pBK=P([be,V(2.4,1.5,-2.4),kf],0xFF9466,'kafka:9092 · order-created',V(3.4,2.6,-1.4));
+  const pX1=P([V(6.2,1,8.6),V(6.2,1,6.8),V(6.2,1,5.15)],0xFF6F8E,'backend:8080? no door',V(3.9,2.3,7.4));
+  const pX2=P([V(9.4,1,1.2),V(8.5,1,1.2),V(7.6,1,1.2)],0xFF6F8E,'postgres:5432? no door',V(5,2.7,2.4));
+  const st={yaw:0};drag(c,st);cam.position.set(0,12.8,18.4);
   function setStage(n){stage=n;t0=performance.now()}
-  const run=(p,k,on)=>{p.ln.visible=p.d.visible=on;if(on)p.d.position.copy(p.cv.getPoint(k))};
-  return {setStage,render(t){size(r,cam,c);const el=(performance.now()-t0)/1000;g.rotation.y=st.yaw*.6+(reduce?0:Math.sin(t*.0001)*.06);cam.lookAt(0,-.2,.6);
-    const netOn=stage>=1&&stage<5;netM.visible=netOn||stage===5&&el<.8;netM.children.forEach(m=>{if(m.material){m.material.opacity=m.isSprite?1:(stage===5?.35*c01(1-el/.8):.35)}});
-    Object.entries(S).forEach(([k,o])=>{let s=.001;if(stage>=1&&stage<5)s=stage===1?c01((el-.5-delay[k])/.4):1;if(stage===5)s=c01(1-el/.7);o.b.scale.setScalar(Math.max(.001,ease(s)));o.b.position.y=.15-(1-s)*1});
-    dns.visible=netOn;gate.visible=gL.visible=netOn;
-    const cyc=(el%3)/3;
-    run(pQ,c01(cyc/.4),stage===2&&cyc<.4);run(pR,c01((cyc-.4)/.3),stage===2&&cyc>=.4&&cyc<.7);run(pDB,c01((cyc-.7)/.3),stage===2&&cyc>=.7);
-    q1.visible=stage===2&&cyc<.4;if(q1.visible)q1.position.copy(pQ.d.position).add(V(0,.6,0));q2.visible=stage===2&&cyc>=.4&&cyc<.7;if(q2.visible)q2.position.copy(pR.d.position).add(V(0,.6,0));
-    const c3=(el%4)/4;run(pIn,c3,stage===3);run(pIn2,(c3*2)%1,stage===3);
-    run(pBad,c01(((el%2.4)/2.4)/.7),stage===4);bad.visible=badL.visible=xm.visible=stage===4;
-    cy.material.emissiveIntensity=stage===5?.5+.4*Math.sin(t*.008):.4;
+  const run=(p,k,on)=>{p.ln.visible=p.d.visible=on;if(p.l)p.l.visible=on;if(on)p.d.position.copy(p.cv.getPoint(k))};
+  return {setStage,render(t){size(r,cam,c);const el=(performance.now()-t0)/1000;g.rotation.y=st.yaw*.6+(reduce?0:Math.sin(t*.0001)*.05);cam.lookAt(0,.2,.6);
+    const regOn=stage>=1&&stage<5;const rs=stage===5?c01(1-el/.8):regOn?1:0;reg.visible=rs>0;reg.scale.set(1,Math.max(.01,rs),1);
+    Object.entries(S).forEach(([k,o])=>{let s=.001;if(regOn)s=stage===1?c01((el-.6-delay[k])/.4):1;if(stage===5)s=c01(1-el/.7);o.b.scale.setScalar(Math.max(.001,ease(s)));o.b.position.y=.15-(1-s)});
+    door.visible=dL.visible=regOn;
+    const c2=(el%2.6)/2.6;run(pIn,c2,stage===2);
+    const c3=(el%3.2)/3.2;run(pFB,c01(c3/.4),stage===3);run(pBP,c01((c3-.4)/.6),stage===3);run(pBK,c01((c3-.4)/.6),stage===3);if(stage===3){pFB.ln.visible=pBP.ln.visible=pBK.ln.visible=true}
+    const c4=c01(((el%2.2)/2.2)/.75);run(pX1,c4,stage===4);run(pX2,c4,stage===4);
+    vols.forEach(v=>{v.cy.material.emissiveIntensity=stage===5?.5+.4*Math.sin(t*.008):.4;v.ln.visible=regOn});
     r.render(sc,cam)}}}
 
 function ensure(id){if(!hasThree)return null;if(!(id in scenes)){try{scenes[id]=id==='globe'?initGlobe():id==='infra3d'?initInfra():id==='vpc3d'?initCity(id,false):id==='arch3d'?initCity(id,true):id==='s33d'?initS3():id==='fc3d'?initFC():id==='cables3d'?initCables():id==='k8s3d'?initK8s():id==='vmc3d'?initVmc():id==='layers3d'?initLayers():id==='exec3d'?initExec():id==='compose3d'?initCompose():null}catch(e){console.warn('3D init failed',id,e);scenes[id]=null}}return scenes[id]}
