@@ -23,7 +23,7 @@ for f in ['p0_head.html','p0b_add.html','s01_campus.html','s02_aws.html','s03_ia
     t=re.sub(r'<!--INC:(.+?)-->',lambda m:open(SRC+m.group(1)).read(),open(SRC+f).read())
     parts.append(re.sub(r'<!--OLD:(.+?)-->',sub,t))
 parts.append(open(SRC+'p5a_geo.html').read())
-parts.append(ren(open(SRC+'p5_script.html').read()))
+parts.append(ren(re.sub(r'/\*@INC:(.+?)\*/',lambda m:open(SRC+m.group(1)).read(),open(SRC+'p5_script.html').read())))
 out=''.join(parts)
 open('index.html','w').write(out)
 print('missing:',missing)

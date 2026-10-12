@@ -12,7 +12,7 @@
   <div class="num">16</div><div class="eyebrow">Act 3 · Chapter 16</div>
   <h2>“It works on my machine”</h2>
   <p class="q">Rahul's service runs perfectly on his laptop. On the test server it crashes: wrong Python version, missing library, different OS.</p>
-  <div class="tiles"><span class="tile sm" style="--c:var(--teal)">DOCKER</span><span class="tile sm" style="--c:var(--teal)">IMAGE</span><span class="tile sm" style="--c:var(--amber)">CONTAINER</span></div>
+  <div class="tiles"><span class="tile sm" style="--c:var(--teal)">DOCKER</span><span class="tile sm" style="--c:var(--teal)">IMAGE</span><span class="tile sm" style="--c:var(--amber)">CONTAINER</span><span class="tile sm" style="--c:var(--violet)">COMPOSE</span></div>
 </section>
 
 <section class="slide" data-title="The shipping container idea" data-phase="pic" data-ch="Containers" data-steps="1">
@@ -42,61 +42,7 @@
   <aside class="notes"><p>Click: the container packages the code with its runtime, libraries and OS files. The same box runs the same way on any machine with a container runtime. That's the whole idea behind Docker.</p></aside>
 </section>
 
-<section class="slide" data-title="Containers vs VMs" data-phase="compare" data-ch="Containers">
-  <h2>Containerization vs virtualization</h2>
-  <div class="grid g2 grow" style="gap:28px">
-    <div class="panel f" data-f="1"><h3 class="hl-v">Virtual machines</h3>
-      <svg class="d" viewBox="0 0 600 320" style="height:320px"><g style="font:600 16px var(--f-body)" text-anchor="middle">
-        <rect x="20" y="270" width="560" height="40" rx="8" class="bx-s"/><text x="300" y="296">Hardware</text>
-        <rect x="20" y="222" width="560" height="40" rx="8" class="bx-v"/><text x="300" y="248" class="tv">Hypervisor</text>
-        <g><rect x="20" y="20" width="176" height="194" rx="10" class="bx-t" style="fill:rgba(63,213,194,.05)"/><rect x="32" y="150" width="152" height="54" rx="8" class="bx-b"/><text x="108" y="182" class="tb">Guest OS · 1 GB</text><rect x="32" y="40" width="152" height="100" rx="8" class="bx-a"/><text x="108" y="96" class="ta">App A</text></g>
-        <g><rect x="212" y="20" width="176" height="194" rx="10" class="bx-t" style="fill:rgba(63,213,194,.05)"/><rect x="224" y="150" width="152" height="54" rx="8" class="bx-b"/><text x="300" y="182" class="tb">Guest OS · 1 GB</text><rect x="224" y="40" width="152" height="100" rx="8" class="bx-a"/><text x="300" y="96" class="ta">App B</text></g>
-        <g><rect x="404" y="20" width="176" height="194" rx="10" class="bx-t" style="fill:rgba(63,213,194,.05)"/><rect x="416" y="150" width="152" height="54" rx="8" class="bx-b"/><text x="492" y="182" class="tb">Guest OS · 1 GB</text><rect x="416" y="40" width="152" height="100" rx="8" class="bx-a"/><text x="492" y="96" class="ta">App C</text></g></g></svg>
-      <p class="small">Each VM carries a whole OS. Boots in minutes. Strong isolation.</p></div>
-    <div class="panel f" data-f="2" style="border-color:var(--teal)"><h3 class="hl-t">Containers</h3>
-      <svg class="d" viewBox="0 0 600 320" style="height:320px"><g style="font:600 16px var(--f-body)" text-anchor="middle">
-        <rect x="20" y="270" width="560" height="40" rx="8" class="bx-s"/><text x="300" y="296">Hardware (or a VM)</text>
-        <rect x="20" y="222" width="560" height="40" rx="8" class="bx-b"/><text x="300" y="248" class="tb">One host OS kernel</text>
-        <rect x="20" y="174" width="560" height="40" rx="8" class="bx-t"/><text x="300" y="200" class="tt">Container runtime (Docker / containerd)</text>
-        <g class="bx-a"><rect x="20" y="40" width="100" height="124" rx="8"/><rect x="135" y="40" width="100" height="124" rx="8"/><rect x="250" y="40" width="100" height="124" rx="8"/><rect x="365" y="40" width="100" height="124" rx="8"/><rect x="480" y="40" width="100" height="124" rx="8"/></g>
-        <g class="ta"><text x="70" y="108">A</text><text x="185" y="108">B</text><text x="300" y="108">C</text><text x="415" y="108">D</text><text x="530" y="108">E</text></g></g></svg>
-      <p class="small">Containers share the host kernel. Start in seconds. Megabytes, not gigabytes.</p></div>
-  </div>
-  <p class="say f" data-f="3">In AWS you usually get <em>both</em>: containers running inside EC2 VMs, or on Fargate.</p>
-  <aside class="notes"><p>VMs virtualize hardware; containers virtualize the operating system. That's why containers are smaller and faster to start, while VMs give stronger isolation. Production often runs containers on VMs (EKS worker nodes are EC2 instances).</p></aside>
-</section>
-
-<section class="slide" data-title="Dockerfile to container" data-phase="concept" data-ch="Containers" data-steps="3">
-  <h2>Recipe → frozen meal → hot plate</h2>
-  <div class="row grow" style="gap:24px;align-items:center">
-<pre class="code" style="width:560px;flex:none;font-size:17px"><span class="c"># Dockerfile</span>
-<span class="k">FROM</span> python:3.12-slim
-<span class="k">WORKDIR</span> /app
-<span class="k">COPY</span> requirements.txt .
-<span class="k">RUN</span> pip install -r requirements.txt
-<span class="k">COPY</span> . .
-<span class="k">EXPOSE</span> 8080
-<span class="k">CMD</span> [<span class="s">"python"</span>, <span class="s">"app.py"</span>]</pre>
-    <div class="vis" style="height:420px">
-      <svg class="d" viewBox="0 0 760 420">
-        <g transform="translate(20,40)"><rect width="200" height="140" rx="16" class="bx-s"/><text x="100" y="64" text-anchor="middle" style="font:700 20px var(--f-body)">Dockerfile</text><text x="100" y="96" text-anchor="middle" class="tmut" style="font-size:16px">the recipe</text></g>
-        <g class="show-on-1"><path d="M220 110 H290" class="w-t"/><text x="255" y="96" text-anchor="middle" class="tt tm" style="font-size:13px">build</text>
-          <g transform="translate(290,40)"><rect width="200" height="140" rx="16" class="bx-t"/><text x="100" y="64" text-anchor="middle" class="tt" style="font:700 20px var(--f-body)">Image</text><text x="100" y="96" text-anchor="middle" class="tmut" style="font-size:16px">frozen, read-only</text></g></g>
-        <g class="show-on-2"><path d="M490 110 H540" class="w-a"/><text x="515" y="96" text-anchor="middle" class="ta tm" style="font-size:13px">run</text>
-          <g transform="translate(540,10)"><rect width="200" height="64" rx="12" class="fa"/><text x="100" y="40" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">container 1</text></g>
-          <g transform="translate(540,82)"><rect width="200" height="64" rx="12" class="fa"/><text x="100" y="40" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">container 2</text></g>
-          <g transform="translate(540,154)"><rect width="200" height="64" rx="12" class="fa"/><text x="100" y="40" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">container 3</text></g></g>
-        <g class="show-on-3"><rect x="20" y="260" width="720" height="140" rx="16" class="bx"/>
-          <text x="44" y="300" class="tm" style="font-size:17px">$ docker build -t ticketwave-api:v3 .</text>
-          <text x="44" y="334" class="tm" style="font-size:17px">$ docker run -d -p 80:8080 ticketwave-api:v3</text>
-          <text x="44" y="368" class="tm" style="font-size:17px">$ docker ps        <tspan class="c"># see what's running</tspan></text></g>
-      </svg>
-    </div>
-  </div>
-  <aside class="notes"><p>Dockerfile = recipe. Image = the frozen, versioned result of following the recipe. Container = a running instance of the image. One image can run as many containers.</p><p>The RDS labs in the PDFs use exactly this: docker pull, then docker run with -p and -e flags.</p></aside>
-</section>
-
-<!--OLD:Layers-->
+<!--INC:s09a_docker.html-->
 
 <!-- ================= CH17 ECR ================= -->
 <section class="slide chapter" data-title="Chapter 17 · ECR">

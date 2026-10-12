@@ -84,4 +84,36 @@ body.nobuild .tp .bar{width:var(--w)}
 .tl>div{flex:1;position:relative;padding:18px 16px 16px;border-top:4px solid var(--c,var(--line));background:var(--ink-2);margin-right:8px;border-radius:0 0 12px 12px}
 .tl>div b{display:block;font:700 13px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--c,var(--muted));margin-bottom:8px}
 .tl>div p{font-size:18px;line-height:1.35}
+
+/* ---------- docker 3D overlays ---------- */
+.lpanel{position:absolute;right:16px;top:58px;width:470px;background:rgba(10,15,27,.88);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:6px;backdrop-filter:blur(6px)}
+.lrow{display:grid;grid-template-columns:14px 1fr 70px 70px;gap:10px;align-items:center;font-size:15px}
+.lrow i{width:14px;height:14px;border-radius:4px;background:var(--c)}
+.lrow span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow b{font:700 14px var(--f-mono);text-align:right;transition:opacity .4s,color .4s}
+.lrow .u{color:var(--fg)}.lrow .z{color:var(--teal);opacity:.15}
+.st1 .lrow .z{opacity:1}.st1 .lrow .u{opacity:.4;text-decoration:line-through}
+.lrow.tot{border-top:1px dashed var(--line);padding-top:6px;grid-template-columns:1fr 70px 70px}
+.lrow.tot span{color:var(--muted);font:600 13px var(--f-mono);text-transform:uppercase;letter-spacing:.1em}
+.term{position:absolute;right:16px;top:58px;width:440px;background:rgba(6,9,16,.92);border:1px solid var(--line);border-radius:12px;overflow:hidden;font:400 15px/1.45 var(--f-mono);color:#D4DCEC;backdrop-filter:blur(6px)}
+.term .tbar{display:flex;gap:6px;align-items:center;padding:8px 12px;background:#111A2D;border-bottom:1px solid var(--line)}
+.term .tbar i{width:10px;height:10px;border-radius:50%;background:var(--rose)}.term .tbar i+i{background:var(--amber)}.term .tbar i+i+i{background:var(--green)}
+.term .tbar span{margin-left:8px;font-size:12px;color:var(--muted)}
+.term .ln{display:none;padding:0 14px;white-space:pre-wrap}
+.term .ln:first-of-type{padding-top:8px}
+.term .ln.o{color:var(--muted)}
+.term .p{color:var(--green)}
+.term .s0{display:block}
+.st1 .term .s1,.st2 .term .s2,.st3 .term .s3,.st4 .term .s4,.st5 .term .s5,.st6 .term .s6{display:block;animation:typ .6s steps(24,end) both}
+.st1 .term .ln.o,.st2 .term .ln.o{animation-delay:.5s}
+.term .ln:last-child{padding-bottom:10px}
+.term .cur{animation:blink 1s steps(2) infinite}
+@keyframes typ{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.cmp-yaml .y{display:inline;transition:background .3s,color .3s;border-radius:4px}
+.st1:not(.st2) .cmp-yaml .y:not(.yv){background:rgba(63,213,194,.12)}
+.st1:not(.st2) .cmp-yaml .ya{background:rgba(255,181,71,.2)}
+.st2:not(.st3) .cmp-yaml .ya,.st2:not(.st3) .cmp-yaml .yd{background:rgba(110,220,146,.16)}
+.st3:not(.st4) .cmp-yaml .yw{background:rgba(255,181,71,.22)}
+.st4:not(.st5) .cmp-yaml .yd{background:rgba(255,111,142,.18)}
+.st5 .cmp-yaml .yv{background:rgba(161,147,255,.22)}
 </style>

@@ -613,7 +613,8 @@ function initK8s(){const c=$('#k8s3d'),r=mkR(c),sc=new THREE.Scene(),cam=new THR
   return {setStage,render(t){size(r,cam,c);cam.position.lerp(camT,.05);cam.lookAt(stg>=3?4:1.5,1,0);g.rotation.y=st.yaw+(reduce?0:Math.sin(t*.00015)*.15);g.rotation.x=st.pitch*.3;
     pods.forEach(m=>{const tg=m.userData.on?1:.001;const s=m.scale.x+(tg-m.scale.x)*.12;m.scale.set(s,s,s);if(m.userData.tp&&m.userData.on)m.position.lerp(m.userData.tp,.08)});r.render(sc,cam)}}}
 
-function ensure(id){if(!hasThree)return null;if(!(id in scenes)){try{scenes[id]=id==='globe'?initGlobe():id==='infra3d'?initInfra():id==='vpc3d'?initCity(id,false):id==='arch3d'?initCity(id,true):id==='s33d'?initS3():id==='fc3d'?initFC():id==='cables3d'?initCables():id==='k8s3d'?initK8s():null}catch(e){console.warn('3D init failed',id,e);scenes[id]=null}}return scenes[id]}
+/*@INC:p5b_docker3d.js*/
+function ensure(id){if(!hasThree)return null;if(!(id in scenes)){try{scenes[id]=id==='globe'?initGlobe():id==='infra3d'?initInfra():id==='vpc3d'?initCity(id,false):id==='arch3d'?initCity(id,true):id==='s33d'?initS3():id==='fc3d'?initFC():id==='cables3d'?initCables():id==='k8s3d'?initK8s():id==='vmc3d'?initVmc():id==='layers3d'?initLayers():id==='exec3d'?initExec():id==='compose3d'?initCompose():null}catch(e){console.warn('3D init failed',id,e);scenes[id]=null}}return scenes[id]}
 function loop(t){if(activeScene)activeScene.render(t);requestAnimationFrame(loop)}requestAnimationFrame(loop);
 const stepBtns=$$('#archSteps .step');
 stepBtns.forEach(b=>b.onclick=()=>{const s=ensure('arch3d');if(!s)return;stepBtns.forEach(x=>x.classList.toggle('on',x===b));s.step(+b.dataset.step)});

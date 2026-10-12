@@ -1,0 +1,179 @@
+
+<section class="slide" data-title="Virtualization vs containerization (3D)" data-phase="pic" data-ch="Containers" data-steps="3" style="padding:24px">
+  <div class="three-wrap grow"><canvas class="three" id="vmc3d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
+    <div class="overlay">
+      <div class="step-cap cur" data-s="0"><b class="k2">Same server, two ways to share it</b><p>Left: every VM carries a <b class="hl-v">whole guest OS</b>. Right: containers share <b class="hl-t">one host kernel</b> and carry only the app and its libraries.</p></div>
+      <div class="step-cap" data-s="1"><b class="k2">Start them up</b><p>A VM boots an operating system: <b class="hl-r">about a minute</b>. A container just starts a process: <b class="hl-g">under a second</b>.</p></div>
+      <div class="step-cap" data-s="2"><b class="k2">How many fit?</b><p>3 VMs fill this server. The same server runs <b class="hl-a">20 containers</b>, because nobody is paying for 20 copies of an OS.</p></div>
+      <div class="step-cap" data-s="3"><b class="k2">The trade-off</b><p>VMs have <b class="hl-v">separate kernels</b>: the strongest walls. Containers share one kernel: lighter walls, which is why AWS runs containers inside VMs (or Firecracker microVMs).</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>Step 0: point at the guest OS blocks: each VM has its own full OS, gigabytes each. Step 1: the boot race. Step 2: density. Step 3: isolation trade-off. In AWS you usually get both: containers running inside EC2 VMs, or on Fargate, which wraps each task in its own microVM.</p></aside>
+</section>
+
+
+<section class="slide" data-title="A container is a process with walls" data-phase="behind" data-ch="Containers" data-steps="3">
+  <div><span class="wowtag">Behind the scenes</span></div>
+  <h2 style="margin-top:6px">A container is just a process with walls</h2>
+  <div class="row grow" style="gap:20px">
+    <div class="vis">
+      <svg class="d" viewBox="0 0 1120 600" id="nsSvg">
+        <style>#nsSvg .nsw{opacity:0;transition:opacity .5s var(--d)}.st1 #nsSvg .nsw{opacity:1}#nsSvg .lab1{opacity:0;transition:opacity .6s .7s}.st1 #nsSvg .lab1{opacity:1}</style>
+        <circle cx="150" cy="90" r="9" class="fm" opacity=".35"/><circle cx="210" cy="160" r="9" class="fm" opacity=".35"/><circle cx="120" cy="250" r="9" class="fm" opacity=".35"/><circle cx="180" cy="420" r="9" class="fm" opacity=".35"/><circle cx="250" cy="500" r="9" class="fm" opacity=".35"/><circle cx="90" cy="520" r="9" class="fm" opacity=".35"/><circle cx="960" cy="90" r="9" class="fm" opacity=".35"/><circle cx="1000" cy="190" r="9" class="fm" opacity=".35"/><circle cx="950" cy="470" r="9" class="fm" opacity=".35"/><circle cx="1010" cy="520" r="9" class="fm" opacity=".35"/><circle cx="300" cy="60" r="9" class="fm" opacity=".35"/><circle cx="830" cy="60" r="9" class="fm" opacity=".35"/>
+        <text x="60" y="580" class="tmut" style="font-size:15px">grey dots: the host's other 400 processes. Inside the walls, they're invisible.</text>
+        <circle cx="540" cy="290" r="96" class="fa glow-a"/><text x="540" y="286" text-anchor="middle" class="tink" style="font:800 20px var(--f-body)">python</text><text x="540" y="310" text-anchor="middle" class="tink" style="font:600 16px var(--f-mono)">app.py</text>
+        <g class="nsw" style="--d:0.0s"><path d="M552.7 108.4 A182 182 0 0 1 690.9 188.2" style="fill:none;stroke:var(--amber);stroke-width:20;stroke-linecap:round"/><text x="653.0" y="100.3" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--amber)">PID</text></g><g class="nsw" style="--d:0.12s"><path d="M703.6 210.2 A182 182 0 0 1 703.6 369.8" style="fill:none;stroke:var(--teal);stroke-width:20;stroke-linecap:round"/><text x="766.0" y="296.0" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--teal)">NET</text></g><g class="nsw" style="--d:0.24s"><path d="M690.9 391.8 A182 182 0 0 1 552.7 471.6" style="fill:none;stroke:var(--blue);stroke-width:20;stroke-linecap:round"/><text x="653.0" y="491.7" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--blue)">MNT</text></g><g class="nsw" style="--d:0.36s"><path d="M527.3 471.6 A182 182 0 0 1 389.1 391.8" style="fill:none;stroke:var(--green);stroke-width:20;stroke-linecap:round"/><text x="427.0" y="491.7" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--green)">UTS</text></g><g class="nsw" style="--d:0.48s"><path d="M376.4 369.8 A182 182 0 0 1 376.4 210.2" style="fill:none;stroke:var(--violet);stroke-width:20;stroke-linecap:round"/><text x="314.0" y="296.0" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--violet)">IPC</text></g><g class="nsw" style="--d:0.6s"><path d="M389.1 188.2 A182 182 0 0 1 527.3 108.4" style="fill:none;stroke:var(--rose);stroke-width:20;stroke-linecap:round"/><text x="427.0" y="100.3" text-anchor="middle" style="font:800 21px var(--f-mono);fill:var(--rose)">USER</text></g>
+        <g class="lab1"><text x="683.5" y="58.7" text-anchor="start" class="tmut" style="font-size:20px">its own process list: it is PID 1</text><text x="827.0" y="296.0" text-anchor="start" class="tmut" style="font-size:20px">its own IP, ports, routes</text><text x="683.5" y="533.3" text-anchor="start" class="tmut" style="font-size:20px">its own / filesystem</text><text x="396.5" y="533.3" text-anchor="end" class="tmut" style="font-size:20px">its own hostname</text><text x="253.0" y="296.0" text-anchor="end" class="tmut" style="font-size:20px">its own shared memory</text><text x="396.5" y="58.7" text-anchor="end" class="tmut" style="font-size:20px">root inside ≠ root on the host</text></g>
+      </svg>
+    </div>
+    <div style="width:430px;flex:none;display:flex;flex-direction:column;justify-content:center;gap:18px">
+      <div class="panel f" data-f="1"><b class="hl-t" style="font-size:22px">Namespaces</b><p class="small" style="margin-top:6px">decide what the process can <b style="color:var(--fg)">see</b>. Six walls, drawn by the Linux kernel.</p></div>
+      <div class="panel f" data-f="2"><b class="hl-a" style="font-size:22px">cgroups</b><p class="small" style="margin-top:6px">decide how much it can <b style="color:var(--fg)">use</b>.</p>
+        <div style="margin-top:12px;display:grid;gap:10px">
+          <div><div class="slider-lab"><span>memory</span><span>380 / 512 MB</span></div><div style="height:12px;border-radius:6px;background:var(--ink-3);overflow:hidden"><div style="width:74%;height:100%;background:var(--amber)"></div></div></div>
+          <div><div class="slider-lab"><span>cpu</span><span>0.3 / 0.5 core</span></div><div style="height:12px;border-radius:6px;background:var(--ink-3);overflow:hidden"><div style="width:60%;height:100%;background:var(--teal)"></div></div></div>
+        </div></div>
+      <p class="say f" data-f="3" style="font-size:24px">No guest OS. <em>Same kernel, different view.</em></p>
+    </div>
+  </div>
+  <aside class="notes"><p>Click 1: the six Linux namespaces. PID: the app sees itself as PID 1 and nothing else. NET: its own network interface and ports. MNT: its own root filesystem, built from the image. UTS: its own hostname. IPC: its own shared memory. USER: can map root inside to an unprivileged user outside.</p><p>Click 2: cgroups (control groups) limit memory and CPU. docker run --memory 512m --cpus 0.5 sets exactly these. Go over the memory limit and the kernel kills the process (OOMKilled).</p><p>Click 3: that's all a container is. Which is why it starts in milliseconds.</p></aside>
+</section>
+
+
+<section class="slide" data-title="What happens on docker run" data-phase="behind" data-ch="Containers" data-steps="5">
+  <div><span class="wowtag">Behind the scenes</span></div>
+  <h2 style="margin-top:6px">What really happens when you type <span class="mono hl-a">docker run</span></h2>
+  <div class="vis">
+    <svg class="d" viewBox="0 0 1408 560">
+      <path id="drp" d="M360 145 H380 M650 145 H690 M960 145 H1000 M1135 200 V330 M1000 385 H960 M690 385 H650" class="w-l" style="stroke-width:3"/>
+      <path id="drp2" d="M360 145 H1000 C 1180 145 1180 385 1000 385 H650" style="fill:none;stroke:none"/>
+      <g class="f" data-f="1"><circle r="10" class="fa glow-a"><animateMotion dur="4s" repeatCount="indefinite"><mpath href="#drp2"/></animateMotion></circle></g>
+      <g class="f" data-f="0"><rect x="70" y="90" width="290" height="110" rx="18" class="bx-a" style="fill:var(--ink-2)"/><text x="215.0" y="136" text-anchor="middle" class="ta" style="font:700 22px var(--f-body)">you</text><text x="215.0" y="168" text-anchor="middle" class="tmut tm" style="font-size:14px">$ docker run -p 8080:80 nginx</text></g><g class="f" data-f="1"><rect x="380" y="90" width="270" height="110" rx="18" class="bx-t" style="fill:var(--ink-2)"/><text x="515.0" y="136" text-anchor="middle" class="tt" style="font:700 22px var(--f-body)">docker CLI</text><text x="515.0" y="168" text-anchor="middle" class="tmut " style="font-size:16px">sends a REST call</text></g><g class="f" data-f="2"><rect x="690" y="90" width="270" height="110" rx="18" class="bx-b" style="fill:var(--ink-2)"/><text x="825.0" y="136" text-anchor="middle" class="tb" style="font:700 22px var(--f-body)">dockerd</text><text x="825.0" y="168" text-anchor="middle" class="tmut " style="font-size:16px">the Docker daemon</text></g><g class="f" data-f="3"><rect x="1000" y="90" width="270" height="110" rx="18" class="bx-v" style="fill:var(--ink-2)"/><text x="1135.0" y="136" text-anchor="middle" class="tv" style="font:700 22px var(--f-body)">containerd</text><text x="1135.0" y="168" text-anchor="middle" class="tmut " style="font-size:16px">manages container lifecycle</text></g><g class="f" data-f="4"><rect x="1000" y="330" width="270" height="110" rx="18" class="bx-v" style="fill:var(--ink-2)"/><text x="1135.0" y="376" text-anchor="middle" class="tv" style="font:700 22px var(--f-body)">runc</text><text x="1135.0" y="408" text-anchor="middle" class="tmut " style="font-size:16px">creates it, then exits</text></g><g class="f" data-f="4"><rect x="690" y="330" width="270" height="110" rx="18" class="bx-t" style="fill:var(--ink-2)"/><text x="825.0" y="376" text-anchor="middle" class="tt" style="font:700 22px var(--f-body)">Linux kernel</text><text x="825.0" y="408" text-anchor="middle" class="tmut " style="font-size:16px">namespaces · cgroups · overlayfs</text></g><g class="f" data-f="4"><rect x="380" y="330" width="270" height="110" rx="18" class="bx-g" style="fill:var(--ink-2)"/><text x="515.0" y="376" text-anchor="middle" class="tg" style="font:700 22px var(--f-body)">nginx</text><text x="515.0" y="408" text-anchor="middle" class="tmut " style="font-size:16px">running as PID 1</text></g>
+      <g class="f" data-f="2"><path d="M825 90 V40 H1250" class="w-a dash" style="stroke-width:3"/><rect x="1250" y="10" width="150" height="60" rx="14" class="bx-a"/><text x="1325" y="47" text-anchor="middle" class="ta" style="font:700 17px var(--f-body)">registry</text><text x="1240" y="30" text-anchor="end" class="ta" style="font-size:15px">no image locally? pull its layers</text></g>
+      <g class="f" data-f="4">
+        <rect x="70" y="470" width="1330" height="80" rx="16" class="bx" style="fill:var(--ink-3)"/>
+        <text x="96" y="502" class="tt" style="font:700 18px var(--f-body)">Network:</text><text x="190" y="502" class="tmut" style="font-size:17px">a virtual cable (veth) plugs the container into the docker0 bridge and gets it an IP</text>
+        <text x="96" y="532" class="ta" style="font:700 18px var(--f-body)">Port:</text><text x="190" y="532" class="tmut" style="font-size:17px">-p 8080:80 adds a NAT rule: host port 8080 → container port 80</text>
+      </g>
+      <g class="f" data-f="5"><rect x="70" y="330" width="290" height="110" rx="18" class="bx-r" style="fill:var(--ink-2)"/><text x="215" y="376" text-anchor="middle" class="tr" style="font:700 20px var(--f-body)">containerd-shim</text><text x="215" y="408" text-anchor="middle" class="tmut" style="font-size:16px">stays as its parent</text><path d="M360 385 H380" class="w-r" style="stroke-width:3"/></g>
+    </svg>
+  </div>
+  <aside class="notes"><p>Click through the chain. The docker command is only a client: it sends a REST call to dockerd. dockerd asks containerd to run the container; containerd uses runc, which asks the kernel to create a process with new namespaces and cgroups, mounts the image layers with overlayfs, then exits.</p><p>Click 2: if the image isn't on this machine, dockerd pulls its layers from the registry first. Click 4: networking and port publishing. Click 5: a small containerd-shim stays as the container's parent, so you can restart dockerd without killing running containers.</p></aside>
+</section>
+
+
+<section class="slide" data-title="Dockerfile to container" data-phase="concept" data-ch="Containers" data-steps="3">
+  <h2>Recipe → frozen meal → hot plate</h2>
+  <div class="row grow" style="gap:24px;align-items:center">
+<pre class="code" style="width:560px;flex:none;font-size:17px"><span class="c"># Dockerfile</span>
+<span class="k">FROM</span> python:3.12-slim
+<span class="k">WORKDIR</span> /app
+<span class="k">COPY</span> requirements.txt .
+<span class="k">RUN</span> pip install -r requirements.txt
+<span class="k">COPY</span> . .
+<span class="k">EXPOSE</span> 8080
+<span class="k">CMD</span> [<span class="s">"python"</span>, <span class="s">"app.py"</span>]</pre>
+    <div class="vis" style="height:420px">
+      <svg class="d" viewBox="0 0 760 420">
+        <g transform="translate(20,40)"><rect width="200" height="140" rx="16" class="bx-s"/><text x="100" y="64" text-anchor="middle" style="font:700 20px var(--f-body)">Dockerfile</text><text x="100" y="96" text-anchor="middle" class="tmut" style="font-size:16px">the recipe</text></g>
+        <g class="show-on-1"><path d="M220 110 H290" class="w-t"/><text x="255" y="96" text-anchor="middle" class="tt tm" style="font-size:13px">build</text>
+          <g transform="translate(290,40)"><rect width="200" height="140" rx="16" class="bx-t"/><text x="100" y="64" text-anchor="middle" class="tt" style="font:700 20px var(--f-body)">Image</text><text x="100" y="96" text-anchor="middle" class="tmut" style="font-size:16px">frozen, read-only</text></g></g>
+        <g class="show-on-2"><path d="M490 110 H540" class="w-a"/><text x="515" y="96" text-anchor="middle" class="ta tm" style="font-size:13px">run</text>
+          <g transform="translate(540,10)"><rect width="200" height="64" rx="12" class="fa"/><text x="100" y="40" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">container 1</text></g>
+          <g transform="translate(540,82)"><rect width="200" height="64" rx="12" class="fa"/><text x="100" y="40" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">container 2</text></g>
+          <g transform="translate(540,154)"><rect width="200" height="64" rx="12" class="fa"/><text x="100" y="40" text-anchor="middle" class="tink" style="font:700 17px var(--f-body)">container 3</text></g></g>
+        <g class="show-on-3"><rect x="20" y="260" width="720" height="140" rx="16" class="bx"/>
+          <text x="44" y="300" class="tm" style="font-size:17px">$ docker build -t ticketwave-api:v3 .</text>
+          <text x="44" y="334" class="tm" style="font-size:17px">$ docker run -d -p 80:8080 ticketwave-api:v3</text>
+          <text x="44" y="368" class="tm" style="font-size:17px">$ docker ps        <tspan class="c"># see what's running</tspan></text></g>
+      </svg>
+    </div>
+  </div>
+  <aside class="notes"><p>Dockerfile = recipe. Image = the frozen, versioned result of following the recipe. Container = a running instance of the image. One image can run as many containers.</p><p>The RDS labs in the PDFs use exactly this: docker pull, then docker run with -p and -e flags.</p></aside>
+</section>
+
+<section class="slide" data-title="Image layers (3D)" data-phase="behind" data-ch="Containers" data-steps="3" style="padding:24px">
+  <div class="three-wrap grow"><canvas class="three" id="layers3d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
+    <div class="lpanel">
+      <div class="lrow"><i style="--c:#64A0FF"></i><span class="mono">FROM python:3.12-slim</span><b class="u">125 MB</b><b class="z">45 MB</b></div>
+      <div class="lrow"><i style="--c:#A193FF"></i><span class="mono">RUN apt-get install libpq</span><b class="u">18 MB</b><b class="z">7 MB</b></div>
+      <div class="lrow"><i style="--c:#3FD5C2"></i><span class="mono">COPY requirements.txt .</span><b class="u">1 KB</b><b class="z">1 KB</b></div>
+      <div class="lrow"><i style="--c:#6EDC92"></i><span class="mono">RUN pip install -r …</span><b class="u">62 MB</b><b class="z">21 MB</b></div>
+      <div class="lrow"><i style="--c:#FFB547"></i><span class="mono">COPY . .</span><b class="u">2 MB</b><b class="z">0.6 MB</b></div>
+      <div class="lrow tot"><span>total</span><b class="u">207 MB</b><b class="z">74 MB</b></div>
+    </div>
+    <div class="overlay">
+      <div class="step-cap cur" data-s="0"><b class="k2">docker build</b><p>Each Dockerfile line adds one <b class="hl-a">read-only layer</b>, stacked like glass sheets. Each layer is named by the hash of its contents.</p></div>
+      <div class="step-cap" data-s="1"><b class="k2">docker push</b><p>Each layer is <b class="hl-t">compressed</b> (tar + gzip): 207 MB becomes 74 MB, and travels to the registry separately.</p></div>
+      <div class="step-cap" data-s="2"><b class="k2">docker pull on a server</b><p>The server already has the python base: <span class="mono hl-g">Already exists</span>. Only the missing layers download, then unpack.</p></div>
+      <div class="step-cap" data-s="3"><b class="k2">docker run ×3</b><p>Three containers share the <b>same</b> image on disk. Each gets a thin <b class="hl-r">writable layer</b>. Change a file and it's copied up first: <b>copy-on-write</b>.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>Step 0: layers build bottom-up, one per instruction that changes files. Order matters: put things that change rarely (base, dependencies) at the bottom, your code at the top, so rebuilds reuse cached layers.</p><p>Step 1: layers are compressed tarballs, stored by their sha256 digest. Step 2: pulls skip layers you already have, which is why the second pull of a new version takes seconds. Step 3: the image never changes. Writes go to each container's own thin layer (overlayfs copy-on-write) and vanish when the container is removed, unless you use a volume.</p><p>Sizes are illustrative but realistic for a Python app.</p></aside>
+</section>
+
+
+<section class="slide" data-title="Inside a container: docker exec (3D)" data-phase="behind" data-ch="Containers" data-steps="6" style="padding:24px">
+  <div class="three-wrap grow"><canvas class="three" id="exec3d"></canvas><div class="drag-hint">→ to continue · drag to look around</div>
+    <div class="term" id="execTerm">
+      <div class="tbar"><i></i><i></i><i></i><span>rahul@laptop</span></div>
+      <div class="ln s0"><span class="p">$</span> docker ps --format "{{.Names}}"</div>
+      <div class="ln s0 o">web<br>api<br>db</div>
+      <div class="ln s1"><span class="p">$</span> docker exec -it api sh</div>
+      <div class="ln s2"><span class="p">/app #</span> ps</div>
+      <div class="ln s2 o">PID  CMD<br>  1  python app.py<br>  7  sh<br>  9  ps</div>
+      <div class="ln s3"><span class="p">/app #</span> ls /</div>
+      <div class="ln s3 o">app  bin  etc  lib  usr  var</div>
+      <div class="ln s4"><span class="p">/app #</span> hostname; ip -br addr</div>
+      <div class="ln s4 o">3f2a9c1b<br>eth0  UP  172.18.0.3/16</div>
+      <div class="ln s5"><span class="p">/app #</span> uname -r</div>
+      <div class="ln s5 o">6.1.0-aws   <span style="color:var(--teal)"># same as the host!</span></div>
+      <div class="ln s6"><span class="p">/app #</span> exit</div>
+      <div class="ln s6"><span class="p">$</span> <span class="cur">▌</span></div>
+    </div>
+    <div class="overlay">
+      <div class="step-cap cur" data-s="0"><b class="k2">Three containers, one kernel</b><p>From outside, they're just boxes sitting on the host's <b class="hl-t">Linux kernel</b>.</p></div>
+      <div class="step-cap" data-s="1"><b class="k2">docker exec -it api sh</b><p>Step through the walls. A whole new world spins up around you: its own processes, files, network and name.</p></div>
+      <div class="step-cap" data-s="2"><b class="k2">ps: only 3 processes</b><p>Your app is <b class="hl-a">PID 1</b>. The host's hundreds of processes are invisible. That's the PID namespace.</p></div>
+      <div class="step-cap" data-s="3"><b class="k2">ls /: a different root</b><p>This filesystem is the <b class="hl-b">image layers</b> plus a writable layer, not the host's disk.</p></div>
+      <div class="step-cap" data-s="4"><b class="k2">Its own name and IP</b><p>Hostname <span class="mono">3f2a9c1b</span>, its own <b class="hl-g">eth0</b>, cabled to a virtual bridge.</p></div>
+      <div class="step-cap" data-s="5"><b class="k2">Look down</b><p>The floor is glass. Underneath is the <b class="hl-t">same kernel</b> as the host. The walls are just namespaces.</p></div>
+      <div class="step-cap" data-s="6"><b class="k2">exit</b><p>Your shell ends. The container keeps running, because PID 1 (the app) is still alive.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>This is the “aha” slide. docker exec starts a new process (sh) inside the existing container's namespaces, so you see exactly what the app sees.</p><p>Walk the steps: ps shows the app as PID 1; ls / shows the image's filesystem; hostname and eth0 come from the UTS and NET namespaces; uname -r shows the host kernel version because there is no guest OS. Exit ends sh only. If PID 1 dies, the whole container stops.</p></aside>
+</section>
+
+
+<section class="slide" data-title="Docker Compose network (3D)" data-phase="prod" data-ch="Docker Compose" data-steps="5" style="padding:62px 24px 24px">
+  <div class="row grow" style="gap:18px">
+    <pre class="code cmp-yaml" style="width:420px;flex:none;font-size:16px;line-height:1.5;padding:16px 18px"><span class="c"># compose.yaml</span>
+<span class="k">services</span>:
+<span class="y yw">  <span class="k">web</span>:
+    image: nginx
+    ports: [<span class="s">"8080:80"</span>]</span>
+<span class="y ya">  <span class="k">api</span>:
+    build: ./api
+    depends_on: [db, redis]</span>
+<span class="y yd">  <span class="k">db</span>:
+    image: postgres:16
+    volumes: [db-data:/var/lib/…]</span>
+<span class="y yr">  <span class="k">redis</span>:
+    image: redis:7</span>
+<span class="y yv"><span class="k">volumes</span>:
+  db-data:</span>
+
+<span class="c">$ docker compose up -d</span></pre>
+    <div class="three-wrap grow"><canvas class="three" id="compose3d"></canvas><div class="drag-hint">→ to continue · drag to rotate</div>
+      <div class="overlay" style="max-width:420px;left:auto;right:20px;bottom:46px">
+        <div class="step-cap cur" data-s="0"><b class="k2">One file, the whole stack</b><p>Four services, one volume. Nothing is running yet: just your laptop.</p></div>
+        <div class="step-cap" data-s="1"><b class="k2">docker compose up</b><p>Compose creates a private network <span class="mono hl-t">ticketwave_default</span>, then starts containers in <b>depends_on</b> order: db and redis, then api, then web.</p></div>
+        <div class="step-cap" data-s="2"><b class="k2">Names are addresses</b><p>api asks the network's built-in DNS: <span class="mono">“where is db?”</span> → <span class="mono hl-g">172.18.0.4</span>. Code just says <span class="mono">db:5432</span>.</p></div>
+        <div class="step-cap" data-s="3"><b class="k2">You come in through one door</b><p>Browser → <span class="mono hl-a">localhost:8080</span> → web:80 → api → redis and db. Only <b>web</b> has a published port.</p></div>
+        <div class="step-cap" data-s="4"><b class="k2">Outsiders can't reach db</b><p>db has no published port, so from outside the network <b class="hl-r">it doesn't exist</b>.</p></div>
+        <div class="step-cap" data-s="5"><b class="k2">docker compose down</b><p>Containers and network are removed. The <b class="hl-v">db-data volume</b> stays, so your data survives the next up.</p></div>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><p>Left panel highlights the part of compose.yaml that matters at each step.</p><p>Step 1: one command creates a network and starts services in dependency order. Step 2: every service name becomes a DNS name on that network (Docker's embedded DNS at 127.0.0.11), which is why config says db:5432 instead of an IP. Step 3: only ports you publish (8080:80) are reachable from your laptop. Step 4: everything else stays private to the network. Step 5: down removes containers and the network but keeps named volumes (unless you add -v).</p></aside>
+</section>
