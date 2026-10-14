@@ -313,6 +313,16 @@ $$('.ann').forEach(a=>{const code=a.querySelector('.dfcode');$$('.dfnotes li',a)
 // k8s folder map
 (function(){const svg=$('#k8fSvg');if(!svg)return;const wrap=$('.kxwrap');
   $$('#kfList .kf').forEach(b=>b.onclick=()=>{const k=b.dataset.k;svg.dataset.sel=k;wrap.dataset.sel=k;$$('#kfList .kf').forEach(x=>x.classList.toggle('on',x===b))})})();
+// HPA scaling slider
+(function(){const svg=$('#hpaSvg'),R=$('#hpaR');if(!svg)return;
+  function draw(){const u=+R.value;const pods=Math.max(2,Math.min(12,Math.ceil(u/400)));const nodes=Math.max(2,Math.ceil(pods/4));const cpu=Math.min(99,Math.round(u/pods/400*70));
+    let h='';for(let n=0;n<3;n++){const x=20+n*315,on=n<nodes;h+=`<g style="opacity:${on?1:.25};transition:opacity .4s"><rect x="${x}" y="60" width="295" height="420" rx="18" class="${on?'bx-b':'w-l'}" style="${on?'fill:rgba(100,160,255,.05)':'stroke-dasharray:8 6'}"/><text x="${x+18}" y="90" class="tb tm" style="font-size:15px">${on?'node '+(n+1)+' · EC2':'node 3 · added when needed'}</text>`;
+      for(let k=0;k<4;k++){const i=n*4+k,px=x+22+(k%2)*135,py=115+Math.floor(k/2)*175,live=i<pods;h+=`<g style="opacity:${live?1:.12};transition:opacity .4s"><rect x="${px}" y="${py}" width="115" height="150" rx="12" class="${live?'bx-t':'w-l'}"/>${live?`<rect x="${px+14}" y="${py+18}" width="30" height="22" rx="4" class="fa"/><text x="${px+57}" y="${py+76}" text-anchor="middle" class="tt tm" style="font-size:13px">orders-api</text><rect x="${px+14}" y="${py+110}" width="87" height="12" rx="6" class="fl"/><rect x="${px+14}" y="${py+110}" width="${Math.round(87*cpu/100)}" height="12" rx="6" class="${cpu>85?'fr':cpu>65?'fa':'fg'}"/>`:''}</g>`}
+      h+='</g>'}
+    h+=`<text x="20" y="30" class="lbl">each pod: CPU bar · target 70%</text>`;svg.innerHTML=h;
+    $('#hpaU').textContent=u.toLocaleString('en-IN');$('#hpaC').textContent=cpu+'%';$('#hpaP').textContent=pods;$('#hpaN').textContent=nodes;
+    const f=$('#hpaF');f.textContent=pods<=2?'Quiet hour: 2 pods are enough (the minimum).':nodes>2?`Busy! ${pods} pods don't fit on 2 nodes, so the Cluster Autoscaler added a 3rd EC2 node.`:`CPU went above 70%, so the HPA added pods: now ${pods}. Drag left and it removes them again.`;f.className='feed '+(nodes>2?'no':'ok')}
+  R.addEventListener('input',draw);draw()})();
 // Activity 5: canary
 (function(){const p=$('#canPct'),b=$('#canBug');if(!p)return;let rb=null;
   function upd(){const pct=+p.value,bug=b.classList.contains('on');$('#canTxt').textContent=pct+'%';$('#canV1').style.width=(100-pct)+'%';$('#canV2').style.width=pct+'%';
