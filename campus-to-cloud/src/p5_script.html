@@ -296,6 +296,18 @@ hooks.sim4={enter(){simRun()}};
 (function(){const svg=$('#dkaSvg');if(!svg)return;const pn=$('#dkaPanel');pn.dataset.r='1';
   $$('#dkaTabs .btn').forEach(b=>b.onclick=()=>{const r=b.dataset.r;svg.dataset.r=r;pn.dataset.r=r;$$('#dkaTabs .btn').forEach(x=>x.classList.toggle('primary',x===b))});
   $$('#dkaPanel .rv').forEach(b=>b.onclick=()=>b.closest('.rnd').classList.add('show'))})();
+// Our Dockerfiles: tabs + note highlighting
+(function(){const w=$('#dftWrap');if(!w)return;
+  $$('#dftTabs .btn').forEach(b=>b.onclick=()=>{w.dataset.t=b.dataset.t;w.dataset.g='';$$('.dfcode',w).forEach(c=>c.dataset.g='');$$('#dftTabs .btn').forEach(x=>x.classList.toggle('primary',x===b))});
+  $$('.dft',w).forEach(t=>{const code=t.querySelector('.dfcode');$$('.dfnotes li',t).forEach(li=>li.onclick=()=>{const on=code.dataset.g===li.dataset.g;code.dataset.g=on?'':li.dataset.g;$$('.dfnotes li',t).forEach(x=>x.classList.toggle('on',!on&&x===li))})})})();
+// .env tracer
+(function(){const svg=$('#envSvg');if(!svg)return;
+  const D={port:{ev1a:'ORDER_PORT=8081',ev1b:'written once per machine',ev2a:'ports: "8081:8081"',ev2a2:'${ORDER_PORT} filled in',ev2b:'SERVER_PORT: ${ORDER_PORT}',ev2b2:'environment: on order-service',ev3a:'SERVER_PORT=8081',ev3b:'inside order-service',ev4a:'Spring Boot',ev4b:'server.port ← SERVER_PORT',ev4c:'listens on 8081',ev4d:'browser reaches localhost:8081'},
+    kafka:{ev1a:'KAFKA_BOOTSTRAP_SERVERS=',ev1b:'kafka:29092  (in-network door)',ev2a:'(not used in the yml)',ev2a2:'',ev2b:'env_file: .env',ev2b2:'copied into every app container',ev3a:'KAFKA_BOOTSTRAP_SERVERS=',ev3b:'kafka:29092',ev4a:'order & executor',ev4b:'spring.kafka.bootstrap-servers',ev4c:'= ${KAFKA_BOOTSTRAP_SERVERS}',ev4d:'connects to kafka by name'},
+    pw:{ev1a:'DB_PASSWORD=••••••',ev1b:'you type it; never in git',ev2a:'(not in the yml)',ev2a2:'',ev2b:'env_file: .env',ev2b2:'auth, order, executor, postgres',ev3a:'DB_PASSWORD=••••••',ev3b:'only at runtime, not in the image',ev4a:'apps + postgres',ev4b:'spring.datasource.password',ev4c:'postgres → POSTGRES_PASSWORD',ev4d:'same secret on both sides'},
+    auth:{ev1a:'AUTH_URL=',ev1b:'http://localhost:3000',ev2a:'AUTH_URL: ${AUTH_URL}',ev2a2:'environment: on frontend',ev2b:'(frontend only)',ev2b2:'',ev3a:'AUTH_URL=http://localhost:3000',ev3b:'inside the nginx container',ev4a:'start-up script',ev4b:'writes app-config.js',ev4c:'authBaseUrl: localhost:3000',ev4d:'the browser calls auth there'}};
+  function set(k){Object.entries(D[k]).forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v})}
+  $$('#envTabs .btn').forEach(b=>b.onclick=()=>{set(b.dataset.k);$$('#envTabs .btn').forEach(x=>x.classList.toggle('primary',x===b))});set('port')})();
 // Activity 5: canary
 (function(){const p=$('#canPct'),b=$('#canBug');if(!p)return;let rb=null;
   function upd(){const pct=+p.value,bug=b.classList.contains('on');$('#canTxt').textContent=pct+'%';$('#canV1').style.width=(100-pct)+'%';$('#canV2').style.width=pct+'%';

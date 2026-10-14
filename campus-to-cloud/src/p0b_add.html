@@ -144,4 +144,28 @@ body.nobuild .tp .bar{width:var(--w)}
 #dkaPanel .rnd{display:none}#dkaPanel[data-r="1"] .r1,#dkaPanel[data-r="2"] .r2,#dkaPanel[data-r="3"] .r3,#dkaPanel[data-r="4"] .r4{display:block}
 .rnd .ans{display:none}.rnd.show .ans{display:block}
 pre.labc{font-size:16.5px;line-height:1.45;padding:16px 18px}
+
+/* our dockerfiles tabs */
+#dftWrap .dft{display:none;height:100%;flex-direction:column;gap:10px}
+#dftWrap[data-t="java"] .java,#dftWrap[data-t="node"] .node,#dftWrap[data-t="ang"] .ang{display:flex}
+.dfhead{display:flex;gap:16px;align-items:baseline;font-size:20px}
+.dfrow{display:flex;gap:20px;min-height:0;flex:1}
+.dfcode{flex:1.25;font-size:15.5px;line-height:1.55;padding:14px 16px;margin:0}
+.dfcode .ln{display:block;border-radius:6px;padding:0 6px;transition:background .25s,opacity .25s}
+.dfcode .ln i{display:inline-block;width:22px;font-style:normal;color:var(--amber);font-weight:700}
+.dfcode[data-g]:not([data-g=""]) .ln{opacity:.35}
+.dfcode[data-g="1"] .g1{opacity:1;background:rgba(255,181,71,.18)}
+.dfcode[data-g="2"] .g2{opacity:1;background:rgba(255,181,71,.18)}
+.dfcode[data-g="3"] .g3{opacity:1;background:rgba(255,181,71,.18)}
+.dfcode[data-g="4"] .g4{opacity:1;background:rgba(255,181,71,.18)}
+.dfcode[data-g="5"] .g5{opacity:1;background:rgba(255,181,71,.18)}
+.dfcode[data-g="6"] .g6{opacity:1;background:rgba(255,181,71,.18)}
+.dfcode[data-g="7"] .g7{opacity:1;background:rgba(255,181,71,.18)}
+.dfcode[data-g="8"] .g8{opacity:1;background:rgba(255,181,71,.18)}
+.dfcode[data-g="9"] .g9{opacity:1;background:rgba(255,181,71,.18)}
+.dfnotes{flex:1;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.dfnotes li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;font-size:16px;line-height:1.38;padding:7px 10px;border-radius:10px;background:var(--ink-2);border:1px solid var(--line);cursor:pointer}
+.dfnotes li i{font-style:normal;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--ink-3);color:var(--amber);font:700 14px var(--f-mono)}
+.dfnotes li.on{border-color:var(--amber);background:var(--ink-3)}
+.dfnotes li b{color:var(--fg)}
 </style>
