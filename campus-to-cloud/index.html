@@ -472,6 +472,17 @@ pre.labc{font-size:16.5px;line-height:1.45;padding:16px 18px}
 .kxwrap[data-sel="k-mail"] .kx.k-mail{display:block}
 .kxwrap[data-sel="k-ing"] .kx.k-ing{display:block}
 .kxwrap[data-sel="k-kus"] .kx.k-kus{display:block}
+
+.kyw pre.code{font-size:18.5px;line-height:1.5;padding:12px 14px;white-space:pre}
+.kyw .v{border-radius:5px;padding:1px 3px;transition:background .3s,box-shadow .3s}
+.kyout{display:flex;flex-direction:column;gap:8px;margin-top:6px}.kyout p{font-size:18px;line-height:1.4}
+.c1{color:var(--violet)}.c2{color:var(--teal)}.c3{color:var(--amber)}.c4{color:var(--green)}.c5{color:var(--rose)}
+.st1 .kyw .k1{background:rgba(161,147,255,.3);box-shadow:0 0 0 1px var(--violet)}
+.st2 .kyw .k2{background:rgba(63,213,194,.25);box-shadow:0 0 0 1px var(--teal)}
+.st3 .kyw .k3{background:rgba(255,181,71,.25);box-shadow:0 0 0 1px var(--amber)}
+.st4 .kyw .k4{background:rgba(110,220,146,.25);box-shadow:0 0 0 1px var(--green)}
+.st2 .kyw .k2r{background:rgba(255,111,142,.25);box-shadow:0 0 0 1px var(--rose)}
+.st5 .kyw .k5{background:rgba(255,111,142,.25);box-shadow:0 0 0 1px var(--rose)}
 </style>
 <div id="viewport"><div id="stage">
 
@@ -3399,6 +3410,85 @@ target: CPU 70%</pre>
     </div>
   </div>
   <aside class="notes"><p>Drag the slider. The Horizontal Pod Autoscaler checks average CPU every 15 seconds: above 70% it adds pods, below it removes them (slowly, to avoid flapping). New pods land on nodes with room; when nodes are full, pods wait as Pending and the Cluster Autoscaler (or Karpenter on EKS) adds an EC2 node. When traffic drops, pods are removed, and empty nodes are removed too, so you stop paying for them.</p><p>Numbers are illustrative: each pod handles about 400 users/s at 70% CPU, and each node fits 4 pods.</p></aside>
+</section>
+
+<section class="slide" data-title="deployment.yaml and service.yaml" data-phase="prod" data-ch="Kubernetes" data-steps="5">
+  <h2>deployment.yaml + service.yaml: how they connect</h2>
+  <div class="grid g2 kyw" style="gap:18px;grid-template-columns:1.15fr 1fr">
+    <div class="panel vf"><div class="vfh"><span class="mono hl-t">deployment.yaml</span><span class="small">runs the pods</span></div>
+<pre class="code">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-api
+spec:
+  <span class="v k1">replicas: 3</span>
+  selector:
+    matchLabels: { <span class="v k2">app: orders-api</span> }
+  template:
+    metadata:
+      labels: { <span class="v k2">app: orders-api</span> }
+    spec:
+      containers:
+        - name: orders-api
+          <span class="v k3">image: 4821….dkr.ecr.ap-south-1.amazonaws.com/</span>
+          <span class="v k3">       orders-api:1.4.2</span>
+          ports:
+            - <span class="v k4">containerPort: 8081</span></pre></div>
+    <div class="panel vf"><div class="vfh"><span class="mono hl-a">service.yaml</span><span class="small">gives them one address</span></div>
+<pre class="code">apiVersion: v1
+kind: Service
+metadata:
+  <span class="v k5">name: orders-api</span>
+spec:
+  type: ClusterIP
+  selector:
+    <span class="v k2">app: orders-api</span>
+  ports:
+    - <span class="v k5">port: 80</span>
+      <span class="v k4">targetPort: 8081</span></pre>
+      <div class="kyout">
+        <p class="f" data-f="1"><b class="c1">① replicas: 3</b> keep 3 identical pods running, always.</p>
+        <p class="f" data-f="2"><b class="c2">② labels</b> are name tags. The Service sends traffic to every pod wearing <span class="mono">app: orders-api</span>.</p>
+        <p class="f" data-f="3"><b class="c3">③ image</b> is pulled from ECR by the node (its IAM role allows it).</p>
+        <p class="f" data-f="4"><b class="c4">④ targetPort = containerPort</b>: the port the app listens on inside the pod.</p>
+        <p class="f" data-f="5"><b class="c5">⑤ name + port</b>: other pods call <span class="mono">http://orders-api:80</span>.</p>
+      </div></div>
+  </div>
+  <aside class="notes"><p>Click through the five colours. The Deployment says what to run and how many; the Service gives those pods one stable name. They're tied together only by labels: the Deployment stamps app: orders-api on every pod, and the Service's selector picks every pod with that label, so new pods join automatically when you scale.</p><p>Image pulls: the kubelet on the node pulls from ECR using the node's IAM role. Ports: containerPort is what the app listens on; the Service's targetPort must match it; port is what callers use.</p></aside>
+</section>
+<section class="slide" data-title="configmap.yaml and secret.yaml" data-phase="prod" data-ch="Kubernetes" data-steps="3">
+  <h2>configmap.yaml + secret.yaml: settings into the pod</h2>
+  <div class="grid g3 kyw" style="gap:18px">
+    <div class="panel vf"><div class="vfh"><span class="mono hl-t">configmap.yaml</span><span class="small">normal settings</span></div>
+<pre class="code">kind: ConfigMap
+metadata:
+  <span class="v k1">name: app-config</span>
+data:
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  KAFKA_BOOTSTRAP_SERVERS:
+    "kafka:29092"</pre><p class="small">Plain text. Safe to keep in git.</p></div>
+    <div class="panel vf"><div class="vfh"><span class="mono hl-r">secret.yaml</span><span class="small">passwords</span></div>
+<pre class="code">kind: Secret
+metadata:
+  <span class="v k2r">name: app-secrets</span>
+type: Opaque
+stringData:
+  DB_PASSWORD: "••••••"
+  JWT_SECRET: "••••••"</pre><p class="small">Never commit it. Create it with <span class="mono">kubectl create secret generic app-secrets …</span></p></div>
+    <div class="panel vf"><div class="vfh"><span class="mono hl-b">deployment.yaml</span><span class="small">uses both</span></div>
+<pre class="code">containers:
+  - name: orders-api
+    envFrom:
+      - configMapRef:
+          <span class="v k1">name: app-config</span>
+      - secretRef:
+          <span class="v k2r">name: app-secrets</span></pre><p class="small">Every key becomes an environment variable.</p></div>
+  </div>
+  <div class="panel f" data-f="3" style="display:flex;gap:20px;align-items:center;border-color:var(--green)"><b class="k2" style="color:var(--green);margin:0;white-space:nowrap">Inside the pod</b>
+    <span class="mono" style="font-size:17px"><span class="hl-t">DB_HOST=postgres  KAFKA_BOOTSTRAP_SERVERS=kafka:29092</span>  <span class="hl-r">DB_PASSWORD=••••••</span></span>
+    <span class="small" style="margin-left:auto;white-space:nowrap">same as .env in compose</span></div>
+  <aside class="notes"><p>Click 1: the ConfigMap is matched by name. Click 2: the Secret, also by name. Click 3: the result: every key of both becomes an environment variable in the container, exactly like env_file: .env in docker-compose. Change a ConfigMap and restart the pods (kubectl rollout restart deployment/orders-api) to pick up new values.</p><p>Secrets are only base64-encoded, not encrypted, in the YAML; on EKS they're encrypted at rest, and many teams load them from AWS Secrets Manager instead.</p></aside>
 </section>
 
 <section class="slide" data-title="Our trading app on EKS (3D)" data-phase="behind" data-ch="Kubernetes · our project" data-steps="5" style="padding:24px">
