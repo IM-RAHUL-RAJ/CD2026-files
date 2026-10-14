@@ -168,3 +168,38 @@ function initCompose(){const c=$('#compose3d'),{r,sc,cam,g}=dk(c);let stage=0,t0
     const c4=c01(((el%2.2)/2.2)/.75);run(pX1,c4,stage===4);run(pX2,c4,stage===4);
     vols.forEach(v=>{v.cy.material.emissiveIntensity=stage===5?.5+.4*Math.sin(t*.008):.4;v.ln.visible=regOn});
     r.render(sc,cam)}}}
+
+/* E · our trading app on EKS */
+function initEks(){const c=$('#eks3d'),{r,sc,cam,g}=dk(c);g.add(new THREE.GridHelper(50,50,0x253350,0x18233a));let stage=0,t0=0;
+  const cp=new THREE.Group();g.add(cp);mbox(cp,16,.6,3,0x2a2350,{at:V(0,5.6,-8),ec:0xA193FF,eo:1,emi:.4});lab(cp,'EKS control plane · run by AWS','#A193FF',V(0,7.3,-8),1.2);
+  ['API server','scheduler','controllers','etcd'].forEach((n,i)=>{mbox(cp,3.2,.5,2,0x3a3370,{at:V(-5.7+i*3.8,6.2,-8),emi:.5});lab(cp,n,'#EBF0F9',V(-5.7+i*3.8,6.85,-8),.75,true)});
+  const NA=V(-5,0,0),NB=V(5,0,0);
+  const node=(p,n)=>{const m=mbox(g,8.6,.5,6.2,0x1d2b47,{at:p.clone().setY(.25),ec:0x64A0FF,eo:.9,emi:.15});const l=lab(g,n,'#64A0FF',p.clone().add(V(0,.3,3.7)),1,true);return {m,l}};
+  const nA=node(NA,'node 1 · EC2 t3.medium · AZ a'),nB=node(NB,'node 2 · EC2 t3.medium · AZ b');
+  const nsBox=new THREE.BoxGeometry(20,3.6,8.4);const ns=new THREE.LineSegments(new THREE.EdgesGeometry(nsBox),new THREE.LineBasicMaterial({color:0x3FD5C2,transparent:true,opacity:.8}));ns.position.set(0,1.8,0);g.add(ns);
+  lab(g,'namespace: trading','#3FD5C2',V(-7,4,-4.2),1);
+  const slot=(N,i)=>N.clone().add(V([-2.6,0,2.6][i%3],1.15,[-1.4,1.4][Math.floor(i/3)]));
+  const PODS=[['frontend',0xFFB547,NA,0],['auth-service',0x3FD5C2,NA,1],['kafka-0',0xFF9466,NA,3],['mailpit',0x97A3BE,NA,4],['order-service',0x64A0FF,NB,0],['executor-service',0xA193FF,NB,1]];
+  const pods=PODS.map(([n,col,N,i],k)=>{const p=new THREE.Group();const m=mbox(p,1.7,1.3,1.7,col,{at:V(0,0,0),emi:.35,ec:0xEBF0F9,eo:.5});const l=label(n,'#'+col.toString(16).padStart(6,'0'),.8);l.position.set(0,1.35,0);p.add(l);p.position.copy(slot(N,i));p.scale.setScalar(.001);g.add(p);return {p,m,home:slot(N,i),alt:slot(NA,[2,5][Math.max(0,k-4)]),col,n}});
+  const disk=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.7,24),std(0xA193FF,{emissive:0xA193FF,emissiveIntensity:.4}));disk.position.copy(slot(NA,3)).add(V(1.25,-.5,0));disk.visible=false;g.add(disk);const dL=lab(g,'EBS gp3 · 2Gi','#A193FF',disk.position.clone().add(V(1.6,.2,0)),.65,true);
+  const job=new THREE.Group();mbox(job,1.5,1.1,1.5,0xFF9466,{at:V(0,0,0),op:.5,emi:.3,ec:0xFF9466,eo:1});const jL=label('Job kafka-topics','#FF9466',.7);jL.position.set(0,1.1,0);job.add(jL);job.position.copy(slot(NA,5));job.visible=false;g.add(job);
+  const cards=new THREE.Group();g.add(cards);mbox(cards,3.4,2,.2,0x1f8f84,{at:V(-12.6,2.6,1),ec:0x3FD5C2,eo:1,emi:.3});lab(cards,'ConfigMap app-config','#3FD5C2',V(-12.6,4,1),.75);mbox(cards,3.4,2,.2,0x6b2338,{at:V(-12.6,2.6,-2.6),ec:0xFF6F8E,eo:1,emi:.3});lab(cards,'Secret app-secrets','#FF6F8E',V(-12.6,4,-2.6),.75);
+  const envL=[];for(let i=0;i<6;i++){const ln=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x3FD5C2,transparent:true,opacity:.4}));g.add(ln);envL.push(ln)}
+  const alb=new THREE.Group();g.add(alb);mbox(alb,7,.8,1.2,0xFFB547,{at:V(3,.5,6.6),emi:.4,op:.9});lab(alb,'AWS load balancer · from ingress.yaml','#FFB547',V(3,1.6,6.6),.85);
+  const user=new THREE.Mesh(new THREE.SphereGeometry(.6,24,24),std(0xEBF0F9,{emissive:0x555c6c,emissiveIntensity:.5}));user.position.set(3,1,10);g.add(user);lab(g,'users · internet','#EBF0F9',V(3,2.1,10),.8);
+  const routes=[[0,'/  → frontend'],[1,'/api/auth → auth-service'],[4,'/api/orders → order-service']].map(([pi,txt],k)=>{const cv=()=>new THREE.CatmullRomCurve3([V(3,1,9.6),V(3+(k-1)*2.4,.6,6.6),pods[pi].p.position.clone().add(V(0,.4,1.6)),pods[pi].p.position.clone()]);const ln=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xFFB547,transparent:true,opacity:.7}));g.add(ln);const d=new THREE.Mesh(new THREE.SphereGeometry(.22,12,12),new THREE.MeshBasicMaterial({color:0xFFB547}));g.add(d);const l=lab(g,txt,'#FFB547',V((k-1)*6,3.3,5),.75);return {cv,ln,d,l,pi}});
+  const msg=lab(g,'','#EBF0F9',V(0,4.6,3),.7);const msgs={};const setMsg=(t,col)=>{if(!msgs[t]){msgs[t]=label(t,col,1);msgs[t].position.set(0,5,3.2);g.add(msgs[t])}Object.values(msgs).forEach(m=>m.visible=false);msgs[t].visible=true};msg.visible=false;
+  const st={yaw:0};drag(c,st);cam.position.set(-1.5,11.5,18.5);
+  function setStage(n){stage=n;t0=performance.now()}
+  return {setStage,render(t){size(r,cam,c);const el=(performance.now()-t0)/1000;g.rotation.y=st.yaw*.6+(reduce?0:Math.sin(t*.0001)*.05);cam.lookAt(-1,1.8,0);
+    const nodeDead=stage===4;nB.m.material.color.setHex(nodeDead?0x3a1520:0x1d2b47);nB.m.children[0].material.color.setHex(nodeDead?0xFF6F8E:0x64A0FF);
+    pods.forEach((o,k)=>{let s=0;if(stage>=1)s=stage===1?c01((el-.3-k*.35)/.4):1;let pos=o.home;if(stage===4&&k>=4){pos=el<1?o.home:o.alt;s=el<1?c01(1-el):c01(el-1.2)}
+      if(stage===3&&k===4){const ph=el%5;o.m.material.color.setHex(ph<1.6?0xFF6F8E:o.col);o.m.material.emissive.setHex(ph<1.6?0xFF6F8E:o.col);s=ph<1.2?1:ph<1.8?c01(1-(ph-1.2)/.6):c01((ph-1.8)/.5)}else{o.m.material.color.setHex(stage===5&&el>.8+k*.5?0x6EDC92:o.col);o.m.material.emissive.setHex(stage===5&&el>.8+k*.5&&k!==2&&k!==3?0x6EDC92:o.col)}
+      if(stage===5&&(k===2||k===3)){o.m.material.color.setHex(o.col);o.m.material.emissive.setHex(o.col)}
+      o.p.position.lerp(pos,.12);o.p.scale.setScalar(Math.max(.001,ease(s)))});
+    disk.visible=dL.visible=stage>=1;job.visible=stage===1&&el>.5&&el<4.5;if(job.visible)job.children[0].material.opacity=el>3.2?.5*(1-(el-3.2)/1.3):.5;
+    envL.forEach((ln,k)=>{const on=stage===1&&el>2.4;ln.visible=on;if(on){const p=pods[k].p.position;ln.geometry.setFromPoints([V(-10.9,2.6,k%2?-2.6:1),V(-8,3,0),p])}});
+    routes.forEach(rt=>{const on=stage===2;rt.ln.visible=rt.d.visible=rt.l.visible=on;if(on){const cv=rt.cv();rt.ln.geometry.setFromPoints(cv.getPoints(40));rt.d.position.copy(cv.getPoint(((el*.4)+rt.pi*.13)%1))}});
+    const M={1:['kubectl apply: the scheduler places every pod','#EBF0F9'],3:['liveness probe failed → pod restarted','#FF6F8E'],4:['node 2 lost → pods rescheduled on node 1','#FF6F8E'],5:['rolling update: new pods ready, old ones removed','#6EDC92']};
+    if(M[stage])setMsg(...M[stage]);else Object.values(msgs).forEach(m=>m.visible=false);
+    r.render(sc,cam)}}}

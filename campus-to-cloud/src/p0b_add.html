@@ -178,4 +178,35 @@ pre.labc{font-size:16.5px;line-height:1.45;padding:16px 18px}
 .st1 .vflow .vb{background:rgba(161,147,255,.28);box-shadow:0 0 0 1px var(--violet)}
 .st2 .vflow .vr{background:rgba(255,181,71,.25);box-shadow:0 0 0 1px var(--amber)}
 .vbox{border-left:4px solid var(--c)}
+
+/* compose → k8s map */
+.maps{display:flex;flex-direction:column;gap:7px;justify-content:center}
+.map{display:grid;grid-template-columns:1fr 60px 1fr;align-items:center;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:8px 16px}
+.map .mc{display:flex;flex-direction:column}.map .mc span{font-size:18px}.map small{font-size:14px;color:var(--muted)}.map .ma{text-align:center;font-size:24px;color:var(--muted)}.map .mk{font-size:19px}
+/* k8s folder map */
+.kf{text-align:left;background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;font-size:14px;line-height:1.3;color:var(--fg)}
+.kf:hover{border-color:var(--muted)}.kf.on{border-color:var(--teal);background:var(--ink-3)}
+#k8fSvg .ko{transition:opacity .3s,filter .3s}
+#k8fSvg[data-sel] .ko{opacity:.18}
+#k8fSvg[data-sel="k-kus"] .ko{opacity:1;filter:drop-shadow(0 0 6px var(--teal))}
+#k8fSvg[data-sel="k-ns"] .k-ns{opacity:1;filter:drop-shadow(0 0 8px var(--teal))}
+#k8fSvg[data-sel="k-sc"] .k-sc{opacity:1;filter:drop-shadow(0 0 8px var(--teal))}
+#k8fSvg[data-sel="k-cm"] .k-cm{opacity:1;filter:drop-shadow(0 0 8px var(--teal))}
+#k8fSvg[data-sel="k-sec"] .k-sec{opacity:1;filter:drop-shadow(0 0 8px var(--teal))}
+#k8fSvg[data-sel="k-app"] .k-app{opacity:1;filter:drop-shadow(0 0 8px var(--teal))}
+#k8fSvg[data-sel="k-kafka"] .k-kafka{opacity:1;filter:drop-shadow(0 0 8px var(--teal))}
+#k8fSvg[data-sel="k-mail"] .k-mail{opacity:1;filter:drop-shadow(0 0 8px var(--teal))}
+#k8fSvg[data-sel="k-ing"] .k-ing{opacity:1;filter:drop-shadow(0 0 8px var(--teal))}
+#k8fSvg[data-sel="k-kus"] .k-kus{opacity:1;filter:drop-shadow(0 0 8px var(--teal))}
+.kx{display:none}.kx h3{font-size:24px;margin:4px 0 6px}.kx p{font-size:18px;line-height:1.45}
+.kxwrap:not([data-sel]) .k-none{display:block}
+.kxwrap[data-sel="k-ns"] .kx.k-ns{display:block}
+.kxwrap[data-sel="k-sc"] .kx.k-sc{display:block}
+.kxwrap[data-sel="k-cm"] .kx.k-cm{display:block}
+.kxwrap[data-sel="k-sec"] .kx.k-sec{display:block}
+.kxwrap[data-sel="k-app"] .kx.k-app{display:block}
+.kxwrap[data-sel="k-kafka"] .kx.k-kafka{display:block}
+.kxwrap[data-sel="k-mail"] .kx.k-mail{display:block}
+.kxwrap[data-sel="k-ing"] .kx.k-ing{display:block}
+.kxwrap[data-sel="k-kus"] .kx.k-kus{display:block}
 </style>

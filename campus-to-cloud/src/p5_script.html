@@ -308,6 +308,11 @@ hooks.sim4={enter(){simRun()}};
     auth:{ev1a:'AUTH_URL=',ev1b:'http://localhost:3000',ev2a:'AUTH_URL: ${AUTH_URL}',ev2a2:'environment: on frontend',ev2b:'(frontend only)',ev2b2:'',ev3a:'AUTH_URL=http://localhost:3000',ev3b:'inside the nginx container',ev4a:'start-up script',ev4b:'writes app-config.js',ev4c:'authBaseUrl: localhost:3000',ev4d:'the browser calls auth there'}};
   function set(k){Object.entries(D[k]).forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v})}
   $$('#envTabs .btn').forEach(b=>b.onclick=()=>{set(b.dataset.k);$$('#envTabs .btn').forEach(x=>x.classList.toggle('primary',x===b))});set('port')})();
+// generic clickable annotations (.ann)
+$$('.ann').forEach(a=>{const code=a.querySelector('.dfcode');$$('.dfnotes li',a).forEach(li=>li.onclick=()=>{const on=code.dataset.g===li.dataset.g;code.dataset.g=on?'':li.dataset.g;$$('.dfnotes li',a).forEach(x=>x.classList.toggle('on',!on&&x===li))})});
+// k8s folder map
+(function(){const svg=$('#k8fSvg');if(!svg)return;const wrap=$('.kxwrap');
+  $$('#kfList .kf').forEach(b=>b.onclick=()=>{const k=b.dataset.k;svg.dataset.sel=k;wrap.dataset.sel=k;$$('#kfList .kf').forEach(x=>x.classList.toggle('on',x===b))})})();
 // Activity 5: canary
 (function(){const p=$('#canPct'),b=$('#canBug');if(!p)return;let rb=null;
   function upd(){const pct=+p.value,bug=b.classList.contains('on');$('#canTxt').textContent=pct+'%';$('#canV1').style.width=(100-pct)+'%';$('#canV2').style.width=pct+'%';
@@ -630,7 +635,7 @@ function initK8s(){const c=$('#k8s3d'),r=mkR(c),sc=new THREE.Scene(),cam=new THR
     pods.forEach(m=>{const tg=m.userData.on?1:.001;const s=m.scale.x+(tg-m.scale.x)*.12;m.scale.set(s,s,s);if(m.userData.tp&&m.userData.on)m.position.lerp(m.userData.tp,.08)});r.render(sc,cam)}}}
 
 /*@INC:p5b_docker3d.js*/
-function ensure(id){if(!hasThree)return null;if(!(id in scenes)){try{scenes[id]=id==='globe'?initGlobe():id==='infra3d'?initInfra():id==='vpc3d'?initCity(id,false):id==='arch3d'?initCity(id,true):id==='s33d'?initS3():id==='fc3d'?initFC():id==='cables3d'?initCables():id==='k8s3d'?initK8s():id==='vmc3d'?initVmc():id==='layers3d'?initLayers():id==='exec3d'?initExec():id==='compose3d'?initCompose():null}catch(e){console.warn('3D init failed',id,e);scenes[id]=null}}return scenes[id]}
+function ensure(id){if(!hasThree)return null;if(!(id in scenes)){try{scenes[id]=id==='globe'?initGlobe():id==='infra3d'?initInfra():id==='vpc3d'?initCity(id,false):id==='arch3d'?initCity(id,true):id==='s33d'?initS3():id==='fc3d'?initFC():id==='cables3d'?initCables():id==='k8s3d'?initK8s():id==='vmc3d'?initVmc():id==='layers3d'?initLayers():id==='exec3d'?initExec():id==='compose3d'?initCompose():id==='eks3d'?initEks():null}catch(e){console.warn('3D init failed',id,e);scenes[id]=null}}return scenes[id]}
 function loop(t){if(activeScene)activeScene.render(t);requestAnimationFrame(loop)}requestAnimationFrame(loop);
 const stepBtns=$$('#archSteps .step');
 stepBtns.forEach(b=>b.onclick=()=>{const s=ensure('arch3d');if(!s)return;stepBtns.forEach(x=>x.classList.toggle('on',x===b));s.step(+b.dataset.step)});
