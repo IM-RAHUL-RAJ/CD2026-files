@@ -431,6 +431,16 @@ pre.labc{font-size:16.5px;line-height:1.45;padding:16px 18px}
 .dfnotes li i{font-style:normal;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--ink-3);color:var(--amber);font:700 14px var(--f-mono)}
 .dfnotes li.on{border-color:var(--amber);background:var(--ink-3)}
 .dfnotes li b{color:var(--fg)}
+
+/* where variables come from */
+.vflow .vf{display:flex;flex-direction:column;gap:10px;padding:16px 18px}
+.vfh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:20px}
+.vflow pre.code{font-size:19px;line-height:1.6;padding:14px 16px;flex:1;white-space:pre-wrap}
+.vfnote{font-size:16px}
+.vflow .v{border-radius:5px;padding:1px 4px;transition:background .3s,box-shadow .3s}
+.st1 .vflow .vb{background:rgba(161,147,255,.28);box-shadow:0 0 0 1px var(--violet)}
+.st2 .vflow .vr{background:rgba(255,181,71,.25);box-shadow:0 0 0 1px var(--amber)}
+.vbox{border-left:4px solid var(--c)}
 </style>
 <div id="viewport"><div id="stage">
 
@@ -2742,27 +2752,38 @@ echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
   <aside class="notes"><p>Click a tab, then click a numbered note (or let them read): the matching lines light up. These follow the files in each service folder, shortened slightly for the slide.</p><p>Common pattern in all three: a build stage with heavy tools, a small runtime stage, dependency files copied before code for caching, a non-root user, and ARG “dials” for version, port and health check. The Angular file adds the app-config.js trick so one image works in every environment.</p></aside>
 </section>
 <section class="slide" data-title="ARG vs ENV vs compose environment" data-phase="behind" data-ch="Our project" data-steps="4">
-  <div><span class="wowtag">Behind the scenes</span></div>
-  <h2 style="margin-top:6px">When does each value get used?</h2>
-  <div class="vis">
-    <svg class="d" viewBox="0 0 1408 560">
-      <path d="M40 120 H1370" class="w-l" style="stroke-width:4"/>
-      <g text-anchor="middle" style="font:700 22px var(--f-body)"><circle cx="250" cy="120" r="14" class="fv"/><text x="250" y="80" class="tv">docker build</text><circle cx="704" cy="120" r="14" class="ft"/><text x="704" y="80" class="tt">the image</text><circle cx="1160" cy="120" r="14" class="fa"/><text x="1160" y="80" class="ta">docker compose up</text></g>
-      <g class="f" data-f="1"><rect x="60" y="160" width="380" height="250" rx="18" class="bx-v" style="fill:rgba(161,147,255,.06)"/><text x="84" y="198" class="tv" style="font:800 24px var(--f-mono)">ARG</text><text x="84" y="230" class="tmut" style="font-size:17px">used while baking, then gone</text>
-        <text x="84" y="276" class="tm" style="font-size:16px">RUNTIME_VERSION=21</text><text x="84" y="304" class="tm" style="font-size:16px">APP_PORT=8081</text><text x="84" y="332" class="tm" style="font-size:16px">HEALTH_PATH=/actuator/health</text>
-        <text x="84" y="384" class="tv" style="font:600 17px var(--f-body)">= the oven temperature</text></g>
-      <g class="f" data-f="2"><rect x="514" y="160" width="380" height="250" rx="18" class="bx-t" style="fill:rgba(63,213,194,.06)"/><text x="538" y="198" class="tt" style="font:800 24px var(--f-mono)">ENV</text><text x="538" y="230" class="tmut" style="font-size:17px">baked in as a default</text>
-        <text x="538" y="276" class="tm" style="font-size:16px">SERVER_PORT=8081</text><text x="538" y="304" class="tm" style="font-size:16px">HEALTH_PATH=/actuator/health</text><text x="538" y="332" class="tm" style="font-size:16px">NODE_ENV=production</text>
-        <text x="538" y="384" class="tt" style="font:600 17px var(--f-body)">= the label on the box</text></g>
-      <g class="f" data-f="3"><rect x="968" y="160" width="400" height="250" rx="18" class="bx-a" style="fill:rgba(255,181,71,.06)"/><text x="992" y="198" class="ta" style="font:800 24px var(--f-mono)">env_file / environment</text><text x="992" y="230" class="tmut" style="font-size:17px">added when the container starts</text>
-        <text x="992" y="276" class="tm" style="font-size:16px">KAFKA_BOOTSTRAP_SERVERS=kafka:29092</text><text x="992" y="304" class="tm" style="font-size:16px">DB_HOST=postgres  DB_PASSWORD=•••</text><text x="992" y="332" class="tm" style="font-size:16px">JWT_SECRET=•••</text>
-        <text x="992" y="384" class="ta" style="font:600 17px var(--f-body)">= the customer's order</text></g>
-      <g class="f" data-f="4">
-        <rect x="60" y="440" width="640" height="100" rx="16" class="bx-r" style="fill:rgba(255,111,142,.06)"/><text x="84" y="476" class="tr" style="font:700 19px var(--f-body)">Never put secrets in ARG or ENV</text><text x="84" y="506" class="tmut" style="font-size:16px">they are saved inside the image layers;</text><text x="84" y="528" class="tmut tm" style="font-size:14px">docker history shows them to anyone</text>
-        <rect x="728" y="440" width="640" height="100" rx="16" class="bx-g" style="fill:rgba(110,220,146,.06)"/><text x="752" y="476" class="tg" style="font:700 19px var(--f-body)">✓ What our project does</text><text x="752" y="506" class="tmut" style="font-size:16px">images stay generic; every machine-specific value</text><text x="752" y="528" class="tmut" style="font-size:16px">and secret arrives at start-up from .env</text></g>
-    </svg>
+  <h2>Where does each variable come from?</h2>
+  <p class="small" style="margin-top:-6px">One service, three files. Follow the colours.</p>
+  <div class="grid g3 vflow" style="gap:18px">
+    <div class="panel vf"><div class="vfh"><span class="mono hl-a">.env</span><span class="small">parent folder · you write it</span></div>
+<pre class="code"><span class="v vb">ORDER_PORT=8081</span>
+<span class="v vr">DB_PASSWORD=secret123</span>
+<span class="v vr">KAFKA_BOOTSTRAP_SERVERS=kafka:29092</span></pre>
+      <p class="small vfnote">Just a list of values. Not in git.</p></div>
+    <div class="panel vf"><div class="vfh"><span class="mono hl-t">docker-compose.yml</span><span class="small">parent folder</span></div>
+<pre class="code">order-service:
+  build:
+    context: ./order-service
+    args:
+      <span class="v vb">APP_PORT: ${ORDER_PORT}</span>
+  <span class="v vr">env_file: .env</span>
+  ports: ["8081:8081"]</pre>
+      <p class="small vfnote"><b class="hl-v">①</b> sends ORDER_PORT to the build &nbsp; <b class="hl-a">②</b> passes .env into the container</p></div>
+    <div class="panel vf"><div class="vfh"><span class="mono hl-b">order-service/Dockerfile</span></div>
+<pre class="code"><span class="v vb">ARG APP_PORT=8080</span>
+<span class="v vb">ENV SERVER_PORT=${APP_PORT}</span>
+...
+ENTRYPOINT java -jar app.jar</pre>
+      <p class="small vfnote">ARG receives <b class="hl-v">8081</b> (8080 is only the default).</p></div>
   </div>
-  <aside class="notes"><p>ARG exists only during docker build: our version, port and health-path dials. ENV is stored in the image as a default (the java Dockerfile turns APP_PORT into SERVER_PORT). Values from env_file and environment in docker-compose are added when the container starts, and override any ENV with the same name.</p><p>To your question: yes, giving the settings and secrets in docker-compose (through .env) is the right design. The images contain no passwords and no addresses, so the same image runs on a laptop, an EC2 instance or EKS.</p></aside>
+  <div class="grid g2" style="gap:18px;align-items:stretch">
+    <div class="panel f vbox" data-f="1" style="--c:var(--violet)"><b class="k2" style="color:var(--violet)">① At build time · ARG</b><p class="say" style="font-size:22px">ORDER_PORT <span class="hl-m">→</span> ARG APP_PORT <span class="hl-m">→</span> ENV SERVER_PORT=8081, saved inside the image.</p><p class="small">ARG exists only while <span class="mono">docker build</span> runs. Never put a password here: it would stay in the image.</p></div>
+    <div class="panel f vbox" data-f="2" style="--c:var(--amber)"><b class="k2">② At start time · env_file</b><p class="say" style="font-size:22px">Every line of .env is handed to the container when it starts.</p><p class="small">That's how DB_PASSWORD and KAFKA_BOOTSTRAP_SERVERS arrive: never stored in the image.</p></div>
+  </div>
+  <div class="panel f" data-f="3" style="display:flex;gap:22px;align-items:center;border-color:var(--green)"><b class="k2" style="color:var(--green);margin:0;white-space:nowrap">Inside the running container</b>
+    <span class="mono" style="font-size:18px"><span class="hl-v">SERVER_PORT=8081</span> &nbsp; <span class="hl-a">DB_PASSWORD=secret123</span> &nbsp; <span class="hl-a">KAFKA_BOOTSTRAP_SERVERS=kafka:29092</span></span>
+    <span class="small f" data-f="4" style="margin-left:auto;white-space:nowrap">→ Spring Boot reads them</span></div>
+  <aside class="notes"><p>Read left to right. The .env file is just values. docker-compose.yml uses them in two ways. Click 1 (purple): at build time, compose passes ORDER_PORT to the Dockerfile as the build argument APP_PORT; the Dockerfile copies it into ENV SERVER_PORT, which is stored in the image. Click 2 (amber): at start time, env_file: .env gives every line of .env to the container, which is how the password and Kafka address arrive. Click 3: what the app actually sees. Check it live with docker compose exec order-service env.</p><p>Rule of thumb: ARG for build settings like versions and ports; env_file or environment for anything that changes per machine or is secret.</p></aside>
 </section>
 <section class="slide" data-title="How a value travels: .env to container" data-phase="behind" data-ch="Our project" data-hook="envf">
   <div style="display:flex;align-items:center;gap:16px"><div><span class="wowtag">Behind the scenes</span></div><span class="small">Pick a value and follow it:</span>
@@ -2773,8 +2794,8 @@ echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
       <defs><marker id="arE" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" class="fa"/></marker></defs>
       <g text-anchor="middle" class="lbl"><text x="160" y="24">1 · .env (parent folder)</text><text x="520" y="24">2 · docker-compose.yml</text><text x="900" y="24">3 · the container's env</text><text x="1245" y="24">4 · the app reads it</text></g>
       <rect x="20" y="40" width="280" height="300" rx="16" class="bx-a" style="fill:rgba(255,181,71,.06)"/><text x="40" y="70" class="ta tm" style="font-size:14px">KEY=value, one per line</text><text x="40" y="92" class="tr tm" style="font-size:13px">in .gitignore: never committed</text>
-      <rect x="340" y="40" width="360" height="140" rx="16" class="bx-t" style="fill:rgba(63,213,194,.06)"/><text x="360" y="68" class="tt" style="font:700 15px var(--f-body)">a · ${…} is filled in the yml</text>
-      <rect x="340" y="200" width="360" height="140" rx="16" class="bx-t" style="fill:rgba(63,213,194,.06)"/><text x="360" y="228" class="tt" style="font:700 15px var(--f-body)">b · env_file: .env / environment:</text><text x="360" y="248" class="tmut" style="font-size:13px">passed into the container</text>
+      <rect x="340" y="40" width="360" height="140" rx="16" class="bx-t" style="fill:rgba(63,213,194,.06)"/><text x="360" y="68" class="tt" style="font:700 15px var(--f-body)">a · for Docker itself: ${…} in the yml</text><text x="360" y="88" class="tmut" style="font-size:12.5px">ports to open, build args, image names</text>
+      <rect x="340" y="200" width="360" height="140" rx="16" class="bx-t" style="fill:rgba(63,213,194,.06)"/><text x="360" y="228" class="tt" style="font:700 15px var(--f-body)">b · for your app: env_file / environment</text><text x="360" y="248" class="tmut" style="font-size:12.5px">handed to the app inside the container</text>
       <rect x="740" y="40" width="320" height="300" rx="16" class="bx-v" style="fill:rgba(161,147,255,.06)"/><text x="760" y="70" class="tv tm" style="font-size:14px">environment variables</text>
       <rect x="1100" y="40" width="290" height="300" rx="16" class="bx-g" style="fill:rgba(110,220,146,.06)"/>
       <path d="M300 150 C 320 150 320 110 340 110 M300 230 C 320 230 320 270 340 270 M700 270 C 720 270 720 190 740 190 M1060 190 H1100" class="w-a" style="stroke-width:3" marker-end="url(#arE)"/>
@@ -2782,19 +2803,19 @@ echo <span class="s">"&lt;h1&gt;Hello from $(hostname)&lt;/h1&gt;"</span> \
       <circle r="10" class="fa glow-a"><animateMotion dur="4s" repeatCount="indefinite"><mpath href="#envP"/></animateMotion></circle>
       <g style="font:500 15px var(--f-mono)">
         <text id="ev1a" x="40" y="180" class="ta" style="font-size:13.5px"></text><text id="ev1b" x="40" y="206" class="tmut" style="font-size:13px"></text>
-        <text id="ev2a" x="360" y="110"></text><text id="ev2a2" x="360" y="136" class="tmut" style="font-size:13px"></text>
+        <text id="ev2a" x="360" y="124"></text><text id="ev2a2" x="360" y="150" class="tmut" style="font-size:13px"></text>
         <text id="ev2b" x="360" y="290"></text><text id="ev2b2" x="360" y="316" class="tmut" style="font-size:13px"></text>
         <text id="ev3a" x="760" y="180" class="tv" style="font-size:13.5px"></text><text id="ev3b" x="760" y="206" class="tmut" style="font-size:13px"></text>
         <text id="ev4a" x="1116" y="90" class="tg" style="font:700 14px var(--f-body)"></text><text id="ev4b" x="1116" y="140" style="font-size:13px"></text><text id="ev4c" x="1116" y="168" class="tmut" style="font-size:13px"></text><text id="ev4d" x="1116" y="194" class="tmut" style="font-size:13px"></text>
       </g>
       <rect x="20" y="370" width="1370" height="140" rx="16" class="bx" style="fill:var(--ink-3)"/>
-      <text x="44" y="402" class="tg" style="font:700 18px var(--f-body)">✓ Keeping env vars in compose + .env is the right design: images hold no addresses or passwords.</text>
+      <text x="44" y="402" style="font:700 18px var(--f-body)"><tspan class="tt">Why both?</tspan> Docker reads (a) to set up the container; the app reads (b). ORDER_PORT needs both; a password only (b).</text>
       <text x="44" y="438" class="tm" style="font-size:16px">docker compose config                                 <tspan class="c"># the yml with every ${…} filled in</tspan></text>
       <text x="44" y="468" class="tm" style="font-size:16px">docker compose exec order-service env | grep KAFKA      <tspan class="c"># what the app really sees</tspan></text>
       <text x="44" y="496" class="tm" style="font-size:16px">docker compose up -d --force-recreate order-service    <tspan class="c"># after editing .env</tspan></text>
     </svg>
   </div>
-  <aside class="notes"><p>Compose reads the .env file next to docker-compose.yml automatically. It is used in two ways: (a) to fill ${…} placeholders in the yml itself, such as port mappings and image names; (b) through env_file: .env or environment:, to pass variables into the container at start-up.</p><p>Click each value. ORDER_PORT is used both ways. KAFKA_BOOTSTRAP_SERVERS only goes into the containers; kafka:29092 is the address inside the Docker network. DB_PASSWORD is a secret: typed into .env, never in an image or in git. AUTH_URL goes into the frontend container, where the start-up script writes it into app-config.js for the browser. Changing .env needs a container recreate, not a rebuild.</p></aside>
+  <aside class="notes"><p>Why both a and b? (a) is read by Docker itself before the container exists: which host port to open, which build argument to send, what to name the image. The app never sees it. (b) is handed to the app inside the container; Docker doesn't use it. ORDER_PORT is needed by both: Docker must open 8081 and Spring Boot must listen on 8081. A password only matters to the app, so it only goes through (b).</p><p>Compose reads the .env file next to docker-compose.yml automatically. It is used in two ways: (a) to fill ${…} placeholders in the yml itself, such as port mappings and image names; (b) through env_file: .env or environment:, to pass variables into the container at start-up.</p><p>Click each value. ORDER_PORT is used both ways. KAFKA_BOOTSTRAP_SERVERS only goes into the containers; kafka:29092 is the address inside the Docker network. DB_PASSWORD is a secret: typed into .env, never in an image or in git. AUTH_URL goes into the frontend container, where the start-up script writes it into app-config.js for the browser. Changing .env needs a container recreate, not a rebuild.</p></aside>
 </section>
 <section class="slide" data-title="Kafka in our compose: broker and topics" data-phase="behind" data-ch="Our project" data-steps="5">
   <div><span class="wowtag">Behind the scenes</span></div>
